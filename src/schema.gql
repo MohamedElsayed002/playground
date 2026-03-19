@@ -1,0 +1,74 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type User {
+  """ID of the user"""
+  id: Int!
+
+  """Name of the user"""
+  name: String!
+
+  """Email of the user"""
+  email: String!
+
+  """Password of the user"""
+  password: String!
+}
+
+type Users {
+  """Status of the users"""
+  status: Int!
+
+  """Data of the users"""
+  data: [User!]!
+
+  """Count of the users"""
+  count: Int!
+}
+
+type UserRemoved {
+  """Status of the user removed"""
+  status: Int!
+
+  """Message of the user removed"""
+  message: String!
+}
+
+type Query {
+  getUsers: Users!
+  SingleUser(id: Int!): [User!]!
+}
+
+type Mutation {
+  createUser(createUserInput: CreateUserInput!): User!
+  UpdateUser(updateUserInput: UpdateUserInput!): User!
+  RemoveUser(id: Int!): UserRemoved!
+}
+
+input CreateUserInput {
+  """ID of the user"""
+  id: Int!
+
+  """Name of the user"""
+  name: String!
+
+  """Email of the user"""
+  email: String!
+
+  """Password of the user"""
+  password: String!
+}
+
+input UpdateUserInput {
+  id: Int!
+
+  """Name of the user"""
+  name: String
+
+  """Email of the user"""
+  email: String
+
+  """Password of the user"""
+  password: String
+}

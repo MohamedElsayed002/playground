@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          Int     @id @default(autoincrement())
+  name        String
+  lastName    String
+  phoneNumber String
+  bio         String?
+  sex         String?
+  image       String?
+
+  @@index([bio])
+  @@index([image])
+}
+
+
+model UserData {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt      @map("updated_at")
+
+  // One profile per user — created automatically on register
+  profile       Profile?
+  // Stored refresh tokens — one per active session/device
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+
+// ═════════════════════════════════════════════════════════════════
+// REFRESH TOKEN  — persistent sessions
+// ═════════════════════════════════════════════════════════════════
+// HOW JWT AUTH WORKS IN THIS APP:
+//
+//   accessToken  (JWT, 15 min)
+//     → sent in every request header:  Authorization: Bearer <token>
+//     → validated by JwtAuthGuard on every protected route
+//     → NOT stored in the DB — stateless
+//
+//   refreshToken  (random 64-byte hex string, 7 days)
+//     → stored HERE as a bcrypt hash (never the raw token)
+//     → client sends it to POST /auth/refresh to get a new accessToken
+//     → DELETE this row = session is instantly dead (logout)
+//     → DELETE all user's rows = "logout from all devices"
+//
+// TOKEN ROTATION:
+//   Every call to /auth/refresh deletes the old token and issues a new one.
+//   A stolen refresh token can only be used once before the real user
+//   invalidates it on their next automatic refresh.
+
+model RefreshToken {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  // bcrypt hash of the raw token — never the raw token itself
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user UserData @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+
+// ═════════════════════════════════════════════════════════════════
+// PROFILE  — public display data
+// ═════════════════════════════════════════════════════════════════
+// WHAT CHANGED: added userId (FK → User), id is now its own UUID.
+// Everything else in the chat schema still references Profile.id —
+// no changes needed in Room, Message, etc.
+
+model Profile {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  // 1-to-1 link to User. @unique = one profile per account.
+  userId     String    @unique @map("user_id") @db.Uuid
+  user       UserData      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  username   String    @unique
+  avatarUrl  String?   @map("avatar_url")
+  bio        String?
+  isOnline   Boolean   @default(false) @map("is_online")
+  lastSeenAt DateTime? @map("last_seen_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt      @map("updated_at")
+
+  // Chat relations — unchanged
+  createdRooms    Room[]        @relation("RoomCreator")
+  roomMemberships RoomMember[]
+  sentMessages    Message[]     @relation("MessageSender")
+  messageReads    MessageRead[]
+
+  @@map("profiles")
+}
+
+
+// ═════════════════════════════════════════════════════════════════
+// ROOM
+// ═════════════════════════════════════════════════════════════════
+
+model Room {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String?
+  description String?
+  isGroup     Boolean  @default(false) @map("is_group")
+  createdBy   String?  @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt      @map("updated_at")
+
+  creator  Profile?      @relation("RoomCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  members  RoomMember[]
+  messages Message[]
+  reads    MessageRead[]
+
+  @@map("rooms")
+}
+
+
+// ═════════════════════════════════════════════════════════════════
+// ROOM MEMBER  (junction table — many-to-many Profile ↔ Room)
+// ═════════════════════════════════════════════════════════════════
+
+model RoomMember {
+  roomId   String   @map("room_id") @db.Uuid
+  userId   String   @map("user_id") @db.Uuid  // → Profile.id
+  role     String   @default("member")         // 'member' | 'admin'
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  room Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([roomId, userId])
+  @@map("room_members")
+}
+
+
+// ═════════════════════════════════════════════════════════════════
+// MESSAGE
+// ═════════════════════════════════════════════════════════════════
+
+model Message {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roomId    String    @map("room_id")    @db.Uuid
+  senderId  String?   @map("sender_id") @db.Uuid  // → Profile.id
+  content   String
+  type      String    @default("text")  // text | image | file | system
+  editedAt  DateTime? @map("edited_at")
+  isDeleted Boolean   @default(false)   @map("is_deleted")
+  replyToId String?   @map("reply_to_id") @db.Uuid
+  createdAt DateTime  @default(now())   @map("created_at")
+  updatedAt DateTime  @updatedAt        @map("updated_at")
+
+  room        Room         @relation(fields: [roomId],    references: [id], onDelete: Cascade)
+  sender      Profile?     @relation("MessageSender",  fields: [senderId],  references: [id], onDelete: SetNull)
+  replyTo     Message?     @relation("MessageReplies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies     Message[]    @relation("MessageReplies")
+  attachments Attachment[]
+
+  @@index([roomId, createdAt(sort: Desc)])
+  @@map("messages")
+}
+
+
+// ═════════════════════════════════════════════════════════════════
+// ATTACHMENT
+// ═════════════════════════════════════════════════════════════════
+
+model Attachment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  messageId String   @map("message_id") @db.Uuid
+  fileUrl   String   @map("file_url")
+  fileName  String   @map("file_name")
+  fileSize  Int?     @map("file_size")
+  mimeType  String?  @map("mime_type")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+
+// ═════════════════════════════════════════════════════════════════
+// MESSAGE READ  (read receipts — last-read-per-room strategy)
+// ═════════════════════════════════════════════════════════════════
+
+model MessageRead {
+  roomId            String   @map("room_id") @db.Uuid
+  userId            String   @map("user_id") @db.Uuid  // → Profile.id
+  lastReadMessageId String?  @map("last_read_message_id") @db.Uuid
+  readAt            DateTime @default(now()) @map("read_at")
+
+  room Room    @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([roomId, userId])
+  @@map("message_reads")
+}
