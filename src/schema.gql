@@ -2,73 +2,184 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type User {
-  """ID of the user"""
-  id: Int!
-
-  """Name of the user"""
-  name: String!
-
-  """Email of the user"""
-  email: String!
-
-  """Password of the user"""
-  password: String!
+type Attachment {
+  created_at: String!
+  file_name: String!
+  file_size: Int
+  file_url: String!
+  id: ID!
+  message_id: ID!
+  mime_type: String
 }
 
-type Users {
-  """Status of the users"""
-  status: Int!
-
-  """Data of the users"""
-  data: [User!]!
-
-  """Count of the users"""
-  count: Int!
-}
-
-type UserRemoved {
-  """Status of the user removed"""
-  status: Int!
-
-  """Message of the user removed"""
-  message: String!
-}
-
-type Query {
-  getUsers: Users!
-  SingleUser(id: Int!): [User!]!
-}
-
-type Mutation {
-  createUser(createUserInput: CreateUserInput!): User!
-  UpdateUser(updateUserInput: UpdateUserInput!): User!
-  RemoveUser(id: Int!): UserRemoved!
+input CreateRoomInput {
+  created_by: ID!
+  description: String
+  is_group: Boolean!
+  member_ids: [ID!]!
+  name: String
 }
 
 input CreateUserInput {
+  """Email of the user"""
+  email: String!
+
   """ID of the user"""
   id: Int!
 
   """Name of the user"""
   name: String!
 
-  """Email of the user"""
-  email: String!
-
   """Password of the user"""
   password: String!
 }
 
+input EditMessageInput {
+  content: String!
+  message_id: ID!
+}
+
+input GetMessagesInput {
+  before: String
+  limit: Int = 30
+  room_id: ID!
+}
+
+input MarkReadInput {
+  message_id: ID!
+  room_id: ID!
+  user_id: ID!
+}
+
+type Message {
+  attachments: [Attachment!]
+  content: String!
+  created_at: String!
+  edited_at: String
+  id: ID!
+  is_deleted: Boolean!
+  reply_to: Message
+  reply_to_id: ID
+  room_id: ID!
+  sender: Profile
+  sender_id: ID
+  type: String!
+  updated_at: String!
+}
+
+type MessageRead {
+  last_read_message_id: ID
+  read_at: String!
+  room_id: ID!
+  user_id: ID!
+}
+
+type Mutation {
+  RemoveUser(id: Int!): UserRemoved!
+  UpdateUser(updateUserInput: UpdateUserInput!): User!
+  createRoom(input: CreateRoomInput!): Room!
+  createUser(createUserInput: CreateUserInput!): User!
+  deleteMessage(message_id: ID!, requesting_user_id: ID!, room_id: ID!): Message!
+  editMessage(input: EditMessageInput!, requesting_user_id: ID!): Message!
+  markRead(input: MarkReadInput!): MessageRead!
+  sendMessage(input: SendMessageInput!): Message!
+}
+
+type Profile {
+  avatar_url: String
+  bio: String
+  created_at: String!
+  id: ID!
+  is_online: Boolean!
+  last_seen_at: String
+  updated_at: String!
+  username: String!
+}
+
+type Query {
+  SingleUser(id: Int!): [User!]!
+  getUsers: Users!
+  message(id: ID!): Message!
+  messages(input: GetMessagesInput!): [Message!]!
+  profile(id: ID!): Profile!
+  room(id: ID!): Room!
+  roomMembers(room_id: ID!): [RoomMember!]!
+  roomsForUser(user_id: ID!): [Room!]!
+}
+
+type Room {
+  created_at: String!
+  created_by: ID
+  description: String
+  id: ID!
+  is_group: Boolean!
+  name: String
+  updated_at: String!
+}
+
+type RoomMember {
+  joined_at: String!
+  profile: Profile
+  role: String!
+  room_id: ID!
+  user_id: ID!
+}
+
+input SendMessageInput {
+  content: String!
+  reply_to_id: ID
+  room_id: ID!
+  sender_id: ID!
+  type: String = "text"
+}
+
+type Subscription {
+  messageAdded(room_id: ID!): Message!
+  messageRead(room_id: ID!): MessageRead!
+  messageUpdated(room_id: ID!): Message!
+}
+
 input UpdateUserInput {
+  """Email of the user"""
+  email: String
   id: Int!
 
   """Name of the user"""
   name: String
 
-  """Email of the user"""
-  email: String
-
   """Password of the user"""
   password: String
+}
+
+type User {
+  """Email of the user"""
+  email: String!
+
+  """ID of the user"""
+  id: Int!
+
+  """Name of the user"""
+  name: String!
+
+  """Password of the user"""
+  password: String!
+}
+
+type UserRemoved {
+  """Message of the user removed"""
+  message: String!
+
+  """Status of the user removed"""
+  status: Int!
+}
+
+type Users {
+  """Count of the users"""
+  count: Int!
+
+  """Data of the users"""
+  data: [User!]!
+
+  """Status of the users"""
+  status: Int!
 }
