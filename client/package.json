@@ -9,14 +9,20 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.91.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "graphql-request": "^7.4.0",
+    "graphql-ws": "^6.0.7",
     "lucide-react": "^0.577.0",
     "next": "16.2.0",
     "radix-ui": "^1.4.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "tailwind-merge": "^3.5.0"
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "tailwind-merge": "^3.5.0",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
