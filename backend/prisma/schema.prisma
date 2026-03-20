@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          Int     @id @default(autoincrement())
+  name        String
+  lastName    String
+  phoneNumber String
+  bio         String?
+  sex         String?
+  image       String?
+
+  @@index([bio])
+  @@index([image])
+}
+
+model UserData {
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String         @unique
+  passwordHash  String         @map("password_hash")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  profile       Profile?
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  tokenHash String   @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      UserData @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Profile {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId          String        @unique @map("user_id") @db.Uuid
+  username        String        @unique
+  avatarUrl       String?       @map("avatar_url")
+  bio             String?
+  isOnline        Boolean       @default(false) @map("is_online")
+  lastSeenAt      DateTime?     @map("last_seen_at")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  messageReads    MessageRead[]
+  sentMessages    Message[]     @relation("MessageSender")
+  user            UserData      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomMemberships RoomMember[]
+  createdRooms    Room[]        @relation("RoomCreator")
+
+  @@map("profiles")
+}
+
+model Room {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String?
+  description String?
+  isGroup     Boolean       @default(false) @map("is_group")
+  createdBy   String?       @map("created_by") @db.Uuid
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+  reads       MessageRead[]
+  messages    Message[]
+  members     RoomMember[]
+  creator     Profile?      @relation("RoomCreator", fields: [createdBy], references: [id])
+
+  @@map("rooms")
+}
+
+model RoomMember {
+  roomId   String   @map("room_id") @db.Uuid
+  userId   String   @map("user_id") @db.Uuid
+  role     String   @default("member")
+  joinedAt DateTime @default(now()) @map("joined_at")
+  room     Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user     Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([roomId, userId])
+  @@map("room_members")
+}
+
+model Message {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roomId      String       @map("room_id") @db.Uuid
+  senderId    String?      @map("sender_id") @db.Uuid
+  content     String
+  type        String       @default("text")
+  editedAt    DateTime?    @map("edited_at")
+  isDeleted   Boolean      @default(false) @map("is_deleted")
+  replyToId   String?      @map("reply_to_id") @db.Uuid
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  attachments Attachment[]
+  replyTo     Message?     @relation("MessageReplies", fields: [replyToId], references: [id])
+  replies     Message[]    @relation("MessageReplies")
+  room        Room         @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender      Profile?     @relation("MessageSender", fields: [senderId], references: [id])
+
+  @@index([roomId, createdAt(sort: Desc)])
+  @@map("messages")
+}
+
+model Attachment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  messageId String   @map("message_id") @db.Uuid
+  fileUrl   String   @map("file_url")
+  fileName  String   @map("file_name")
+  fileSize  Int?     @map("file_size")
+  mimeType  String?  @map("mime_type")
+  createdAt DateTime @default(now()) @map("created_at")
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+model MessageRead {
+  roomId            String   @map("room_id") @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  lastReadMessageId String?  @map("last_read_message_id") @db.Uuid
+  readAt            DateTime @default(now()) @map("read_at")
+  room              Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user              Profile  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([roomId, userId])
+  @@map("message_reads")
+}
