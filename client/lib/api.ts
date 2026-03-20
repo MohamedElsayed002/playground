@@ -69,19 +69,19 @@ export async function apiFetch<T>(
 
 export const authApi = {
     register: (body: { email: string; password: string; username: string }) =>
-        apiFetch<AuthTokens>('/auth/register', {
+        apiFetch<AuthTokens>('auth/register', {
             method: 'POST', body: JSON.stringify(body)
         }),
     login: (body: {email: string; password: string}) =>
-            apiFetch<AuthTokens>('/auth/login',{ method: 'POST',body: JSON.stringify({body})
+            apiFetch<AuthTokens>('auth/login',{ method: 'POST',body: JSON.stringify({body})
         }),
     refresh: (refreshToken: string) => 
-            apiFetch<AuthTokens>('/auth/refresh',{ method: 'POST',body: JSON.stringify(refreshToken)
+            apiFetch<AuthTokens>('auth/refresh',{ method: 'POST',body: JSON.stringify(refreshToken)
         }),
     logout: (refreshToken: string) => 
-            apiFetch<{success:boolean}>('/auth/logout', {method: 'POST',body: JSON.stringify({refreshToken})
+            apiFetch<{success:boolean}>('auth/logout', {method: 'POST',body: JSON.stringify({refreshToken})
         }),
     logoutAll: () => 
-            apiFetch<{success: boolean}>('/auth/logout-all',{method: 'POST'}),
+            apiFetch<{success: boolean}>('auth/logout-all',{method: 'POST'}),
     me: () => apiFetch<{userId: string, profileId: string;email: string}>('/auth/me')
 }
