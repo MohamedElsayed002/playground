@@ -28,6 +28,8 @@ export function useSocket(roomId: string) {
         const socket = getSocket(profile.id)
 
         socket.emit('join_room', {room_id: roomId})
+        // Ensure local user appears online immediately in this room
+        setOnline(roomId, profile.id, true)
 
         socket.on('new_message', (message: Message) => {
             injectMessage(message)
@@ -92,6 +94,7 @@ export function useSocket(roomId: string) {
             socket.off("user_joined")
             socket.off("user_left")
             socket.off("message_read")
+            setOnline(roomId, profile.id, false)
             clearRoom(roomId)
         }
     },[roomId,profile?.id])

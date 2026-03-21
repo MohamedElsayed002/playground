@@ -46,10 +46,10 @@ export default function Provider({children}: {children: React.ReactNode}) {
 
         authApi.me()
             .then(async (me) => {
-                const refresh = tokenStorage.getRefresh()
-                if(!refresh) return 
-
-                const tokens = await authApi.refresh(refresh)
+                const refreshToken = tokenStorage.getRefresh()
+                if(!refreshToken) return 
+                const tokens = await authApi.refresh(refreshToken)
+                console.log('tokens',tokens)
                 setSession(tokens.profile, {
                     accessToken: tokens.accessToken,
                     refreshToken: tokens.refreshToken

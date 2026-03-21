@@ -34,7 +34,7 @@ export function MemberList({roomId}: MemberListProps) {
     // @ts-expect-error
     const renderMember = (m: typeof members[0]) => {
         // isOnline: combine the profile's DB value with the live socket presence
-        const isOnline = onlineSet?.has(m.user_id) ?? m.profile?.is_online ?? false;
+        const isOnline = onlineSet ? onlineSet.has(m.user_id) : (m.profile?.is_online ?? false);
     
         return (
           <div key={m.user_id} className="flex items-center gap-2.5 py-1">

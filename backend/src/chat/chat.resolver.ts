@@ -1,6 +1,7 @@
 import { Args, ID, Mutation, Query, Resolver, Subscription } from "@nestjs/graphql";
 import { PubSub } from 'graphql-subscriptions'
 import { ChatService } from "./chat.service";
+import { ChatGateway } from "./chat.gateway";
 import { Message, MessageRead, Profile, Room, RoomMember } from "./chat.model";
 import {
     CreateRoomInput,
@@ -25,7 +26,10 @@ const pubSub = new PubSub()
 
 @Resolver()
 export class ChatResolver {
-    constructor(private readonly chatService: ChatService) { }
+    constructor(
+        private readonly chatService: ChatService,
+        private readonly chatGateway: ChatGateway
+    ) { }
 
 
     /**
@@ -114,6 +118,9 @@ export class ChatResolver {
             messageAdded: message,
         });
 
+        // Also broadcast over Socket.IO for real-time clients
+        this.chatGateway.server?.to(message.room_id).emit('new_message', message)
+
         return message
     }
 
@@ -129,6 +136,8 @@ export class ChatResolver {
             messageUpdated: message,
         });
 
+        this.chatGateway.server?.to(message.room_id).emit('message_updated', message)
+
         return message;
     }
 
@@ -143,6 +152,12 @@ export class ChatResolver {
         await pubSub.publish(`${EVENTS.MESSAGE_DELETED}.${room_id}`, {
             messageDeleted: { message_id, room_id, is_deleted: true },
         });
+
+        this.chatGateway.server?.to(room_id).emit('message_deleted', {
+            message_id,
+            room_id,
+            is_deleted: true
+        })
 
         return message;
     }

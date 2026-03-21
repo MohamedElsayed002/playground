@@ -6,6 +6,7 @@
 // • Uses useCreateRoom mutation → invalidates room list on success
 
 import { useState }      from 'react';
+import { useRouter } from 'next/navigation';
 // import { useCreateRoom } from '@/hooks/useRooms';
 import { useAuthStore }  from '@/store/auth.store';
 import { useCreateRoom } from '@/hooks/use-rooms';
@@ -17,28 +18,50 @@ interface CreateRoomModalProps {
 export function CreateRoomModal({ onClose }: CreateRoomModalProps) {
   const profile    = useAuthStore((s) => s.profile);
   const createRoom = useCreateRoom();
+  const router = useRouter()
 
   const [isGroup,    setIsGroup]    = useState(false);
   const [name,       setName]       = useState('');
   const [memberIds,  setMemberIds]  = useState('');  // comma-separated UUIDs
+  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
+
+    setLocalError(null)
 
     const extraIds = memberIds
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean);
 
+    const uniqueExtra = Array.from(new Set(extraIds))
+    const filteredExtra = uniqueExtra.filter((id) => id !== profile.id)
+
+    if (!isGroup) {
+      if (filteredExtra.length === 0) {
+        setLocalError('Direct message must include another user.')
+        return
+      }
+      if (filteredExtra.length > 1) {
+        setLocalError('Direct message can only include one other user.')
+        return
+      }
+    }
+
     createRoom.mutate(
       {
         is_group:   isGroup,
         name:       isGroup ? name : undefined,
-        // Always include own profile ID
-        member_ids: [profile.id, ...extraIds],
+        member_ids: filteredExtra,
       },
-      { onSuccess: () => onClose() },
+      {
+        onSuccess: (room) => {
+          onClose()
+          router.push(`/rooms/${room.id}`)
+        }
+      },
     );
   };
 
@@ -103,8 +126,10 @@ export function CreateRoomModal({ onClose }: CreateRoomModalProps) {
             />
           </div>
 
-          {createRoom.error && (
-            <p className="text-red-500 text-xs">{(createRoom.error as Error).message}</p>
+          {(localError || createRoom.error) && (
+            <p className="text-red-500 text-xs">
+              {localError ?? (createRoom.error as Error).message}
+            </p>
           )}
 
           <div className="flex gap-2 justify-end mt-1">

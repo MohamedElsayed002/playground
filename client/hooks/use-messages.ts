@@ -216,10 +216,34 @@ export function useInjectMessage(roomId: string) {
         queryClient.setQueryData<InfiniteData<Message[]>>(
           messageKeys.list(roomId),
           (old) => {
-            if (!old) return old;
-            // Skip if already exists (e.g. our own optimistic update was replaced)
+            if (!old) {
+              return { pages: [[message]], pageParams: [undefined] }
+            }
+
+            // If a matching optimistic message exists, replace it with the real one
+            let replacedOptimistic = false
+            const pagesWithReplace = old.pages.map((page) =>
+              page.map((m) => {
+                if (
+                  !replacedOptimistic &&
+                  m.id.startsWith('optimistic-') &&
+                  m.sender_id === message.sender_id &&
+                  m.content === message.content
+                ) {
+                  replacedOptimistic = true
+                  return message
+                }
+                return m
+              }),
+            )
+            if (replacedOptimistic) {
+              return { ...old, pages: pagesWithReplace }
+            }
+
+            // Skip if already exists
             const exists = old.pages.some((p) => p.some((m) => m.id === message.id));
             if (exists) return old;
+
             return {
               ...old,
               pages: [[message, ...old.pages[0]], ...old.pages.slice(1)],

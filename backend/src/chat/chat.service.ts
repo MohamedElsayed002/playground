@@ -67,7 +67,8 @@ export class ChatService {
 
   async createRoom(input: CreateRoomInput): Promise<Room> {
     const rawMemberIds = (input.member_ids ?? []).map((id) => id.trim()).filter(Boolean)
-    const allIds = Array.from(new Set([...rawMemberIds, input.created_by]))
+    const uniqueRawMemberIds = Array.from(new Set(rawMemberIds))
+    const allIds = Array.from(new Set([...uniqueRawMemberIds, input.created_by]))
 
     const profiles = await this.prisma.profile.findMany({
       where: {
@@ -91,9 +92,43 @@ export class ChatService {
     }
 
     const createdById = idToProfileId.get(input.created_by)!
-    const memberProfileIds = rawMemberIds.map((id) => idToProfileId.get(id)!)
+    const memberProfileIds = uniqueRawMemberIds.map((id) => idToProfileId.get(id)!)
     if (!memberProfileIds.includes(createdById)) {
       memberProfileIds.push(createdById)
+    }
+    const uniqueMemberProfileIds = Array.from(new Set(memberProfileIds))
+
+    // Direct message guardrails: must be exactly two distinct users
+    if (!input.is_group) {
+      if (uniqueMemberProfileIds.length < 2) {
+        throw new BadRequestException('Direct message must include another user')
+      }
+      if (uniqueMemberProfileIds.length > 2) {
+        throw new BadRequestException('Direct message can only include two users')
+      }
+
+      const otherId = uniqueMemberProfileIds.find((id) => id !== createdById)
+      if (!otherId) {
+        throw new BadRequestException('You cannot create a direct message with yourself')
+      }
+
+      // Check if a DM between these two users already exists
+      const candidates = await this.prisma.room.findMany({
+        where: {
+          isGroup: false,
+          AND: [
+            { members: { some: { userId: createdById } } },
+            { members: { some: { userId: otherId } } },
+            { members: { every: { userId: { in: uniqueMemberProfileIds } } } },
+          ],
+        },
+        include: { members: { select: { userId: true } } }
+      })
+
+      const existing = candidates.find((r) => r.members.length === 2)
+      if (existing) {
+        return this.toRoom(existing)
+      }
     }
 
     const room = await this.prisma.room.create({
@@ -104,7 +139,7 @@ export class ChatService {
         createdBy: createdById,
         members: {
           createMany: {
-            data: memberProfileIds.map((profileId) => ({
+            data: uniqueMemberProfileIds.map((profileId) => ({
               userId: profileId,
               role: profileId === createdById ? 'admin' : 'member'
             })),

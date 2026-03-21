@@ -76,12 +76,12 @@ export const authApi = {
             apiFetch<AuthTokens>('auth/login',{ method: 'POST',body: JSON.stringify(body)
         }),
     refresh: (refreshToken: string) => 
-            apiFetch<AuthTokens>('auth/refresh',{ method: 'POST',body: JSON.stringify(refreshToken)
+            apiFetch<AuthTokens>('auth/refresh',{ method: 'POST', body: JSON.stringify({ refreshToken })
         }),
     logout: (refreshToken: string) => 
-            apiFetch<{success:boolean}>('auth/logout', {method: 'POST',body: JSON.stringify({refreshToken})
+            apiFetch<{success:boolean}>('auth/logout', {method: 'POST', body: JSON.stringify({ refreshToken })
         }),
     logoutAll: () => 
             apiFetch<{success: boolean}>('auth/logout-all',{method: 'POST'}),
-    me: () => apiFetch<{userId: string, profileId: string;email: string}>('/auth/me')
+    me: () => apiFetch<{userId: string, profileId: string;email: string}>('auth/me')
 }

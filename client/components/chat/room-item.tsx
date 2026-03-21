@@ -4,6 +4,8 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import type { Room} from "@/types"
+import { useRoomMembers } from "@/hooks/use-rooms"
+import { useAuthStore } from "@/store/auth.store"
 
 interface RoomItemProps {
     room: Room
@@ -12,7 +14,12 @@ interface RoomItemProps {
 export function RoomItem({room}: RoomItemProps) {
     const pathname = usePathname()
     const isActive = pathname === `/rooms/${room.id}`
-    const roomName = room.name ?? (room.is_group ? 'Group Chat' : 'Direct message')
+    const { data: members } = useRoomMembers(room.id)
+    const profileId = useAuthStore((s) => s.profile?.id)
+
+    const otherMember = members?.find((m) => m.user_id !== profileId)
+    const roomName = room.name
+        ?? (room.is_group ? 'Group Chat' : (otherMember?.profile?.username ?? 'Direct message'))
 
 
     return (
