@@ -66,17 +66,47 @@ export class ChatService {
   }
 
   async createRoom(input: CreateRoomInput): Promise<Room> {
+    const rawMemberIds = (input.member_ids ?? []).map((id) => id.trim()).filter(Boolean)
+    const allIds = Array.from(new Set([...rawMemberIds, input.created_by]))
+
+    const profiles = await this.prisma.profile.findMany({
+      where: {
+        OR: [
+          { id: { in: allIds } },
+          { userId: { in: allIds } },
+        ]
+      },
+      select: { id: true, userId: true }
+    })
+
+    const idToProfileId = new Map<string, string>()
+    for (const p of profiles) {
+      idToProfileId.set(p.id, p.id)
+      idToProfileId.set(p.userId, p.id)
+    }
+
+    const missing = allIds.filter((id) => !idToProfileId.has(id))
+    if (missing.length > 0) {
+      throw new BadRequestException(`Invalid member ids: ${missing.join(', ')}`)
+    }
+
+    const createdById = idToProfileId.get(input.created_by)!
+    const memberProfileIds = rawMemberIds.map((id) => idToProfileId.get(id)!)
+    if (!memberProfileIds.includes(createdById)) {
+      memberProfileIds.push(createdById)
+    }
+
     const room = await this.prisma.room.create({
       data: {
         name: input.name ?? null,
         description: input.description ?? null,
         isGroup: input.is_group,
-        createdBy: input.created_by,
+        createdBy: createdById,
         members: {
           createMany: {
-            data: input.member_ids.map((userId) => ({
-              userId,
-              role: userId === input.created_by ? 'admin' : 'member'
+            data: memberProfileIds.map((profileId) => ({
+              userId: profileId,
+              role: profileId === createdById ? 'admin' : 'member'
             })),
           },
         }

@@ -73,7 +73,7 @@ export const authApi = {
             method: 'POST', body: JSON.stringify(body)
         }),
     login: (body: {email: string; password: string}) =>
-            apiFetch<AuthTokens>('auth/login',{ method: 'POST',body: JSON.stringify({body})
+            apiFetch<AuthTokens>('auth/login',{ method: 'POST',body: JSON.stringify(body)
         }),
     refresh: (refreshToken: string) => 
             apiFetch<AuthTokens>('auth/refresh',{ method: 'POST',body: JSON.stringify(refreshToken)

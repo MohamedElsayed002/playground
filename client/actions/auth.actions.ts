@@ -11,11 +11,12 @@ const REFRESH_COOKIE = 'chat_refresh';
 
 async function saveTokensToCookies(tokens: AuthTokens) {
     const cookieStore = await cookies()
+    const isProd = process.env.NODE_ENV === 'production'
     cookieStore.set(ACCESS_COOKIE, tokens.accessToken, {
-        httpOnly: true, secure: true, sameSite: 'lax', maxAge: 60 * 15
+        httpOnly: true, secure: isProd, sameSite: 'lax', maxAge: 60 * 15
     })
     cookieStore.set(REFRESH_COOKIE,tokens.refreshToken, {
-        httpOnly: true, secure: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7
+        httpOnly: true, secure: isProd, sameSite: 'lax', maxAge: 60 * 60 * 24 * 7
     })
 }
 
@@ -27,13 +28,10 @@ export async function registerAction(formData: FormData) {
     try {
         const tokens = await authApi.register({email,password,username})
         await saveTokensToCookies(tokens)
-        return { 
-            success: true,
-            data: tokens
-        }
+        return tokens
     }catch(err) {
         const errMessage = err instanceof Error ? err.message : 'Error'
-        return { success: false, error: errMessage}
+        throw new Error(errMessage)
     }
 }
 
@@ -44,12 +42,10 @@ export async function loginAction(formData: FormData) {
     try {
         const tokens = await authApi.login({email,password})
         await saveTokensToCookies(tokens)
+        return tokens
     }catch(err) {
         const errMessage = err instanceof Error ? err.message : 'Error'
-        return { 
-            success:false,
-            error: errMessage
-        }
+        throw new Error(errMessage)
     }
 }
 
@@ -64,7 +60,7 @@ export async function logoutAction() {
 
     cookieStore.delete(ACCESS_COOKIE)
     cookieStore.delete(REFRESH_COOKIE)
-    redirect('/login')
+    redirect('/auth/login')
 }
 
 export async function getSession() {

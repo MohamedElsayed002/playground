@@ -55,15 +55,15 @@ export function useRoom(roomId: string) {
 
 export function useRoomMembers(roomId: string) {
     return useQuery({
-        queryKey: roomKeys.members(roomId),
-        queryFn: () => 
-            gqlClient
-                .request<{roomMembers: RoomMember[]}>(GET_ROOM_MEMBERS, {room_id: roomId})
-                .then((d) => d.roomMembers),
-        staleTime: 30_000,
-        enabled: !!roomId
-    })
-}
+      queryKey: roomKeys.members(roomId),
+      queryFn:  () =>
+        gqlClient
+          .request<{ roomMembers: RoomMember[] }>(GET_ROOM_MEMBERS, { room_id: roomId })
+          .then((d) => d.roomMembers),
+      staleTime: 30_000,
+      enabled:   !!roomId,
+    });
+  }
 
 
 export function useCreateRoom() {

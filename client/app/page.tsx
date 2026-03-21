@@ -1,14 +1,10 @@
-import type { Metadata} from 'next'
+// src/app/page.tsx
+// Root page: redirect to chat if logged in, login if not.
+import { redirect } from 'next/navigation';
+import { getSession } from '@/actions/auth.actions';
 
-export const metadata: Metadata = {
-  title: 'Playground',
-  description: 'Playground Description'
-}
-
-export default function HomePage() {
-  return (
-    <div className='min-h-screen grid place-items-center'>
-      <h1 className='text-7xl text-blue-500 font-bold'>Mohamed</h1>
-    </div>
-  )
+export default async function RootPage() {
+  const session = await getSession();
+  if (session) redirect('/rooms');
+  else         redirect('/auth/login');
 }

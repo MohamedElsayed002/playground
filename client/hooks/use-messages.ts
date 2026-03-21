@@ -48,7 +48,7 @@ export function useSendMessage(roomId: string) {
         mutationFn: (data: { content: string; type?: string; reply_to_id?: string }) =>
             gqlClient
                 .request<{ sendMessage: Message }>(SEND_MESSAGE, {
-                    inputs: {
+                    input: {
                         room_id: roomId,
                         sender_id: profile?.id,
                         ...data
