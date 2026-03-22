@@ -2,10 +2,13 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import { ReactQueryDevtools} from "@tanstack/react-query-devtools"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { useAuthStore } from "@/store/auth.store";
 import { tokenStorage, authApi } from "@/lib/api";
-import{ Toaster } from 'sileo'
+import { Toaster } from 'sileo'
+
+import { TanStackDevtools } from "@tanstack/react-devtools"
+import { aiDevtoolsPlugin } from "@tanstack/react-ai-devtools"
 
 function makeQueryClient() {
     return new QueryClient({
@@ -25,11 +28,11 @@ function makeQueryClient() {
 let browserQueryClient: QueryClient | undefined
 
 function getQueryClient() {
-    if(typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
         return makeQueryClient()
     }
 
-    if(!browserQueryClient) browserQueryClient = makeQueryClient()
+    if (!browserQueryClient) browserQueryClient = makeQueryClient()
     return browserQueryClient
 }
 
@@ -37,20 +40,20 @@ function getQueryClient() {
 
 
 
-export default function Provider({children}: {children: React.ReactNode}) {
+export default function Provider({ children }: { children: React.ReactNode }) {
     const queryClient = getQueryClient()
     const setSession = useAuthStore((s) => s.setSession)
 
     useEffect(() => {
         const token = tokenStorage.getAccess()
-        if(!token) return 
+        if (!token) return
 
         authApi.me()
             .then(async (me) => {
                 const refreshToken = tokenStorage.getRefresh()
-                if(!refreshToken) return 
+                if (!refreshToken) return
                 const tokens = await authApi.refresh(refreshToken)
-                console.log('tokens',tokens)
+                console.log('tokens', tokens)
                 setSession(tokens.profile, {
                     accessToken: tokens.accessToken,
                     refreshToken: tokens.refreshToken
@@ -59,13 +62,23 @@ export default function Provider({children}: {children: React.ReactNode}) {
             .catch(() => {
                 tokenStorage.clearTokens()
             })
-    },[])
+    }, [])
 
     return (
         <QueryClientProvider client={queryClient}>
             {children}
-            <ReactQueryDevtools  initialIsOpen={false} />
+            <ReactQueryDevtools initialIsOpen={false} />
             <Toaster position="top-center" />
+            <TanStackDevtools
+                plugins={[
+                    // ... other plugins
+                    // aiDevtoolsPlugin(),
+                ]}
+                // this config is important to connect to the server event bus
+                eventBusConfig={{
+                    connectToServerBus: true,
+                }}
+            />
         </QueryClientProvider>
     )
 }
