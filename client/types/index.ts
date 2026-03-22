@@ -2,6 +2,7 @@ export interface User {
     id: string 
     name: string
     lastName: string
+    phoneNumber: string
     bio: string 
     sex: string
     image: string
@@ -12,6 +13,10 @@ export interface GQL_Response_User {
         usersCount: number
         users: User[]
     }
+}
+
+export interface GQL_Single_User {
+    SingleUserFake: User
 }
 
 export interface AuthProfile {

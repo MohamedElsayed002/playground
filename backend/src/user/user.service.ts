@@ -74,4 +74,14 @@ export class UserService {
       users
     }
   }
+
+  findSingleUser(userId: string) {
+    const user = this.prisma.user.findUniqueOrThrow({
+      where: {
+        id: Number(userId)
+      }
+    })
+
+    return user
+  }
 }

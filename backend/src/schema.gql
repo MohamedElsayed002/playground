@@ -80,6 +80,7 @@ type Profile {
 }
 
 type Query {
+  SingleUserFake(id: ID!): User!
   allUsers: UserData!
   message(id: ID!): Message!
   messages(input: GetMessagesInput!): [Message!]!

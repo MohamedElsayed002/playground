@@ -1,4 +1,4 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Int, ID } from '@nestjs/graphql';
 import { UserService } from './user.service';
 import { User, UserData, UserRemoved, Users } from './entities/user.entity';
 import { CreateUserInput } from './dto/create-user.input';
@@ -41,5 +41,10 @@ export class UserResolver {
   @Query(() => UserData,{name: 'allUsers'})
   allUsersFake() {
     return this.userService.findAllFakeUsers()
+  }
+
+  @Query(() => User, {name: 'SingleUserFake'})
+  singleUser(@Args('id',{type: () => ID}) id: string) {
+    return this.userService.findSingleUser(id)
   }
 }

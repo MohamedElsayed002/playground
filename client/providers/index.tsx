@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { ReactQueryDevtools} from "@tanstack/react-query-devtools"
 import { useAuthStore } from "@/store/auth.store";
 import { tokenStorage, authApi } from "@/lib/api";
+import{ Toaster } from 'sileo'
 
 function makeQueryClient() {
     return new QueryClient({
@@ -64,6 +65,7 @@ export default function Provider({children}: {children: React.ReactNode}) {
         <QueryClientProvider client={queryClient}>
             {children}
             <ReactQueryDevtools  initialIsOpen={false} />
+            <Toaster position="top-center" />
         </QueryClientProvider>
     )
 }

@@ -34,6 +34,7 @@ export const GET_ALL_USERS = `
     users {
       id
       name
+      image
       lastName
       sex
       bio
@@ -41,6 +42,20 @@ export const GET_ALL_USERS = `
   }
 }
 `
+
+export const SINGLE_USER = `
+  query SingleUser($id: ID!) {
+    SingleUserFake(id: $id) {
+      id
+      bio
+      image
+      name
+      lastName
+      sex
+      phoneNumber
+    }
+  }
+`;
 
 export const GET_PROFILE = `
   ${PROFILE_FRAGMENT}

@@ -2,6 +2,8 @@
 
 import { useUsers } from "@/hooks/use-users";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTable } from "./data-table";
+import { columns } from "./columns";
 
 export default function Users() {
     const { data: users, isLoading, error} = useUsers()
@@ -20,9 +22,10 @@ export default function Users() {
         )
     }
 
+
     return (
-        <div>
-            {JSON.stringify(users.allUsers.users.slice(0,5))}
+        <div className="min-w-7xl mx-auto my-20">
+            <DataTable columns={columns} data={users.allUsers.users}/>
         </div>
     )
 
