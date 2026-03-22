@@ -1,3 +1,18 @@
+export interface User {
+    id: string 
+    name: string
+    lastName: string
+    bio: string 
+    sex: string
+    image: string
+}
+
+export interface GQL_Response_User {
+    allUsers: {
+        usersCount: number
+        users: User[]
+    }
+}
 
 export interface AuthProfile {
     id: string 

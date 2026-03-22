@@ -20,20 +20,6 @@ input CreateRoomInput {
   name: String
 }
 
-input CreateUserInput {
-  """Email of the user"""
-  email: String!
-
-  """ID of the user"""
-  id: Int!
-
-  """Name of the user"""
-  name: String!
-
-  """Password of the user"""
-  password: String!
-}
-
 input EditMessageInput {
   content: String!
   message_id: ID!
@@ -75,10 +61,7 @@ type MessageRead {
 }
 
 type Mutation {
-  RemoveUser(id: Int!): UserRemoved!
-  UpdateUser(updateUserInput: UpdateUserInput!): User!
   createRoom(input: CreateRoomInput!): Room!
-  createUser(createUserInput: CreateUserInput!): User!
   deleteMessage(message_id: ID!, requesting_user_id: ID!, room_id: ID!): Message!
   editMessage(input: EditMessageInput!, requesting_user_id: ID!): Message!
   markRead(input: MarkReadInput!): MessageRead!
@@ -97,8 +80,7 @@ type Profile {
 }
 
 type Query {
-  SingleUser(id: Int!): [User!]!
-  getUsers: Users!
+  allUsers: UserData!
   message(id: ID!): Message!
   messages(input: GetMessagesInput!): [Message!]!
   profile(id: ID!): Profile!
@@ -139,47 +121,22 @@ type Subscription {
   messageUpdated(room_id: ID!): Message!
 }
 
-input UpdateUserInput {
-  """Email of the user"""
-  email: String
-  id: Int!
-
-  """Name of the user"""
-  name: String
-
-  """Password of the user"""
-  password: String
-}
-
 type User {
-  """Email of the user"""
-  email: String!
+  bio: String!
 
-  """ID of the user"""
-  id: Int!
-
-  """Name of the user"""
+  """User ID"""
+  id: ID!
+  image: String!
+  lastName: String!
   name: String!
-
-  """Password of the user"""
-  password: String!
+  phoneNumber: String!
+  sex: String!
 }
 
-type UserRemoved {
-  """Message of the user removed"""
-  message: String!
+type UserData {
+  """all users"""
+  users: [User!]!
 
-  """Status of the user removed"""
-  status: Int!
-}
-
-type Users {
-  """Count of the users"""
-  count: Int!
-
-  """Data of the users"""
-  data: [User!]!
-
-  """Status of the users"""
-  status: Int!
+  """Total users"""
+  usersCount: Float!
 }

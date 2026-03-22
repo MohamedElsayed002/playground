@@ -1,6 +1,7 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 const db = [
   {
@@ -19,6 +20,14 @@ const db = [
 
 @Injectable()
 export class UserService {
+
+  private readonly logger = new Logger()
+
+  constructor(
+    private readonly prisma: PrismaService
+  ) {}
+
+
   create(createUserInput: CreateUserInput) {
     const newUser = {...createUserInput, id: db.length + 1}
     db.push(newUser)
@@ -53,6 +62,16 @@ export class UserService {
     return {
       status: 200,
       message: "User deleted successfully",
+    }
+  }
+
+
+  findAllFakeUsers() {
+    const usersCount =  this.prisma.user.count()
+    const users = this.prisma.user.findMany({})
+    return {
+      usersCount,
+      users
     }
   }
 }

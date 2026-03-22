@@ -27,6 +27,21 @@ export const MESSAGE_FRAGMENT = `
 
 // ── Queries ───────────────────────────────────────────────────────
 
+export const GET_ALL_USERS = `
+  query {
+  allUsers {
+    usersCount 
+    users {
+      id
+      name
+      lastName
+      sex
+      bio
+  	}
+  }
+}
+`
+
 export const GET_PROFILE = `
   ${PROFILE_FRAGMENT}
   query GetProfile($id: ID!) {
