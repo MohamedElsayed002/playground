@@ -229,7 +229,7 @@ export function Chat() {
   );
 }
 ```
-
+ 
 ---
 
 ## Tool Definition
@@ -647,3 +647,161 @@ const getUserData = getUserDataDef.server(async ({ userId }) => {
 });
 ```
 
+---
+
+## Client Tools
+
+Client tools execute in the browser, enabling UI updates, local Storage access, and browser API interactions. Unlike server tools, client tools don't have an `execute` function in their server defintion 
+
+
+### When to Use Client Tools 
+
+- **UI Updates**: Show notifications, update forms, toggle visbility 
+- **Local Storage**: Save user preferences,  cache data 
+- **Browser APIs**: Access geolocation, camera, clipboard
+- **State Management**: Update React state
+- **Navigation** Change routes, scroll to sections
+
+
+```tsx
+import { toolDefinition } from "@tanstack/ai"
+import { z } from "zod"
+
+export const updateUIDef = toolDefinition({
+  name: "update_ui",
+  description: "Update the UI with new information",
+  inputSchema: z.object({
+    message: z.string().description("Message to display"),
+    type: ..
+  }),
+  outputSchema: z.object9{
+    success: z.boolean()
+  }
+})
+
+export const saveToLocalStorageDef = toolDefinition({
+  name: "save_to_local_storage",
+  description: "Save data to browser local storage",
+  inputSchema: z.object({
+    key: z.string().meta({ description: "Storage key" }),
+    value: z.string().meta({ description: "Value to store" }),
+  }),
+  outputSchema: z.object({
+    saved: z.boolean(),
+  }),
+});
+
+```
+
+
+```ts
+import { chat, toServerSendEventsStream } from "@tanstack/ai"
+import { openaiText } from "@tanstack/ai-openai"
+import { updateUIDef, saveToLocalStorageDef } from "@/tools/definitions";
+
+
+export async function POST(request: Request) {
+  const { messages } = await request.json()
+
+  const stream = chat({
+    adapter: openaiText("gpt-5.2),
+    messages,
+    tools: [updateUIDef, ..]
+  })
+
+  return toServerSendEventsStream(stream)
+}
+```
+
+```tsx
+import { useChat, fetchServerSendEvents } from "@tanstack/ai-react"
+import {
+  clientTools,
+  createChatClientOptions,
+  type InferChatMessages
+} from "@tanstack/ai-client"
+import { updateUIDef, saveToLocalStorageDef } from "@/tools/definitions"
+import { useState } from "react"
+
+function ChatComponent() {
+  const [notifications,setNotification] = useState(null)
+
+  // Step 1: Create client implementations
+   const updateUI = updateUIDef.client((input) => {
+    // Update React state - fully typed!
+    setNotification({ message: input.message, type: input.type });
+    return { success: true };
+  });
+
+  const saveToLocalStorage = saveToLocalStorageDef.client((input) => {
+    localStorage.setItem(input.key, input.value);
+    return { saved: true };
+  });
+
+  // Step 2: Create typed tools array (no 'as const' needed!)
+  const tools = clientTools(updateUI,saveToLocalStorage)
+
+  const chatOptions = createChatClientOptions({
+    connection: fetchServerSendEvents("/api/chat"),
+    tools
+  })
+
+  // Step 3 Infer message types for full type safety 
+
+  type ChatMessages = InferChatMessages<typeof chatOptions>
+
+  const { messages, sendMessage, isLoading} = useChat(chatOptions)
+
+  // Step 4: Render with full type safety 
+    return (
+    <div>
+      {messages.map((message) => (
+        <MessageComponent key={message.id} message={message} />
+      ))}
+      {notification && (
+        <div className={`notification ${notification.type}`}>
+          {notification.message}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// Messages component with full type safety
+function MessageComponent({ message }: { message: ChatMessages[number] }) {
+  return (
+    <div>
+      {message.parts.map((part) => {
+        if (part.type === "text") {
+          return <p>{part.content}</p>;
+        }
+        
+        if (part.type === "tool-call") {
+          // ✅ part.name is narrowed to specific tool names
+          if (part.name === "update_ui") {
+            // ✅ part.input is typed as { message: string, type: "success" | "error" | "info" }
+            // ✅ part.output is typed as { success: boolean } | undefined
+            return (
+              <div>
+                Tool: {part.name}
+                {part.output && <span>✓ Success</span>}
+              </div>
+            );
+          }
+        }
+      })}
+    </div>
+  );
+}
+
+```
+
+## Best Practices 
+
+- **Keep client tools simple**: Since client tools run in the browser, avoid heavy compulations or large dependencies that could bload your bundle size.
+- **Handle erros gracefully**: Define clear error handling in your tool implementations and return meaningful error messages in your output schema
+- **Update UI reactively**:  Use your framework's state management to update the UI in response to tool executions
+- **Secure sensitive data**: Never store sensistive data (like API keys or personal info) in localStorage or expose it via client tools.
+- **Provide feedback** Use tools states to inform users about ongoing operations and results of client tool executions (loading spiiners, success messages, error alerts)
+- **Type everything**: Leverage Typescript and Zod schemas for full type safety from tool definitions to implementations to usage
