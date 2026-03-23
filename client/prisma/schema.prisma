@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          Int     @id @default(autoincrement())
+  name        String
+  lastName    String
+  phoneNumber String
+  bio         String?
+  sex         String?
+  image       String?
+
+  @@index([bio])
+  @@index([image])
+}
+
+model attachments {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  message_id String   @db.Uuid
+  file_url   String
+  file_name  String
+  file_size  Int?
+  mime_type  String?
+  created_at DateTime @default(now())
+  messages   messages @relation(fields: [message_id], references: [id], onDelete: Cascade)
+}
+
+model message_reads {
+  room_id              String   @db.Uuid
+  user_id              String   @db.Uuid
+  last_read_message_id String?  @db.Uuid
+  read_at              DateTime @default(now())
+  rooms                rooms    @relation(fields: [room_id], references: [id], onDelete: Cascade)
+  profiles             profiles @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([room_id, user_id])
+}
+
+model messages {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  room_id        String        @db.Uuid
+  sender_id      String?       @db.Uuid
+  content        String
+  type           String        @default("text")
+  edited_at      DateTime?
+  is_deleted     Boolean       @default(false)
+  reply_to_id    String?       @db.Uuid
+  created_at     DateTime      @default(now())
+  updated_at     DateTime
+  attachments    attachments[]
+  messages       messages?     @relation("messagesTomessages", fields: [reply_to_id], references: [id])
+  other_messages messages[]    @relation("messagesTomessages")
+  rooms          rooms         @relation(fields: [room_id], references: [id], onDelete: Cascade)
+  profiles       profiles?     @relation(fields: [sender_id], references: [id])
+
+  @@index([room_id, created_at(sort: Desc)])
+}
+
+model profiles {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String          @unique @db.Uuid
+  username      String          @unique
+  avatar_url    String?
+  bio           String?
+  is_online     Boolean         @default(false)
+  last_seen_at  DateTime?
+  created_at    DateTime        @default(now())
+  updated_at    DateTime
+  message_reads message_reads[]
+  messages      messages[]
+  users         users           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  room_members  room_members[]
+  rooms         rooms[]
+}
+
+model refresh_tokens {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id    String   @db.Uuid
+  token_hash String
+  expires_at DateTime
+  created_at DateTime @default(now())
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+}
+
+model room_members {
+  room_id   String   @db.Uuid
+  user_id   String   @db.Uuid
+  role      String   @default("member")
+  joined_at DateTime @default(now())
+  rooms     rooms    @relation(fields: [room_id], references: [id], onDelete: Cascade)
+  profiles  profiles @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([room_id, user_id])
+}
+
+model rooms {
+  id            String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String?
+  description   String?
+  is_group      Boolean         @default(false)
+  created_by    String?         @db.Uuid
+  created_at    DateTime        @default(now())
+  updated_at    DateTime
+  message_reads message_reads[]
+  messages      messages[]
+  room_members  room_members[]
+  profiles      profiles?       @relation(fields: [created_by], references: [id])
+}
+
+model users {
+  id             String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email          String           @unique
+  password_hash  String
+  created_at     DateTime         @default(now())
+  updated_at     DateTime
+  profiles       profiles?
+  refresh_tokens refresh_tokens[]
+}

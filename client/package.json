@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@prisma/adapter-pg": "^7.5.0",
+    "@prisma/client": "^7.5.0",
     "@tanstack/ai": "^0.8.1",
     "@tanstack/ai-openai": "^0.7.1",
     "@tanstack/ai-react": "^0.7.2",
@@ -22,6 +24,8 @@
     "graphql-ws": "^6.0.7",
     "lucide-react": "^0.577.0",
     "next": "16.2.0",
+    "pg": "^8.20.0",
+    "prisma": "^7.5.0",
     "radix-ui": "^1.4.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -30,6 +34,7 @@
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.5.0",
+    "three": "^0.183.2",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
@@ -40,6 +45,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.183.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.0",
     "shadcn": "^4.1.0",

@@ -334,5 +334,316 @@ function ChatComponent() {
   
   // messages is now fully typed with tool names and outputs!
   return <Messages messages={messages} />;
+} 
+```
+
+---
+
+## Tool Architecture
+
+The tanstack AI tool system provides a powerful, flexible architecture for enabling AI Agents to interact with external systems
+
+- **Server Tools** execute securely on the backend with automatic handling
+- **Client Tools**: execute in the browser for UI updates and local operations
+- **The Agentic Cycle**: enables multi-step reasoning and complex workflows
+- **Tool States** provide real-time feedback and enable robust UIs
+- **Approval Flow** gives users control over sensitive operations This architecture enables building sophisticated AI applications that can:
+  - Fetch data from APIs and databases
+  - Perform calculations and transformations 
+  - Update UIs and manage state
+  - Execute multi-step workflows
+  - Require user approval for sensitive actions
+
+
+```ts
+import { chat, toServerSentEventsResponse} from "@tanstack/ai"
+import { openaiText } from "@tanstack/ai-openai"
+import { getWeather, sendEmail } from "./tools"
+
+export async function POST(req: Request) {
+  const { messages } = await request.json()
+
+  const stream = chat({
+    adapter: openaiText("gpt-5.2"),
+    messages,
+    tools: [getWeather, sendEmail]
+  })
+
+  return toServerSendEventsResponse(stream)
 }
 ```
+
+Client (React Component)
+
+```ts
+import { useChat, fetchServerSentEvents} from "@tanstack/ai-react"
+
+function ChatCompnent() {
+  const {messages, sendMessage, isLoading} = useChat({
+    connection: fetchServerSendEvents("/api/chat")
+  })
+
+  return (
+    <div></div>
+  )
+}
+```
+
+
+Monitoring Tool States in React 
+
+```ts
+function ChatComponent() {
+  const { messages } = useChat({
+    connection: fetchServerSentEvents("/api/chat"),
+  });
+
+  return (
+    <div>
+      {messages.map((message) => (
+        <div key={message.id}>
+          {message.parts.map((part) => {
+            if (part.type === "tool-call") {
+              return (
+                <div key={part.id} className="tool-status">
+                  {/* Show state-specific UI */}
+                  {part.state === "awaiting-input" && (
+                    <div>🔄 Calling {part.name}...</div>
+                  )}
+                  {part.state === "input-streaming" && (
+                    <div>📥 Receiving arguments...</div>
+                  )}
+                  {part.state === "input-complete" && (
+                    <div>✓ Arguments ready</div>
+                  )}
+                  {part.state === "approval-requested" && (
+                    <ApprovalUI part={part} />
+                  )}
+                </div>
+              );
+            }
+            if (part.type === "tool-result") {
+              return (
+                <div key={part.toolCallId}>
+                  {part.state === "complete" && (
+                    <div>✓ Tool completed</div>
+                  )}
+                  {part.state === "error" && (
+                    <div>❌ Error: {part.error}</div>
+                  )}
+                </div>
+              );
+            }
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+
+Approval Flow 
+
+For sensitive operations, tools can require user approval before execution:
+
+```ts
+const sendEmailDef = toolDefinition({
+  name: "send_email",
+  description: "Send an email",
+  inputSchema: z.object({
+    to: z.string().email(),
+    subject: z.string(),
+    body: z.string()
+  }),
+  needsApproval: true
+})
+
+const sendEmail = sendEmailDef.service(async ({to,subject,body}) => {
+  await emailService.send({to,subject,body})
+  return [ success: true]
+})
+
+```
+
+Handle Approval in Client
+
+```ts
+const { messages, addToolApprovalResponse} = useChat({
+  connection: fetchServerSendEvents("/api/chat")
+})
+
+return (
+  {part.state === "approval-requested" && (
+  <div>
+    <p>Approve sending email to {part.arguments.to}?</p>
+    <button
+      onClick={() =>
+        addToolApprovalResponse({
+          id: part.approval.id,
+          approved: true,
+        })
+      }
+    >
+      Approve
+    </button>
+    <button
+      onClick={() =>
+        addToolApprovalResponse({
+          id: part.approval.id,
+          approved: false,
+        })
+      }
+    >
+      Deny
+    </button>
+  </div>
+)}
+)
+```
+
+## Defining Server Tools 
+
+Server tools use the isomorphic `toolDefinition()` API with the `.server()` method
+
+```ts
+import { toolDefinition } from "@tanstack/ai"
+import { z } from "zod"
+
+const getUserDataDef = toolDefinition({
+  name: "get_user_data",
+  description: "Get user information from the database",
+  inputSchema: z.object({
+    userId: z.string().description("the user id to loop up"),
+    outputSchema: z.object({
+      name: z.string(),
+      email: z.string().email(),
+      createdAt: z.string()
+    })
+  })
+})
+
+const getUserData = getUserDataDef.server(async ({userId}) => {
+  const user = await db.users.findUnique({
+    where: {
+      id: userId
+    }
+  })
+  return {
+    ..
+  }
+})
+```
+
+
+Using Server Tools 
+
+Pass tools to the chat function 
+
+
+```ts
+import { chat, toServerSentEventsResponse} from "@tanstack/ai"
+import { openaiText} from "@tanstack/ai-openai"
+import { getUserData, searchProducts } from './tools"
+
+export async function POST(request: Request) {
+  const { messages}  = await request.json()
+
+  const stream = chat({
+    adapter: openaiText('gpt-4o-mini'),
+    messages,
+    tools: [getUserData,searchProducts]
+  })
+
+  return toServerSendEventsResponse(stream)
+}
+```
+
+## Tool Organization Pattern 
+
+For better organization, define tool schemas and implementations separately 
+
+```ts
+// tools/definitions.ts
+import { toolDefinition } from "@tanstack/ai";
+import { z } from "zod";
+
+export const getUserDataDef = toolDefinition({
+  name: "get_user_data",
+  description: "Get user information",
+  inputSchema: z.object({
+    userId: z.string(),
+  }),
+  outputSchema: z.object({
+    name: z.string(),
+    email: z.string(),
+  }),
+});
+
+export const searchProductsDef = toolDefinition({
+  name: "search_products",
+  description: "Search products",
+  inputSchema: z.object({
+    query: z.string(),
+  }),
+});
+
+// tools/server.ts
+import { getUserDataDef, searchProductsDef } from "./definitions";
+import { db } from "@/lib/db";
+
+export const getUserData = getUserDataDef.server(async ({ userId }) => {
+  const user = await db.users.findUnique({ where: { id: userId } });
+  return { name: user.name, email: user.email };
+});
+
+export const searchProducts = searchProductsDef.server(async ({ query }) => {
+  const products = await db.products.search(query);
+  return products;
+});
+
+// api/chat/route.ts
+import { chat } from "@tanstack/ai";
+import { openaiText } from "@tanstack/ai-openai";
+import { getUserData, searchProducts } from "@/tools/server";
+
+const stream = chat({
+  adapter: openaiText("gpt-5.2"),
+  messages,
+  tools: [getUserData, searchProducts],
+});
+```
+
+---
+
+## Error Handling
+
+Tools should handle errors gracefully:
+
+```tsx
+const getUserDataDef = toolDefinition({
+  name: "get_user_data",
+  description: "Get user information",
+  inputSchema: z.object({
+    userId: z.string(),
+  }),
+  outputSchema: z.object({
+    name: z.string().optional(),
+    email: z.string().optional(),
+    error: z.string().optional(),
+  }),
+});
+
+const getUserData = getUserDataDef.server(async ({ userId }) => {
+  try {
+    const user = await db.users.findUnique({ where: { id: userId } });
+    if (!user) {
+      return { error: "User not found" };
+    }
+    return { name: user.name, email: user.email };
+  } catch (error) {
+    return { error: "Failed to fetch user data" };
+  }
+});
+```
+
