@@ -20,18 +20,27 @@ export const getUserData = getUserDataDef.server(async ({userId}) => {
 })
 
 export const updateUser = updateUserDef.server(async ({ userId, name, lastName, phoneNumber, bio, sex, image }) => {
+    const existingUser = await prisma.user.findUnique({
+        where: { id: Number(userId) }
+    })
+
+    if (!existingUser) {
+        throw new Error("User not found")
+    }
+
     const data: {
-        name?: string
-        lastName?: string
-        phoneNumber?: string
+        name: string
+        lastName: string
+        phoneNumber: string
         bio?: string | null
         sex?: string | null
         image?: string | null
-    } = {}
+    } = {
+        name: name ?? existingUser.name,
+        lastName: lastName ?? existingUser.lastName,
+        phoneNumber: phoneNumber ?? existingUser.phoneNumber
+    }
 
-    if (name !== undefined) data.name = name
-    if (lastName !== undefined) data.lastName = lastName
-    if (phoneNumber !== undefined) data.phoneNumber = phoneNumber
     if (bio !== undefined) data.bio = bio
     if (sex !== undefined) data.sex = sex
     if (image !== undefined) data.image = image

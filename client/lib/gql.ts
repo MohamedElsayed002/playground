@@ -1,12 +1,3 @@
-// ─────────────────────────────────────────────────────────────────
-// src/lib/gql.ts  — All GraphQL documents in one place
-// ─────────────────────────────────────────────────────────────────
-// Keeping every query/mutation/subscription string here means:
-//   • One file to update if the schema changes
-//   • Easy to see all operations the frontend uses
-// ─────────────────────────────────────────────────────────────────
-
-
 export const PROFILE_FRAGMENT = `
   fragment ProfileFields on Profile {
     id username avatar_url bio is_online last_seen_at created_at updated_at
@@ -36,7 +27,6 @@ export const GET_ALL_USERS = `
       name
       image
       lastName
-      sex
       bio
   	}
   }
@@ -50,8 +40,8 @@ export const SINGLE_USER = `
       bio
       image
       name
-      lastName
       sex
+      lastName
       phoneNumber
     }
   }

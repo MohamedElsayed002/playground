@@ -13,6 +13,8 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { useChat, fetchServerSentEvents } from "@tanstack/ai-react";
+import { ApprovalPrompt } from "./approval"
+import { Badge } from "@/components/ui/badge"
 
 const formSchema = z.object({
     message: z.string().min(3, 'Send Message not less than 3 characters')
@@ -21,7 +23,7 @@ const formSchema = z.object({
 export default function AdminPage() {
 
 
-    const { sendMessage, messages, isLoading } = useChat({
+    const { sendMessage, messages, isLoading, addToolApprovalResponse } = useChat({
         connection: fetchServerSentEvents("/api/chat")
     })
 
@@ -47,7 +49,23 @@ export default function AdminPage() {
         return text.replace(/!\[[^\]]*]\((https?:\/\/[^)]+)\)/gi, "").trim()
     }
 
+    const formatJsonLike = (value: unknown) => {
+        if (value === null || value === undefined) return "null"
+        if (typeof value === "string") {
+            try {
+                const parsed = JSON.parse(value)
+                return JSON.stringify(parsed, null, 2)
+            } catch {
+                return value
+            }
+        }
+        if (typeof value === "object") {
+            return JSON.stringify(value, null, 2)
+        }
+        return String(value)
+    }
 
+    console.log(messages)
 
     return (
         <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fde68a_0%,_#fff7ed_35%,_#eef2ff_75%,_#f8fafc_100%)]">
@@ -97,10 +115,14 @@ export default function AdminPage() {
                         </Form>
 
                         <div className="mt-6 rounded-2xl bg-slate-900/90 text-slate-100 p-4 text-sm">
-                            <p className="font-medium">Tip</p>
-                            <p className="text-slate-300 mt-1">
-                                Keep prompts short for faster responses, or add detail for richer outputs.
-                            </p>
+                            <p className="font-medium">Shortcuts</p>
+                            <div className="flex gap-3 mt-4 flex-wrap">
+                                <Badge className="bg-orange-400">Get User Data by ID</Badge>
+                                <Badge className="bg-blue-400">Update User by ID</Badge>
+                                <Badge className="bg-violet-400">Delete User</Badge>
+                                <Badge className="bg-red-400">Get Users by Name</Badge>
+                                <Badge className="bg-cyan-400">Total Users</Badge>
+                            </div>
                         </div>
                     </div>
 
@@ -123,6 +145,19 @@ export default function AdminPage() {
 
                                     <div>
                                         {message.parts.map((part, idx) => {
+                                            if (part.type === 'tool-call' && part.state === 'approval-requested' && part.approval) {
+                                                return <ApprovalPrompt
+                                                    part={part}
+                                                    onApprove={() => addToolApprovalResponse({
+                                                        id: part.approval!.id,
+                                                        approved: true
+                                                    })}
+                                                    onDeny={() => addToolApprovalResponse({
+                                                        id: part.approval!.id,
+                                                        approved: false
+                                                    })}
+                                                />
+                                            }
                                             if (part.type === "thinking") {
                                                 return (
                                                     <div
@@ -166,8 +201,39 @@ export default function AdminPage() {
                                                         key={idx}
                                                         className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 overflow-x-auto"
                                                     >
-                                                        {JSON.stringify(part.result, null, 2)}
+                                                        {formatJsonLike((part as { content?: unknown; result?: unknown }).content ?? (part as { result?: unknown }).result)}
                                                     </pre>
+                                                )
+                                            }
+                                            if (part.type === "tool-call") {
+                                                const toolCall = part as {
+                                                    name?: string
+                                                    arguments?: string
+                                                    output?: unknown
+                                                    state?: string
+                                                }
+                                                return (
+                                                    <div
+                                                        key={idx}
+                                                        className="mt-2 rounded-xl border border-slate-200 bg-white/80 p-3 text-xs text-slate-700"
+                                                    >
+                                                        <div className="font-semibold text-slate-900">
+                                                            Tool Call: {toolCall.name ?? "unknown"}
+                                                        </div>
+                                                        {toolCall.state && (
+                                                            <div className="text-slate-500">State: {toolCall.state}</div>
+                                                        )}
+                                                        {toolCall.arguments && (
+                                                            <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-slate-50 p-2">
+                                                                {formatJsonLike(toolCall.arguments)}
+                                                            </pre>
+                                                        )}
+                                                        {toolCall.output !== undefined && (
+                                                            <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-slate-50 p-2">
+                                                                {formatJsonLike(toolCall.output)}
+                                                            </pre>
+                                                        )}
+                                                    </div>
                                                 )
                                             }
                                             return null;
@@ -175,7 +241,7 @@ export default function AdminPage() {
                                     </div>
                                 </div>
                             ))}
-
+                            {/* {JSON.stringify(messages,null,2)} */}
                         </div>
                     </div>
                 </div>

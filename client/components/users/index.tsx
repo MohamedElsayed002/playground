@@ -7,7 +7,6 @@ import { columns } from "./columns";
 
 export default function Users() {
     const { data: users, isLoading, error} = useUsers()
-
     if(isLoading) {
         return (
             <div className='max-w-7xl mx-auto my-20'>

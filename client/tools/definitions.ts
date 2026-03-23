@@ -36,10 +36,10 @@ export const updateUserDef = toolDefinition({
         userId: z.number().describe("The user id"),
         name: z.string().optional(),
         lastName: z.string().optional(),
-        phoneNumber: z.string().optional(),
-        bio: z.string().optional(),
-        sex: z.string().optional(),
-        image: z.string().optional()
+        phoneNumber: z.string().nullable().optional(),
+        bio: z.string().nullable().optional(),
+        sex: z.string().nullable().optional(),
+        image: z.string().nullable().optional()
     }),
     outputSchema: z.object({
         userId: z.number().optional(),
@@ -85,3 +85,4 @@ export const getUsersByNameDef = toolDefinition({
         )
     })
 })
+
