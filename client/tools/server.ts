@@ -80,7 +80,7 @@ export const getUsersByName = getUsersByNameDef.server(async ({ name, limit }) =
                 mode: "insensitive"
             }
         },
-        take: limit ?? 5
+        take: Number(limit) ?? 5
     })
 
     return {
@@ -96,7 +96,7 @@ export const getUsersByName = getUsersByNameDef.server(async ({ name, limit }) =
 })
 
 
-export const getTotalUsers = getUsersCountDef.server(async ({message}) => {
+export const getTotalUsers = getUsersCountDef.server(async () => {
     const usersCount = await prisma.user.count()
     return {
         count: usersCount

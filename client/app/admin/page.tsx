@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -12,9 +13,14 @@ import {
     FormItem,
     FormMessage,
 } from "@/components/ui/form"
-import { useChat, fetchServerSentEvents } from "@tanstack/ai-react";
+import { useChat, fetchServerSentEvents, useRealtimeChat } from "@tanstack/ai-react";
 import { ApprovalPrompt } from "./approval"
 import { Badge } from "@/components/ui/badge"
+
+import { useRef } from "react"
+import { useHotkey } from '@tanstack/react-hotkeys'
+import { openaiRealtime } from "@tanstack/ai-openai"
+import { getSingleUserClient, getTotalUsersClient } from "@/tools/client"
 
 const formSchema = z.object({
     message: z.string().min(3, 'Send Message not less than 3 characters')
@@ -22,10 +28,31 @@ const formSchema = z.object({
 
 export default function AdminPage() {
 
+    const inputRef = useRef<HTMLInputElement | null>(null)
 
     const { sendMessage, messages, isLoading, addToolApprovalResponse } = useChat({
         connection: fetchServerSentEvents("/api/chat")
     })
+
+    const {
+        status,
+        mode,
+        messages: messagesRealtime,
+        connect,
+        disconnect,
+        pendingUserTranscript,
+        pendingAssistantTranscript,
+    } = useRealtimeChat({
+        getToken: () => fetch('/api/realtime-chat', {
+            method: 'POST'
+        }).then((r) => r.json()),
+        adapter: openaiRealtime(),
+        instructions: 'You are helpful voice assistant',
+        voice: 'ash',
+        tools: [getTotalUsersClient,getSingleUserClient]
+    })
+
+
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -33,6 +60,23 @@ export default function AdminPage() {
             message: ""
         }
     })
+
+    const applyShortcutMessage = (text: string) => {
+        form.setValue("message", text, { shouldDirty: true, shouldValidate: true })
+        form.setFocus("message")
+        requestAnimationFrame(() => {
+            const el = inputRef.current
+            if (!el) return
+            const cursor = text.length
+            el.setSelectionRange(cursor, cursor)
+        })
+    }
+
+    useHotkey('Control+D', () => applyShortcutMessage("Get user data by id: "))
+    useHotkey('Control+U', () => applyShortcutMessage("Update user by id: "))
+    useHotkey('Control+Shift+D', () => applyShortcutMessage("Delete user by id: "))
+    useHotkey('Control+K', () => applyShortcutMessage("Get users by name: "))
+    useHotkey('Control+O', () => applyShortcutMessage("Total users"))
 
 
     const handleSubmit = (values: z.infer<typeof formSchema>) => {
@@ -65,10 +109,29 @@ export default function AdminPage() {
         return String(value)
     }
 
-    console.log(messages)
 
     return (
         <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fde68a_0%,_#fff7ed_35%,_#eef2ff_75%,_#f8fafc_100%)]">
+            <div>
+                <p>Status: {status}</p>
+                <p>Mode: {mode}</p>
+                <button onClick={status === 'idle' ? connect : disconnect}>
+                    {status === 'idle' ? 'Start Conversation' : 'End Conversation'}
+                </button>
+                {pendingUserTranscript && <p>You: {pendingUserTranscript}...</p>}
+                {pendingAssistantTranscript && <p>AI: {pendingAssistantTranscript}...</p>}
+                {messagesRealtime.map((msg) => (
+                    <div key={msg.id}>
+                        <strong>{msg.role}:</strong>
+                        {msg.parts.map((part, i) => (
+                            <span key={i}>
+                                {part.type === 'text' ? part.content : null}
+                                {part.type === 'audio' ? part.transcript : null}
+                            </span>
+                        ))}
+                    </div>
+                ))}
+            </div>
             <div className="max-w-6xl mx-auto px-6 py-16">
                 <div className="flex flex-col gap-3">
                     <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Admin Console</p>
@@ -97,6 +160,7 @@ export default function AdminPage() {
                                                     type='text'
                                                     placeholder="Type your message..."
                                                     className="h-12 rounded-2xl border-slate-200 bg-white/90 text-slate-900 shadow-sm focus-visible:ring-slate-400"
+                                                    ref={inputRef}
                                                     {...field}
                                                 />
                                             </FormControl>
@@ -117,11 +181,11 @@ export default function AdminPage() {
                         <div className="mt-6 rounded-2xl bg-slate-900/90 text-slate-100 p-4 text-sm">
                             <p className="font-medium">Shortcuts</p>
                             <div className="flex gap-3 mt-4 flex-wrap">
-                                <Badge className="bg-orange-400">Get User Data by ID</Badge>
-                                <Badge className="bg-blue-400">Update User by ID</Badge>
-                                <Badge className="bg-violet-400">Delete User</Badge>
-                                <Badge className="bg-red-400">Get Users by Name</Badge>
-                                <Badge className="bg-cyan-400">Total Users</Badge>
+                                <Badge className="bg-orange-400">Get User Data by ID (Ctrl+D)</Badge>
+                                <Badge className="bg-blue-400">Update User by ID (Ctrl+U)</Badge>
+                                <Badge className="bg-violet-400">Delete User (Ctrl+Shift+D)</Badge>
+                                <Badge className="bg-red-400">Get Users by Name (Ctrl+K)</Badge>
+                                <Badge className="bg-cyan-400">Total Users (Ctrl+O)</Badge>
                             </div>
                         </div>
                     </div>
@@ -147,6 +211,7 @@ export default function AdminPage() {
                                         {message.parts.map((part, idx) => {
                                             if (part.type === 'tool-call' && part.state === 'approval-requested' && part.approval) {
                                                 return <ApprovalPrompt
+                                                    key={part.id}
                                                     part={part}
                                                     onApprove={() => addToolApprovalResponse({
                                                         id: part.approval!.id,
@@ -241,7 +306,6 @@ export default function AdminPage() {
                                     </div>
                                 </div>
                             ))}
-                            {/* {JSON.stringify(messages,null,2)} */}
                         </div>
                     </div>
                 </div>
