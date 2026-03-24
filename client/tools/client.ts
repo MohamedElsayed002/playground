@@ -1,4 +1,4 @@
-import { getUserDataDef, getUsersCountDef } from "./definitions"
+import { getAllUsersDef, getUserDataDef, getUsersCountDef, sendEmailDef } from "./definitions"
 
 
 
@@ -12,7 +12,6 @@ export const getTotalUsersClient = getUsersCountDef.client(async () => {
 
 
 export const getSingleUserClient = getUserDataDef.client(async ({ userId }) => {
-    console.log('useridddd',userId)
     const res = await fetch('/api/single-user', {
         method: 'POST',
         headers: {
@@ -23,4 +22,43 @@ export const getSingleUserClient = getUserDataDef.client(async ({ userId }) => {
 
     const data = await res.json()
     return data.user
+})
+
+
+export const getAllUsersClient = getAllUsersDef.client(async ({query}: {query: string}) => {
+    const res = await fetch('/api/all-users',{
+        method: 'POST',
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({query})
+    })
+    const data = await res.json()
+    console.log(data)
+    return data.users
+})
+
+
+export const sendEmailClient = sendEmailDef.client(async ({to,subject,text,html,query}) => {
+    const res = await fetch("/api/send-email",{
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            to,
+            subject,
+            text,
+            html,
+            query
+        })
+    })
+
+    if(!res.ok) {
+        const error = await res.json()
+        throw new Error(error || "Failed to send email")
+    }
+
+    const data = await res.json()
+    return data
 })
