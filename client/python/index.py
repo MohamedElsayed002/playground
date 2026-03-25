@@ -1,7 +1,3 @@
-"""
-FastAPI server example for TanStack AI
-Streams OpenAI API events in SSE format compatible with TanStack AI client
-"""
 import os
 import logging
 from typing import List, Dict, Any, Optional

@@ -3,4 +3,5 @@ uvicorn[standard]==0.38.0
 openai==2.14.0
 pydantic==2.12.5
 python-dotenv==1.2.1
+python-socketio[asgi]==5.11.2
 -e ../../packages/python/tanstack-ai

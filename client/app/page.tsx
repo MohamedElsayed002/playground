@@ -5,10 +5,10 @@ import { getSession } from '@/actions/auth.actions';
 import Basketball from '@/components/ball';
 
 export default async function RootPage() {
-
-  const data = await fetch('http://localhost:8000/health')
-  const res = await data.json()
-  console.log('backend', res)
+// 
+  // const data = await fetch('http://localhost:8000/health').catch(() => {})
+  // const res = await data.json()
+  // console.log('backend', res)
 
   return <Basketball/>
   const session = await getSession();

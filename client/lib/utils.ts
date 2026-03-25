@@ -23,3 +23,20 @@ export function formatMessageTime(iso: string): string {
   return date.toLocaleDateString([], { day: 'numeric', month: 'short' });
 }
  
+
+export const extractImageUrl = (text: string) => {
+  const match = text.match(/!\[[^\]]*]\((https?:\/\/[^)]+)\)/i)
+  return match ? match[1] : null
+}
+
+export const stripMarkdownImage = (text: string) =>
+  text.replace(/!\[[^\]]*]\((https?:\/\/[^)]+)\)/gi, "").trim()
+
+export const formatJsonLike = (value: unknown) => {
+  if (value === null || value === undefined) return "null"
+  if (typeof value === "string") {
+      try { return JSON.stringify(JSON.parse(value), null, 2) } catch { return value }
+  }
+  if (typeof value === "object") return JSON.stringify(value, null, 2)
+  return String(value)
+}
