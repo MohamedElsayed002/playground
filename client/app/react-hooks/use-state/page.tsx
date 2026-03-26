@@ -17,6 +17,12 @@ export default function Page() {
         email: '',
         password: ''
     })
+    const [selectedOptions,setSelectedOption] = useState('react')
+
+    const handleChange = (e) => {
+        e.preventDefault()
+        setUserInfo({...userInfo,[e.target.name]: e.target.value})
+    }
 
     const removeItem = (id: number) => {
         const filteredData = data.filter((item) => item.id !== id)
@@ -62,10 +68,14 @@ export default function Page() {
                             value={userInfo.name}
                             onChange={(e) => setUserInfo((prev) => ({ ...prev, name: e.target.value }))}
                             tabIndex={1}
+                            name="name"
+                            type="text"
                             autoFocus={true}
                         />
                         <input
                             value={userInfo.email}
+                            name="email"
+                            type="email"
                             onChange={(e) => setUserInfo((prev) => ({ ...prev, email: e.target.value }))}
                             tabIndex={2}
                        />
@@ -73,12 +83,19 @@ export default function Page() {
                         <input
                             value={userInfo.password}
                             onChange={(e) => setUserInfo((prev) => ({ ...prev, password: e.target.value }))}
+                            name="password"
+                            type="password"
                             tabIndex={4}
                         />
                         <button aria-label="submit-button" tabIndex={3} type='submit' onClick={handleSubmit}>
                             Submit
                         </button>
                     </form>
+                    <select value={selectedOptions} onChange={(e) => setSelectedOption(e.target.value)}>
+                            <option value='react'>React</option>
+                            <option value='angular'>Angular</option>
+                            <option value='vuejs'>Vuejss</option>
+                        </select>
                 </div>
             </div>
         </div>
