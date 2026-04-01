@@ -4,15 +4,15 @@ import { useState } from "react"
 import { useRooms } from "@/hooks/use-rooms"
 import { useAuthStore } from "@/store/auth.store"
 import { useLogout } from "@/hooks/use-auth"
-import { Avatar } from "../user/avatar"
+import { Avatar } from "../users/avatar"
 import { RoomItem } from "./room-item"
 import { CreateRoomModal } from "./create-room-modal"
 
 export function RoomList() {
-    const { data: rooms, isLoading} = useRooms()
+    const { data: rooms, isLoading } = useRooms()
     const profile = useAuthStore((s) => s.profile)
     const logout = useLogout()
-    const [showCreate,setShowCreate] = useState(false)
+    const [showCreate, setShowCreate] = useState(false)
 
     return (
         <aside className="w-64 flex flex-col border-r bg-white">
@@ -30,7 +30,7 @@ export function RoomList() {
             {/* Room List */}
             <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
                 {isLoading && (
-                    [...Array(5)].map((_,i) => (
+                    [...Array(5)].map((_, i) => (
                         <div key={i} className="h-9 rounded-lg bg-gray-100 animate-pulse mx-1" />
                     ))
                 )}
@@ -46,7 +46,7 @@ export function RoomList() {
 
             {/* Current user footer */}
             <div className="border-t px-3 py-2 flex items-center gap-2">
-                <Avatar 
+                <Avatar
                     username={profile?.username ?? '?'}
                     avatarUrl={profile?.avatarUrl}
                     isOnline={true}

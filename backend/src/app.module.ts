@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
-// GraphQL 
 import { GraphQLModule } from '@nestjs/graphql'
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
@@ -13,6 +12,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import { AiAgentModule } from './ai-agent/ai-agent.module';
 
 
 
@@ -34,6 +34,7 @@ import { AuthModule } from './auth/auth.module';
     PrismaModule,
     UserModule,
     ProductsModule,
+    AiAgentModule,
     ChatModule,
     AuthModule,
   ],

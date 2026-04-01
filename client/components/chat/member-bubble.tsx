@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from "react"
-import { Avatar } from "../user/avatar"
+import { Avatar } from "../users/avatar"
 import { useAuthStore } from "@/store/auth.store"
 import { useEditMessage, useDeleteMessage } from "@/hooks/use-messages"
 import { formatMessageTime } from "@/lib/utils"
@@ -98,7 +98,7 @@ export function MessageBubble({ message, roomId }: MessageBubbleProps) {
                         <div
                             className={cn("px-3 py-2 rounded-2xl text-sm leading-relaxed break-words",
                                 isOwn ? 'bg-blue-600 text-white rounded-tr-sm' :
-                                'bg-white border text-gray-800 rounded-tl-sm shadow-sm'
+                                    'bg-white border text-gray-800 rounded-tl-sm shadow-sm'
                             )}
                         >
                             {message.content}
@@ -124,39 +124,39 @@ export function MessageBubble({ message, roomId }: MessageBubbleProps) {
                 )}
             </div>
 
-                {/* Context menu - only for own messages */}
-                {isOwn && !editing && (
-                    <div className="relative opacity-0 group-hover:opacity-100 transition-opacity self-center">
-                        <button
-                            onClick={() => setMenuOpen((v) => !v)}
-                            className="text-gray-400 hover:text-gray-600 px-1 text-sm"
-                        >
-                            ···
-                        </button>
-                        {menuOpen && (
-                            <div className="absolute right-0 bottom-full mb-1 bg-white border rounded-lg shadow-lg text-sm z-10 min-w-[100px]">
-                                <button
-                                    className="block w-full text-left px-3 py-1.5 hover:bg-gray-50"
-                                    onClick={() => {
-                                        setEditing(true);
-                                        setMenuOpen(false)
-                                    }}
-                                >
-                                    Edit
-                                </button>
-                                <button
-                                    className="block w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-600"
-                                    onClick={() => {
-                                        deleteMsg.mutate(message.id);
-                                        setMenuOpen(false)
-                                    }}
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
+            {/* Context menu - only for own messages */}
+            {isOwn && !editing && (
+                <div className="relative opacity-0 group-hover:opacity-100 transition-opacity self-center">
+                    <button
+                        onClick={() => setMenuOpen((v) => !v)}
+                        className="text-gray-400 hover:text-gray-600 px-1 text-sm"
+                    >
+                        ···
+                    </button>
+                    {menuOpen && (
+                        <div className="absolute right-0 bottom-full mb-1 bg-white border rounded-lg shadow-lg text-sm z-10 min-w-[100px]">
+                            <button
+                                className="block w-full text-left px-3 py-1.5 hover:bg-gray-50"
+                                onClick={() => {
+                                    setEditing(true);
+                                    setMenuOpen(false)
+                                }}
+                            >
+                                Edit
+                            </button>
+                            <button
+                                className="block w-full text-left px-3 py-1.5 hover:bg-red-50 text-red-600"
+                                onClick={() => {
+                                    deleteMsg.mutate(message.id);
+                                    setMenuOpen(false)
+                                }}
+                            >
+                                Delete
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
 
         </div>
     )

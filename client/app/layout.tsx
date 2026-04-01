@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Provider from "@/providers";
+import BackgroundBeamsDemo from "@/components/layouts/beams";
 
 
 const geistSans = Geist({
@@ -32,6 +33,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <Provider>
           {children}
+          {/* <BackgroundBeamsDemo/> */}
         </Provider>
       </body>
     </html>
