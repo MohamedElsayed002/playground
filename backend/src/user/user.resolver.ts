@@ -4,9 +4,7 @@ import { User, UserData, UserRemoved, Users } from './entities/user.entity';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
 
-
 @Resolver(() => User)
-
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
 
@@ -37,14 +35,13 @@ export class UserResolver {
   //   return this.userService.remove(id);
   // }
 
-
-  @Query(() => UserData,{name: 'allUsers'})
+  @Query(() => UserData, { name: 'allUsers' })
   allUsersFake() {
-    return this.userService.findAllFakeUsers()
+    return this.userService.findAllFakeUsers();
   }
 
-  @Query(() => User, {name: 'SingleUserFake'})
-  singleUser(@Args('id',{type: () => ID}) id: string) {
-    return this.userService.findSingleUser(id)
+  @Query(() => User, { name: 'SingleUserFake' })
+  singleUser(@Args('id', { type: () => ID }) id: string) {
+    return this.userService.findSingleUser(id);
   }
 }

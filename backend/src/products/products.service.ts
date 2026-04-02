@@ -5,7 +5,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ProductsService {
-
   constructor(private prisma: PrismaService) {}
 
   create(createProductDto: CreateProductDto) {
@@ -14,7 +13,7 @@ export class ProductsService {
   }
 
   findAll() {
-    return this.prisma.user.findMany({take: 5})
+    return this.prisma.user.findMany({ take: 5 });
   }
 
   findOne(id: number) {

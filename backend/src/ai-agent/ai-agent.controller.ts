@@ -7,6 +7,6 @@ export class AiAgentController {
 
   @Post('')
   runAgent(@Body() body: { prompt: string }) {
-    return this.aiAgentService.runAgent(body.prompt)
+    return this.aiAgentService.runAgent(body.prompt);
   }
 }

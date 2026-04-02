@@ -4,13 +4,26 @@ import {
   ForbiddenException,
   Injectable,
   Logger,
-  NotFoundException
-} from "@nestjs/common"
-import { Prisma } from "@prisma/client";
-import { PrismaService } from "src/prisma/prisma.service";
-import { CreateRoomInput, EditMessageInput, GetMessagesInput, MarkReadInput, SendMessageInput } from "./dto/chat.dto";
-import { Attachment, Message, MessageRead, Profile, Room, RoomMember } from "./chat.model";
-import { Chat } from "./entities/chat.entity";
+  NotFoundException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
+import {
+  CreateRoomInput,
+  EditMessageInput,
+  GetMessagesInput,
+  MarkReadInput,
+  SendMessageInput,
+} from './dto/chat.dto';
+import {
+  Attachment,
+  Message,
+  MessageRead,
+  Profile,
+  Room,
+  RoomMember,
+} from './chat.model';
+import { Chat } from './entities/chat.entity';
 
 const MESSAGE_INCLUDE: Prisma.MessageInclude = {
   sender: {
@@ -21,8 +34,8 @@ const MESSAGE_INCLUDE: Prisma.MessageInclude = {
       isOnline: true,
       lastSeenAt: true,
       createdAt: true,
-      updatedAt: true
-    }
+      updatedAt: true,
+    },
   },
   attachments: true,
   replyTo: {
@@ -35,81 +48,91 @@ const MESSAGE_INCLUDE: Prisma.MessageInclude = {
           isOnline: true,
           lastSeenAt: true,
           createdAt: true,
-          updatedAt: true
-        }
-      }
-    }
-  }
-}
-
+          updatedAt: true,
+        },
+      },
+    },
+  },
+};
 
 @Injectable()
 export class ChatService {
-  private readonly logger = new Logger(ChatService.name)
+  private readonly logger = new Logger(ChatService.name);
 
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async getProfile(userId: string): Promise<Profile> {
-    const row = await this.prisma.profile.findUnique({ where: { id: userId } })
-    if (!row) throw new NotFoundException(`Profile ${userId} not found`)
-    return this.toProfile(row)
+    const row = await this.prisma.profile.findUnique({ where: { id: userId } });
+    if (!row) throw new NotFoundException(`Profile ${userId} not found`);
+    return this.toProfile(row);
   }
-
 
   async setOnlineStatus(userId: string, isOnline: boolean): Promise<void> {
     await this.prisma.profile.update({
       where: { id: userId },
       data: {
-        isOnline, ...(isOnline === false && { lastSeenAt: new Date() })
-      }
-    })
+        isOnline,
+        ...(isOnline === false && { lastSeenAt: new Date() }),
+      },
+    });
   }
 
   async createRoom(input: CreateRoomInput): Promise<Room> {
-    const rawMemberIds = (input.member_ids ?? []).map((id) => id.trim()).filter(Boolean)
-    const uniqueRawMemberIds = Array.from(new Set(rawMemberIds))
-    const allIds = Array.from(new Set([...uniqueRawMemberIds, input.created_by]))
+    const rawMemberIds = (input.member_ids ?? [])
+      .map((id) => id.trim())
+      .filter(Boolean);
+    const uniqueRawMemberIds = Array.from(new Set(rawMemberIds));
+    const allIds = Array.from(
+      new Set([...uniqueRawMemberIds, input.created_by]),
+    );
 
     const profiles = await this.prisma.profile.findMany({
       where: {
-        OR: [
-          { id: { in: allIds } },
-          { userId: { in: allIds } },
-        ]
+        OR: [{ id: { in: allIds } }, { userId: { in: allIds } }],
       },
-      select: { id: true, userId: true }
-    })
+      select: { id: true, userId: true },
+    });
 
-    const idToProfileId = new Map<string, string>()
+    const idToProfileId = new Map<string, string>();
     for (const p of profiles) {
-      idToProfileId.set(p.id, p.id)
-      idToProfileId.set(p.userId, p.id)
+      idToProfileId.set(p.id, p.id);
+      idToProfileId.set(p.userId, p.id);
     }
 
-    const missing = allIds.filter((id) => !idToProfileId.has(id))
+    const missing = allIds.filter((id) => !idToProfileId.has(id));
     if (missing.length > 0) {
-      throw new BadRequestException(`Invalid member ids: ${missing.join(', ')}`)
+      throw new BadRequestException(
+        `Invalid member ids: ${missing.join(', ')}`,
+      );
     }
 
-    const createdById = idToProfileId.get(input.created_by)!
-    const memberProfileIds = uniqueRawMemberIds.map((id) => idToProfileId.get(id)!)
+    const createdById = idToProfileId.get(input.created_by)!;
+    const memberProfileIds = uniqueRawMemberIds.map(
+      (id) => idToProfileId.get(id)!,
+    );
     if (!memberProfileIds.includes(createdById)) {
-      memberProfileIds.push(createdById)
+      memberProfileIds.push(createdById);
     }
-    const uniqueMemberProfileIds = Array.from(new Set(memberProfileIds))
+    const uniqueMemberProfileIds = Array.from(new Set(memberProfileIds));
 
     // Direct message guardrails: must be exactly two distinct users
     if (!input.is_group) {
       if (uniqueMemberProfileIds.length < 2) {
-        throw new BadRequestException('Direct message must include another user')
+        throw new BadRequestException(
+          'Direct message must include another user',
+        );
       }
       if (uniqueMemberProfileIds.length > 2) {
-        throw new BadRequestException('Direct message can only include two users')
+        throw new BadRequestException(
+          'Direct message can only include two users',
+        );
       }
 
-      const otherId = uniqueMemberProfileIds.find((id) => id !== createdById)
+      const otherId = uniqueMemberProfileIds.find((id) => id !== createdById);
       if (!otherId) {
-        throw new BadRequestException('You cannot create a direct message with yourself')
+        throw new BadRequestException(
+          'You cannot create a direct message with yourself',
+        );
       }
 
       // Check if a DM between these two users already exists
@@ -122,12 +145,12 @@ export class ChatService {
             { members: { every: { userId: { in: uniqueMemberProfileIds } } } },
           ],
         },
-        include: { members: { select: { userId: true } } }
-      })
+        include: { members: { select: { userId: true } } },
+      });
 
-      const existing = candidates.find((r) => r.members.length === 2)
+      const existing = candidates.find((r) => r.members.length === 2);
       if (existing) {
-        return this.toRoom(existing)
+        return this.toRoom(existing);
       }
     }
 
@@ -141,40 +164,39 @@ export class ChatService {
           createMany: {
             data: uniqueMemberProfileIds.map((profileId) => ({
               userId: profileId,
-              role: profileId === createdById ? 'admin' : 'member'
+              role: profileId === createdById ? 'admin' : 'member',
             })),
           },
-        }
-      }
-    })
+        },
+      },
+    });
 
-
-    this.logger.log(`Room created: ${room.id}`)
-    return this.toRoom(room)
+    this.logger.log(`Room created: ${room.id}`);
+    return this.toRoom(room);
   }
 
   async getRoom(roomId: string): Promise<Room> {
-    const row = await this.prisma.room.findUnique({ where: { id: roomId } })
-    if (!row) throw new NotFoundException(`Room ${roomId} not found`)
-    return this.toRoom(row)
+    const row = await this.prisma.room.findUnique({ where: { id: roomId } });
+    if (!row) throw new NotFoundException(`Room ${roomId} not found`);
+    return this.toRoom(row);
   }
 
   async getRoomsForUser(userId: string): Promise<Room[]> {
     const rows = await this.prisma.room.findMany({
       where: {
-        members: { some: { userId } }
+        members: { some: { userId } },
       },
       orderBy: {
-        updatedAt: 'desc'
-      }
-    })
-    return rows.map((r) => this.toRoom(r))
+        updatedAt: 'desc',
+      },
+    });
+    return rows.map((r) => this.toRoom(r));
   }
 
   async getRoomMembers(roomId: string): Promise<RoomMember[]> {
     const rows = await this.prisma.roomMember.findMany({
       where: {
-        roomId
+        roomId,
       },
       include: {
         user: {
@@ -185,33 +207,34 @@ export class ChatService {
             isOnline: true,
             lastSeenAt: true,
             createdAt: true,
-            updatedAt: true
-          }
-        }
-      }
-    })
+            updatedAt: true,
+          },
+        },
+      },
+    });
 
     return rows.map((m) => ({
       room_id: m.roomId,
       user_id: m.userId,
       role: m.role,
       joined_at: m.joinedAt.toISOString(),
-      profile: m.user ? this.toProfile(m.user) : undefined
-    }))
+      profile: m.user ? this.toProfile(m.user) : undefined,
+    }));
   }
 
-  // Messages 
+  // Messages
   async saveMessage(input: SendMessageInput): Promise<Message> {
     const membership = await this.prisma.roomMember.findUnique({
       where: {
         roomId_userId: {
           roomId: input.room_id,
-          userId: input.sender_id
-        }
-      }
-    })
+          userId: input.sender_id,
+        },
+      },
+    });
 
-    if (!membership) throw new ForbiddenException('User is not a member of this room')
+    if (!membership)
+      throw new ForbiddenException('User is not a member of this room');
 
     const [message] = await this.prisma.$transaction([
       this.prisma.message.create({
@@ -220,149 +243,193 @@ export class ChatService {
           senderId: input.sender_id,
           content: input.content,
           type: input.type ?? 'text',
-          replyToId: input.reply_to_id ?? null
+          replyToId: input.reply_to_id ?? null,
         },
-        include: MESSAGE_INCLUDE
+        include: MESSAGE_INCLUDE,
       }),
       this.prisma.room.update({
         where: {
-          id: input.room_id
+          id: input.room_id,
         },
         data: {
-          updatedAt: new Date()
-        }
-      })
-    ])
+          updatedAt: new Date(),
+        },
+      }),
+    ]);
 
-    return this.toMessage(message)
+    return this.toMessage(message);
   }
 
-  async editMessage(input: EditMessageInput, requestingUserId: string): Promise<Message> {
+  async editMessage(
+    input: EditMessageInput,
+    requestingUserId: string,
+  ): Promise<Message> {
     const existing = await this.prisma.message.findUnique({
       where: {
-        id: input.message_id
+        id: input.message_id,
       },
       select: {
         senderId: true,
-        isDeleted: true
-      }
-    })
-    if (!existing) throw new NotFoundException('Message not found')
-    if (existing.isDeleted) throw new BadRequestException('Cannot edit a delete message')
-    if (existing.senderId !== requestingUserId) throw new ForbiddenException('You can only edit your own messages')
+        isDeleted: true,
+      },
+    });
+    if (!existing) throw new NotFoundException('Message not found');
+    if (existing.isDeleted)
+      throw new BadRequestException('Cannot edit a delete message');
+    if (existing.senderId !== requestingUserId)
+      throw new ForbiddenException('You can only edit your own messages');
 
     const updated = await this.prisma.message.update({
       where: {
-        id: input.message_id
+        id: input.message_id,
       },
       data: {
         content: input.content,
-        editedAt: new Date()
+        editedAt: new Date(),
       },
-      include: MESSAGE_INCLUDE
-    })
-    return this.toMessage(updated)
+      include: MESSAGE_INCLUDE,
+    });
+    return this.toMessage(updated);
   }
 
-  async deleteMessage(messageId: string, requestingUserId: string): Promise<Message> {
+  async deleteMessage(
+    messageId: string,
+    requestingUserId: string,
+  ): Promise<Message> {
     const existing = await this.prisma.message.findUnique({
       where: {
-        id: messageId
+        id: messageId,
       },
       select: {
-        senderId: true
-      }
-    })
+        senderId: true,
+      },
+    });
 
-    if (!existing) throw new NotFoundException('Message not found')
-    if (existing.senderId !== requestingUserId) throw new ForbiddenException('You can only delete you own messages')
+    if (!existing) throw new NotFoundException('Message not found');
+    if (existing.senderId !== requestingUserId)
+      throw new ForbiddenException('You can only delete you own messages');
 
     const deleted = await this.prisma.message.update({
       where: {
-        id: messageId
+        id: messageId,
       },
       data: {
         isDeleted: true,
         content: '',
-        editedAt: null
+        editedAt: null,
       },
-      include: MESSAGE_INCLUDE
-    })
-    return this.toMessage(deleted)
+      include: MESSAGE_INCLUDE,
+    });
+    return this.toMessage(deleted);
   }
 
   async getMessages(input: GetMessagesInput): Promise<Message[]> {
-    const limit = Math.min(input.limit ?? 30, 100)
+    const limit = Math.min(input.limit ?? 30, 100);
     const rows = await this.prisma.message.findMany({
       where: {
         roomId: input.room_id,
         ...(input.before && {
           createdAt: {
-            lt: new Date(input.before)
-          }
-        })
+            lt: new Date(input.before),
+          },
+        }),
       },
       orderBy: {
         createdAt: 'desc',
       },
       take: limit,
-      include: MESSAGE_INCLUDE
-    })
-    return rows.map((m) => this.toMessage(m))
+      include: MESSAGE_INCLUDE,
+    });
+    return rows.map((m) => this.toMessage(m));
   }
 
   async getMessage(messageId: string): Promise<Message> {
     const row = await this.prisma.message.findUnique({
       where: {
-        id: messageId
+        id: messageId,
       },
-      include: MESSAGE_INCLUDE
-    })
-    if (!row) throw new NotFoundException(`Message ${messageId} not found`)
-    return this.toMessage(row)
+      include: MESSAGE_INCLUDE,
+    });
+    if (!row) throw new NotFoundException(`Message ${messageId} not found`);
+    return this.toMessage(row);
   }
 
   // Read receipts
 
   async markRead(input: MarkReadInput): Promise<MessageRead> {
-    const now = new Date()
+    const now = new Date();
     const row = await this.prisma.messageRead.upsert({
       where: {
-        roomId_userId: { roomId: input.room_id, userId: input.user_id }
+        roomId_userId: { roomId: input.room_id, userId: input.user_id },
       },
       create: {
         roomId: input.room_id,
         userId: input.user_id,
         lastReadMessageId: input.message_id,
-        readAt: now
+        readAt: now,
       },
       update: {
         lastReadMessageId: input.message_id,
-        readAt: now
-      }
-    })
+        readAt: now,
+      },
+    });
     return {
       room_id: row.roomId,
       user_id: row.userId,
       last_read_message_id: row.lastReadMessageId ?? undefined,
-      read_at: row.readAt.toISOString()
-    }
+      read_at: row.readAt.toISOString(),
+    };
   }
 
-
   private toProfile(p: any): Profile {
-    return { id: p.id, username: p.username, avatar_url: p.avatarUrl ?? undefined, bio: p.bio ?? undefined, is_online: p.isOnline, last_seen_at: p.lastSeenAt?.toISOString(), created_at: p.createdAt?.toISOString() ?? '', updated_at: p.updatedAt?.toISOString() ?? '' };
+    return {
+      id: p.id,
+      username: p.username,
+      avatar_url: p.avatarUrl ?? undefined,
+      bio: p.bio ?? undefined,
+      is_online: p.isOnline,
+      last_seen_at: p.lastSeenAt?.toISOString(),
+      created_at: p.createdAt?.toISOString() ?? '',
+      updated_at: p.updatedAt?.toISOString() ?? '',
+    };
   }
 
   private toRoom(r: any): Room {
-    return { id: r.id, name: r.name ?? undefined, description: r.description ?? undefined, is_group: r.isGroup, created_by: r.createdBy ?? undefined, created_at: r.createdAt.toISOString(), updated_at: r.updatedAt.toISOString() };
+    return {
+      id: r.id,
+      name: r.name ?? undefined,
+      description: r.description ?? undefined,
+      is_group: r.isGroup,
+      created_by: r.createdBy ?? undefined,
+      created_at: r.createdAt.toISOString(),
+      updated_at: r.updatedAt.toISOString(),
+    };
   }
 
   private toMessage(m: any): Message {
     return {
-      id: m.id, room_id: m.roomId, sender_id: m.senderId ?? undefined, content: m.content, type: m.type, edited_at: m.editedAt?.toISOString(), is_deleted: m.isDeleted, reply_to_id: m.replyToId ?? undefined, created_at: m.createdAt.toISOString(), updated_at: m.updatedAt.toISOString(),
+      id: m.id,
+      room_id: m.roomId,
+      sender_id: m.senderId ?? undefined,
+      content: m.content,
+      type: m.type,
+      edited_at: m.editedAt?.toISOString(),
+      is_deleted: m.isDeleted,
+      reply_to_id: m.replyToId ?? undefined,
+      created_at: m.createdAt.toISOString(),
+      updated_at: m.updatedAt.toISOString(),
       sender: m.sender ? this.toProfile(m.sender) : undefined,
-      attachments: (m.attachments ?? []).map((a: any): Attachment => ({ id: a.id, message_id: a.messageId, file_url: a.fileUrl, file_name: a.fileName, file_size: a.fileSize ?? undefined, mime_type: a.mimeType ?? undefined, created_at: a.createdAt.toISOString() })),
+      attachments: (m.attachments ?? []).map(
+        (a: any): Attachment => ({
+          id: a.id,
+          message_id: a.messageId,
+          file_url: a.fileUrl,
+          file_name: a.fileName,
+          file_size: a.fileSize ?? undefined,
+          mime_type: a.mimeType ?? undefined,
+          created_at: a.createdAt.toISOString(),
+        }),
+      ),
       reply_to: m.replyTo ? this.toMessage(m.replyTo) : undefined,
     };
   }
