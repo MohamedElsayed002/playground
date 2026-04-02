@@ -15,6 +15,9 @@ import { AuthModule } from './auth/auth.module';
 import { AiAgentModule } from './ai-agent/ai-agent.module';
 import { BotModule } from './bot/bot.module';
 import { MongooseModule } from '@nestjs/mongoose';
+import { GeminiModule } from './gemini/gemini.module';
+import { CodeExecutionModule } from './code-execution/code-execution.module';
+import { FileAnalysisModule } from './file-analysis/file-analysis.module';
 
 @Module({
   imports: [
@@ -39,6 +42,9 @@ import { MongooseModule } from '@nestjs/mongoose';
     ChatModule,
     AuthModule,
     BotModule,
+    GeminiModule,
+    CodeExecutionModule,
+    FileAnalysisModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
