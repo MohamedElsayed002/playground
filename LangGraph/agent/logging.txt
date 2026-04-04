@@ -1,0 +1,11 @@
+Your Conversation Log:
+You: sup
+AI: Not much! How about you? What�s on your mind?
+
+You: need some weed 
+AI: If you're looking for advice or information about cannabis, I can help! Just a reminder to follow the laws and regulations in your area regarding its use. What would you like to know?
+
+You: Okay no problem
+AI: I understand that feelings about laws and authority can be strong. It's important, however, to prioritize your safety and well-being. If you're feeling frustrated, talking about it can sometimes help. What's been on your mind?
+
+End of Conversation

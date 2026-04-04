@@ -13,7 +13,7 @@ export default async function RootPage() {
   // const res = await data.json()
   // console.log('backend', res)
 
-  return <BackgroundPathsDemo/>
+  // return <BackgroundPathsDemo/>
   // return <Basketball/>
   const session = await getSession();
   if (session) redirect('/rooms');

@@ -13,7 +13,7 @@ export const getAllUsersDef = toolDefinition({
             email: z.string(),
             username: z.string()
         }))
-    })
+    }), 
 })
 
 export const sendEmailDef = toolDefinition({
@@ -93,7 +93,8 @@ export const deleteUserDef = toolDefinition({
         deleted: z.boolean(),
         userId: z.number().optional()
     }),
-    needsApproval: true
+    needsApproval: true,
+    lazy: true,
 })
 
 export const getUsersByNameDef = toolDefinition({

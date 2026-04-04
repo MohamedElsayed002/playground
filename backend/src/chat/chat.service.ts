@@ -27,7 +27,6 @@ import {
   Room,
   RoomMember,
 } from './chat.model';
-import { Chat } from './entities/chat.entity';
 import { GeminiService } from 'src/gemini/gemini.service';
 import { GeminiConfig } from 'config/gemini-config';
 

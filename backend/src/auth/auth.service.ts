@@ -166,7 +166,6 @@ export class AuthService {
   }
 
   private async issueTokens(user: any, profile: any): Promise<AuthTokens> {
-    // ── 1. Access token (JWT — stateless, short-lived) ────────────
     const payload: JwtPayload = {
       sub: user.id,
       profileId: profile.id,

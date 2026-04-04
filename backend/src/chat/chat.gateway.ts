@@ -1,44 +1,3 @@
-// Normal HTTP:  client sends request → server responds → done.
-// WebSocket:    connection stays OPEN → either side can push data
-//               at any time without a new request.
-//
-// Socket.IO builds on WebSocket and adds:
-//   • Named events  (like custom message types)
-//   • Rooms         (groups of sockets — maps perfectly to chat rooms)
-//   • Auto-reconnect on network drop
-//
-// NestJS decorators:
-//   @WebSocketGateway()  → register this class as a Socket.IO server
-//   @WebSocketServer()   → inject the raw Socket.IO Server instance
-//   @SubscribeMessage()  → handle a named incoming event
-//
-// CLIENT CONNECTION:
-//   import { io } from 'socket.io-client';
-//   const socket = io('http://localhost:3000/chat', {
-//     auth: { user_id: 'your-uuid' }   ← sent in handshake
-//   });
-//
-// EVENTS  (client → server):
-//   join_room     { room_id }
-//   leave_room    { room_id }
-//   send_message  SendMessageInput
-//   edit_message  EditMessageInput & { room_id, requesting_user_id }
-//   delete_message { message_id, room_id, requesting_user_id }
-//   typing_start  { room_id, user_id, username }
-//   typing_stop   { room_id, user_id }
-//   mark_read     MarkReadInput
-//
-// EVENTS  (server → client):
-//   new_message     Message
-//   message_updated Message
-//   message_deleted { message_id, room_id, is_deleted: true }
-//   user_joined     { room_id, user_id }
-//   user_left       { room_id, user_id }
-//   user_typing     { room_id, user_id, username?, is_typing }
-//   message_read    MessageRead
-//   error           { event, message }
-// =================================================================
-
 import {
   ConnectedSocket,
   MessageBody,
@@ -62,7 +21,7 @@ const socketUserMap = new Map<string, string>();
 
 @WebSocketGateway({
   cors: { origin: '*', credentials: true },
-  namespace: '/chat', // client connects to: ws://localhost:3000/chat
+  namespace: '/chat', 
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
