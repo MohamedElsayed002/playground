@@ -23,7 +23,7 @@ export default function Users() {
 
 
     return (
-        <div className="min-w-7xl mx-auto my-20">
+        <div className="container mx-auto p-10 my-20">
             <DataTable columns={columns} data={users.allUsers.users}/>
         </div>
     )

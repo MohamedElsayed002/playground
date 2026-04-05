@@ -1,19 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+// import { Geist, Geist_Mono, Local } from "next/font/google";
+import localFont from 'next/font/local'
+
 import "./globals.css";
 import Provider from "@/providers";
-import BackgroundBeamsDemo from "@/components/layouts/beams";
 
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const SariaStencilFont = localFont({
+  src: [
+    {
+      path: '../public/fonts/SairaStencil-Italic-VariableFont_wdth,wght.ttf',
+      weight: '400',
+      style: 'italic'
+    },
+    {
+      path: '../public/fonts/SairaStencil-VariableFont_wdth,wght.ttf',
+      weight: '500',
+      style: 'normal'
+    }
+  ]
+})
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -28,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${SariaStencilFont.className} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <Provider>
