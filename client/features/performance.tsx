@@ -127,13 +127,10 @@ export function Performance() {
                     />
                     <div className="relative z-10 h-full flex flex-col justify-between text-white">
                         <div className="flex justify-between items-start">
-                            <span className="bg-white/10 backdrop-blur-md px-3 py-1 rounded-full text-[10px] lg:text-xs font-medium uppercase tracking-wider">
-                                tanstack virtualized
-                            </span>
                         </div>
                         <div className='flex justify-between'>
                             <div>
-                                <div className="text-4xl lg:text-7xl font-bold leading-none mb-2">34</div>
+                                <div className="text-lg lg:text-2xl font-medium leading-tight mb-1">TANSTACK VIRTUALIZED</div>
                                 <p className="text-[10px] lg:text-sm opacity-80">
                                     performance optimized
                                 </p>

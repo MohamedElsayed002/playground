@@ -35,17 +35,17 @@ export default function RealtimeChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen overflow-y-scroll bg-[radial-gradient(circle_at_top,_#1e293b_0%,_#0f172a_40%,_#020617_100%)] text-white">
       <div className="mx-auto max-w-3xl px-6 py-14">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
               Realtime Chat
             </p>
-            <h1 className="text-3xl font-semibold text-slate-900">
+            <h1 className="text-3xl font-semibold">
               Live AI Session
             </h1>
-            <p className="mt-2 text-slate-600">
+            <p className="mt-2">
               Start a realtime session, speak or send text, and watch transcripts
               update instantly.
             </p>
