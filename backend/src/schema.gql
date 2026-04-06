@@ -61,6 +61,7 @@ type MessageRead {
 }
 
 type Mutation {
+  RemoveUser(id: ID!): UserRemoved!
   createRoom(input: CreateRoomInput!): Room!
   deleteMessage(message_id: ID!, requesting_user_id: ID!, room_id: ID!): Message!
   editMessage(input: EditMessageInput!, requesting_user_id: ID!): Message!
@@ -140,4 +141,12 @@ type UserData {
 
   """Total users"""
   usersCount: Float!
+}
+
+type UserRemoved {
+  """Message of the user removed"""
+  message: String!
+
+  """Status of the user removed"""
+  status: Int!
 }

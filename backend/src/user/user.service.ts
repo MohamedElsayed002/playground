@@ -81,4 +81,20 @@ export class UserService {
 
     return user;
   }
+
+  async removeFakeUser(userId: string) {
+    const id = Number(userId);
+    if (Number.isNaN(id)) {
+      throw new BadRequestException('Invalid user id');
+    }
+
+    await this.prisma.user.delete({
+      where: { id },
+    });
+
+    return {
+      status: 200,
+      message: 'User deleted successfully',
+    };
+  }
 }
