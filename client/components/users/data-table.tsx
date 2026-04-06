@@ -30,14 +30,26 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { DataTablePagination } from "./pagination"
+import { useDeleteUser } from "@/hooks/use-users"
+import { sileo } from "sileo"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
     data: TData[]
 }
 
-export function DataTable<TData, TValue>({
+export function DataTable<TData extends { id: string }, TValue>({
     columns,
     data
 }: DataTableProps<TData, TValue>) {
@@ -50,6 +62,10 @@ export function DataTable<TData, TValue>({
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
 
     const [rowSelection, setRowSelection] = useState({})
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+    const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([])
+    const [pendingDeleteLabel, setPendingDeleteLabel] = useState("")
+    const { mutateAsync: deleteUser, isPending: isDeleting } = useDeleteUser()
 
     const table = useReactTable({
         data,
@@ -78,12 +94,69 @@ export function DataTable<TData, TValue>({
             columnVisibility,
             rowSelection
         },
+        meta: {
+            onRequestDeleteUser: (id: string, label?: string) => {
+                setPendingDeleteIds([id])
+                setPendingDeleteLabel(label ?? "this user")
+                setIsDeleteDialogOpen(true)
+            },
 
-
+        }
     })
+
+    const selectedUsers = table.getFilteredSelectedRowModel().rows.map((row) => row.original)
+
+    const handleBulkDelete = () => {
+        if (!selectedUsers.length) return
+
+        const ids = selectedUsers.map((user) => user.id)
+        setPendingDeleteIds(ids)
+        setPendingDeleteLabel(`${ids.length} selected user(s)`)
+        setIsDeleteDialogOpen(true)
+    }
+
+    const confirmDelete = async () => {
+        if (!pendingDeleteIds.length) return
+        try {
+            for (const id of pendingDeleteIds) {
+                await deleteUser(id)
+            }
+            setRowSelection({})
+            sileo.success({ title: `Deleted ${pendingDeleteIds.length} user(s)` })
+            setIsDeleteDialogOpen(false)
+            setPendingDeleteIds([])
+            setPendingDeleteLabel("")
+        } catch {
+            sileo.error({ title: "Failed to delete user(s)" })
+        }
+    }
 
     return (
         <div>
+
+            {/* Confirm Delete Dialog */}
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Confirm delete</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete {pendingDeleteLabel}? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-destructive text-white hover:bg-destructive/90"
+                            disabled={isDeleting}
+                            onClick={confirmDelete}
+                        >
+                            {isDeleting ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            
             <div className="flex items-center py-4">
                 <Input
                     placeholder="Filter names..."
@@ -123,6 +196,16 @@ export function DataTable<TData, TValue>({
                             })}
                     </DropdownMenuContent>
                 </DropdownMenu>
+                {selectedUsers.length > 0 && (
+                    <Button
+                        variant="destructive"
+                        className="ml-2"
+                        disabled={!selectedUsers.length || isDeleting}
+                        onClick={handleBulkDelete}
+                    >
+                        Delete selected ({selectedUsers.length})
+                    </Button>
+                )}
             </div>
             <div className="overflow-hidden rounded-md border">
                 <Table>
@@ -170,28 +253,6 @@ export function DataTable<TData, TValue>({
             </div>
             <div className="flex items-center justify-between space-x-2 py-4">
                 <DataTablePagination table={table} />
-                {/* <div className="flex-1 text-sm text-muted-foreground">
-                    {table.getFilteredSelectedRowModel().rows.length} of{" "}
-                    {table.getFilteredRowModel().rows.length} row(s) selected.
-                </div>
-                <div className="">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
-                </div> */}
             </div>
 
         </div>

@@ -111,6 +111,17 @@ export const columns: ColumnDef<User>[] = [
             <DropdownMenuItem>
               <Link href={`/users/${row.original.id}`}>View User</Link>
             </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-red-500 focus:text-red-500"
+              onClick={() => {
+                ;(table.options.meta as { onRequestDeleteUser?: (id: string, label?: string) => void })?.onRequestDeleteUser?.(
+                  row.original.id,
+                  row.original.name
+                )
+              }}
+            >
+              Delete User
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )

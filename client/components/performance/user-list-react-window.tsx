@@ -1,5 +1,8 @@
 "use client";
 
+import { useHotkey } from "@tanstack/react-hotkeys";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { CSSProperties } from "react";
 import { FixedSizeList as List } from "react-window";
 
@@ -18,6 +21,9 @@ const fallbackAvatar =
   "https://placehold.co/80x80/e2e8f0/475569?text=User";
 
 export default function UsersList({ users }: UsersListProps) {
+
+  const router = useRouter()
+
   const Row = ({
     index,
     style,
@@ -25,6 +31,12 @@ export default function UsersList({ users }: UsersListProps) {
     index: number;
     style: CSSProperties;
   }) => {
+
+
+    useHotkey('Control+Space', () => {
+      router.push('/')
+    })
+
     const user = users[index];
     const fullName = [user.name, user.lastName].filter(Boolean).join(" ");
 
@@ -48,10 +60,6 @@ export default function UsersList({ users }: UsersListProps) {
                   Virtual row {index + 1}
                 </p>
               </div>
-
-              <span className="w-fit rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
-                React Window
-              </span>
             </div>
 
             <p className="line-clamp-2 text-sm leading-6 text-slate-600">
@@ -63,8 +71,15 @@ export default function UsersList({ users }: UsersListProps) {
     );
   };
 
+
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8">
+
+      <span onClick={() => router.push('/')} className="flex gap-4 cursor-pointer">
+        <ArrowLeft size={20} />
+        Back / Ctrl+Space
+      </span>
+
       <div className="space-y-2">
         <p className="text-sm font-medium uppercase tracking-[0.3em] text-slate-500">
           10k Users

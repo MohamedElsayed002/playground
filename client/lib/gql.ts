@@ -140,6 +140,15 @@ export const MARK_READ = `
   }
 `;
 
+export const DELETE_USER = `
+  mutation RemoveUser($id: ID!) {
+    RemoveUser(id: $id) {
+      status
+      message
+    }
+  }
+`;
+
 // ── Subscriptions ─────────────────────────────────────────────────
 
 export const SUB_MESSAGE_ADDED = `
