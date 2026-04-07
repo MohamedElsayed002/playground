@@ -20,8 +20,8 @@ import {
     FieldLabel
 } from "../ui/field"
 import { Input } from "../ui/input";
-import { Link } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { SocialMediaButtons } from "./providers-buttons";
 
 
 
@@ -44,8 +44,7 @@ export function LoginForm() {
         },
         onSubmit: async ({ value }) => {
             login.mutate(value,{
-                onSuccess: (data) => {
-                    console.log(data.profile)
+                onSuccess: () => {
                     sileo.success({
                         title: "Logged in successfully"
                     })
@@ -65,8 +64,10 @@ export function LoginForm() {
         <main className="container mx-auto min-h-screen place-items-center grid">
             <Card className="w-full sm:max-w-md">
                 <CardHeader>
-                    <CardTitle className="text-4xl tracking-tight">Welcome to my Arsenal</CardTitle>
+                    <CardTitle className="text-2xl text-center tracking-tight">Welcome to my Arsenal</CardTitle>
                 </CardHeader>
+                <SocialMediaButtons/>
+
                 <CardContent>
                     <form
                         id="login-playground"
@@ -135,6 +136,7 @@ export function LoginForm() {
                 </CardContent>
                 <CardFooter>
                     <Field orientation="vertical">
+                        
                         <Button className="w-full" type="submit" form="login-playground">
                             Login
                         </Button>
@@ -145,6 +147,7 @@ export function LoginForm() {
                         </p>
                     </Field>
                 </CardFooter>
+                
             </Card>
         </main>
     )

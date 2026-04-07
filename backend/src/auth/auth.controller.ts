@@ -3,21 +3,38 @@ import {
   Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
   HttpCode,
   HttpStatus,
   UseGuards,
   Request,
+  Req,
+  Res,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto, RefreshDto, RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
+import type { AuthTokens } from './auth.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+  ) {}
+
+
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth(@Req() req) {}
+
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  googleAuthRedirect(@Req() req: { user: AuthTokens }, @Res() res: Response) {
+    const payload = Buffer.from(JSON.stringify(req.user)).toString('base64url');
+    const url = `${process.env.FRONTEND_URL || "http://localhost:3000"}/auth/oauth/google#data=${payload}`;
+    return res.redirect(302, url);
+  }
 
   @Post('register')
   register(@Body() dto: RegisterDto) {

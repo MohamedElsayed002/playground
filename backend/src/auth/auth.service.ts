@@ -5,7 +5,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -36,11 +35,9 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
-    // private readonly config: ConfigService
   ) {}
 
   async register(dto: RegisterDto): Promise<AuthTokens> {
-    // 1. Uniqueness checks — give specific errors so the user knows what to fix
     const existingEmail = await this.prisma.userData.findUnique({
       where: { email: dto.email.toLowerCase() },
     });
@@ -57,13 +54,10 @@ export class AuthService {
       throw new BadRequestException('This username is already taken');
     }
 
-    // 2. Hash password
-    // bcrypt.hash(plain, saltRounds=10) — 2^10 = 1024 iterations
-    // Standard for web apps: slow enough to resist brute-force, fast enough for UX
+
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    // 3. Create User + Profile atomically with Prisma nested create
-    // If the Profile insert fails the User is also rolled back — no orphan rows
+
     const user = await this.prisma.userData.create({
       data: {
         email: dto.email.toLowerCase(),
@@ -93,6 +87,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (!user.passwordHash) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const passwordMatch = await bcrypt.compare(dto.password, user.passwordHash);
 
     if (!passwordMatch) {
@@ -101,6 +99,98 @@ export class AuthService {
 
     this.logger.log(`Login: ${user.email}`);
     return this.issueTokens(user, user.profile);
+  }
+
+  async signInWithGoogleOAuth(profile: {
+    id: string;
+    emails?: { value: string }[];
+    displayName?: string;
+    photos?: { value: string }[];
+  }): Promise<AuthTokens> {
+    const googleId = profile.id;
+    const email = profile.emails?.[0]?.value?.toLowerCase();
+    if (!email) {
+      throw new UnauthorizedException('Google account has no email');
+    }
+
+    const avatarUrl = profile.photos?.[0]?.value ?? null;
+
+    let user = await this.prisma.userData.findFirst({
+      where: { OR: [{ googleId }, { email }] },
+      include: { profile: true },
+    });
+
+    if (user) {
+      if (!user.profile) {
+        const username = await this.generateUniqueUsernameFromEmail(email);
+        await this.prisma.profile.create({
+          data: {
+            userId: user.id,
+            username,
+            avatarUrl,
+          },
+        });
+        user = await this.prisma.userData.findUniqueOrThrow({
+          where: { id: user.id },
+          include: { profile: true },
+        });
+      }
+
+      if (!user.googleId || (avatarUrl && user.profile && !user.profile.avatarUrl)) {
+        user = await this.prisma.userData.update({
+          where: { id: user.id },
+          data: {
+            ...(!user.googleId ? { googleId } : {}),
+            ...(avatarUrl && user.profile && !user.profile.avatarUrl
+              ? { profile: { update: { avatarUrl } } }
+              : {}),
+          },
+          include: { profile: true },
+        });
+      }
+
+      this.logger.log(`Google sign-in: ${user.email}`);
+      return this.issueTokens(user, user.profile!);
+    }
+
+    const username = await this.generateUniqueUsernameFromEmail(email);
+    const created = await this.prisma.userData.create({
+      data: {
+        email,
+        googleId,
+        passwordHash: null,
+        profile: {
+          create: {
+            username,
+            avatarUrl,
+          },
+        },
+      },
+      include: { profile: true },
+    });
+
+    this.logger.log(`Google register: ${created.email}`);
+    return this.issueTokens(created, created.profile!);
+  }
+
+
+  // Helper function
+  private async generateUniqueUsernameFromEmail(email: string): Promise<string> {
+    const local = email.split('@')[0] ?? 'user';
+    const base =
+      local.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '') ||
+      'user';
+    const trimmed = base.slice(0, 24);
+    let candidate = trimmed;
+    let n = 0;
+    while (
+      await this.prisma.profile.findUnique({ where: { username: candidate } })
+    ) {
+      n += 1;
+      const suffix = `_${n}`;
+      candidate = `${trimmed.slice(0, Math.max(1, 24 - suffix.length))}${suffix}`;
+    }
+    return candidate;
   }
 
   async refresh(rawRefreshToken: string): Promise<AuthTokens> {
@@ -173,9 +263,7 @@ export class AuthService {
     };
     const accessToken = this.jwt.sign(payload);
 
-    // ── 2. Refresh token (opaque random string — stored hashed) ──
-    // Format: <userId>.<64 random bytes hex>
-    // userId prefix makes lookups efficient without a full table scan
+
     const rawRefreshToken = `${user.id}.${crypto.randomBytes(64).toString('hex')}`;
     const tokenHash = await bcrypt.hash(rawRefreshToken, 10);
 

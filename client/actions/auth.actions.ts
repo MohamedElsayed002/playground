@@ -49,6 +49,11 @@ export async function loginAction(formData: FormData) {
     }
 }
 
+/** Same cookie session as email/password login — required for server `getSession()` (e.g. chat layout). */
+export async function saveOAuthTokensAction(tokens: AuthTokens) {
+    await saveTokensToCookies(tokens)
+}
+
 
 export async function logoutAction() {
     const cookieStore = await cookies()

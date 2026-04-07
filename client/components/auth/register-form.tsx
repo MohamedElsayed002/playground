@@ -42,7 +42,19 @@ export function RegisterForm() {
             onSubmit: formSchema
         },
         onSubmit: async ({value}) => {
-            register.mutate(value)
+            register.mutate(value,{
+                onSuccess: () => {
+                    sileo.success({
+                        title: "Logged in successfully"
+                    })
+                },
+                onError: (error) => {
+                    sileo.error({
+                        title: "Error",
+                        description: error.message
+                    })
+                }
+            })
         }
     })
 
@@ -53,7 +65,7 @@ export function RegisterForm() {
         <main className="container mx-auto min-h-screen place-items-center grid">
         <Card className="w-full sm:max-w-md">
             <CardHeader>
-                <CardTitle className="text-4xl tracking-tight">Welcome to my Arsenal</CardTitle>
+                <CardTitle className="text-2xl text-center tracking-tight">Welcome to my Arsenal</CardTitle>
             </CardHeader>
             <CardContent>
                 <form
@@ -72,7 +84,7 @@ export function RegisterForm() {
                                     <Field
                                         data-invalid={isInvalid}
                                     >
-                                        <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                                        <FieldLabel htmlFor={field.name}>Username</FieldLabel>
                                         <Input
                                             id={field.name}
                                             name={field.name}

@@ -20,11 +20,11 @@ import { JwtPayload } from './auth.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(config: ConfigService) {
+  constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: 'Mohamed',
+      secretOrKey: process.env.JWT_SECRET || 'Mohamed',
     });
   }
 
