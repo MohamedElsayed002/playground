@@ -1,80 +1,166 @@
 'use client'
 
-import { FormEvent, useState } from "react"
+import { useForm } from "@tanstack/react-form"
+import { sileo } from "sileo"
+import * as z from 'zod'
+
+import { Button } from "../ui/button"
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle
+ } from "../ui/card"
+import {
+    Field,
+    FieldError,
+    FieldGroup,
+    FieldLabel
+} from "../ui/field"
+import { Input } from "../ui/input"
+
 import Link from "next/link"
 import { useRegister } from "@/hooks/use-auth"
 
+const formSchema = z.object({
+    email: z.string().email({message: "Invalid email address"}),
+    username: z.string().min(2,'Min characters 2').max(20,'Max 20'),
+    password: z.string().min(6,'Min 6')
+})
+
 export function RegisterForm() {
     const register = useRegister()
-    const [form,setForm] = useState({email: '',password: '',username: ''})
 
-    const handleSubmit = (e: FormEvent) => {
-        e.preventDefault()
-        register.mutate(form)
-    }
+    const form = useForm({
+        defaultValues: {
+            email: "",
+            username: "",
+            password:""
+        },
+        validators: {
+            onSubmit: formSchema
+        },
+        onSubmit: async ({value}) => {
+            register.mutate(value)
+        }
+    })
+
+
 
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm">
-            <h1 className="text-2xl font-bold">Create account</h1>
-
-            {register.error && (
-                <p className="bg-red-50 border border-red-200 text-red-600 rounded px-3 py-2 text-sm">
-                    {(register.error as Error).message}
-                </p>
-            )}
-
-            <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">User</label>
-                <input
-                    type='text'
-                    placeholder="mosayed002"
-                    value={form.username}
-                    onChange={(e) => setForm((prev) => ({...prev,username: e.target.value}))}
-                    minLength={2}
-                    maxLength={30}
-                    required
-                    className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-blue-500"
-                />
-            </div>
-
-            <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Email</label>
-                <input
-                    type='email'
-                    placeholder="mo@gmail.com"
-                    value={form.email}
-                    onChange={(e) => setForm((prev) => ({...prev,email: e.target.value}))}
-                    required 
-                    className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-blue-500"
-                />
-            </div>
-
-            <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-gray-700">Password</label>
-                <input
-                    type='password'
-                    placeholder="At least 8 characters"
-                    value={form.password}
-                    onChange={(e) => setForm((prev) => ({...prev,password: e.target.value}))}
-                    className="border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-            </div>
-
-            <button
-                type='submit'
-                disabled={register.isPending}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 text-sm font-medium disabled:opacity-50 transition-colors"
+        <main className="container mx-auto min-h-screen place-items-center grid">
+        <Card className="w-full sm:max-w-md">
+            <CardHeader>
+                <CardTitle className="text-4xl tracking-tight">Welcome to my Arsenal</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <form
+                    id="register-playground"
+                    onSubmit={(e) => {
+                        e.preventDefault()
+                        form.handleSubmit()
+                    }}
                 >
-                    {register.isPending ? 'Creating account' : 'Create account'}
-                </button>
+                    <FieldGroup>
+                    <form.Field
+                            name="username"
+                            children={(field) => {
+                                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                return (
+                                    <Field
+                                        data-invalid={isInvalid}
+                                    >
+                                        <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                                        <Input
+                                            id={field.name}
+                                            name={field.name}
+                                            value={field.state.value}
+                                            onBlur={field.handleBlur}
+                                            onChange={(e) => field.handleChange(e.target.value)}
+                                            aria-invalid={isInvalid}
+                                            placeholder="mosayed002"
+                                            autoComplete="off"
+                                        />
+                                        {isInvalid && (
+                                            <FieldError errors={field.state.meta.errors} />
+                                        )}
+                                    </Field>
+                                )
+                            }}
+                        />
+                        <form.Field
+                            name="email"
+                            children={(field) => {
+                                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                return (
+                                    <Field
+                                        data-invalid={isInvalid}
+                                    >
+                                        <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                                        <Input
+                                            id={field.name}
+                                            name={field.name}
+                                            value={field.state.value}
+                                            onBlur={field.handleBlur}
+                                            onChange={(e) => field.handleChange(e.target.value)}
+                                            aria-invalid={isInvalid}
+                                            placeholder="mo@gmail.com"
+                                            autoComplete="off"
+                                        />
+                                        {isInvalid && (
+                                            <FieldError errors={field.state.meta.errors} />
+                                        )}
+                                    </Field>
+                                )
+                            }}
+                        />
 
-                <p className="text-center text-sm text-gray-500">
-                    Already have an account?{" "}
-                    <Link href="/login" className="text-blue-600 hover:underline">
-                        Sign in
-                    </Link>
-                </p>
-        </form>
+                        <form.Field
+                            name="password"
+                            children={(field) => {
+                                const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                return (
+                                    <Field data-invalid={isInvalid}>
+                                        <FieldLabel htmlFor={field.name}>
+                                            Password
+                                        </FieldLabel>
+                                        <Input
+                                            id={field.name}
+                                            name={field.name}
+                                            type="password"
+                                            value={field.state.value}
+                                            onBlur={field.handleBlur}
+                                            onChange={(e) => field.handleChange(e.target.value)}
+                                            aria-invalid={isInvalid}
+                                            placeholder="*****"
+                                            autoComplete="off"
+                                        />
+                                        {isInvalid && (
+                                            <FieldError errors={field.state.meta.errors} />
+                                        )}
+                                    </Field>
+                                )
+                            }}
+                        />
+                    </FieldGroup>
+                </form>
+            </CardContent>
+            <CardFooter>
+                <Field orientation="vertical">
+                    <Button className="w-full" type="submit" form="register-playground">
+                        Register
+                    </Button>
+                    <span>
+                        Already have an account? 
+                            <Link className="underline ml-1"  href="/auth/login">
+                                Login
+                            </Link>
+                    </span>
+                </Field>
+            </CardFooter>
+        </Card>
+    </main>
     )
 }

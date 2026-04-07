@@ -68,7 +68,7 @@ export default function Provider({ children }: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
             {children}
             <ReactQueryDevtools initialIsOpen={false} />
-            <Toaster position="top-center" />
+            <Toaster theme="dark" position="top-center" />
             <TanStackDevtools
                 plugins={[
                     // ... other plugins

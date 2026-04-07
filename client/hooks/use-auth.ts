@@ -1,11 +1,12 @@
 'use client'
 
-import { useMutation, useQueryClient} from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { authApi, tokenStorage } from '@/lib/api'
 import { loginAction, registerAction } from '@/actions/auth.actions'
 import { useAuthStore } from '@/store/auth.store'
-import { disconnectSocket} from '@/lib/socket'
+import { sileo } from 'sileo'
+import { disconnectSocket } from '@/lib/socket'
 
 
 export function useRegister() {
@@ -13,7 +14,7 @@ export function useRegister() {
     const router = useRouter()
 
     return useMutation({
-        mutationFn: async (data: {email: string,password: string,username: string}) => {
+        mutationFn: async (data: { email: string, password: string, username: string }) => {
             const formData = new FormData()
             formData.set('email', data.email)
             formData.set('password', data.password)
@@ -21,7 +22,7 @@ export function useRegister() {
             return registerAction(formData)
         },
         onSuccess: (data) => {
-            setSession(data.profile,{accessToken: data.accessToken,refreshToken: data.refreshToken})
+            setSession(data.profile, { accessToken: data.accessToken, refreshToken: data.refreshToken })
             router.push('/')
         }
     })
@@ -34,14 +35,14 @@ export function useLogin() {
 
 
     return useMutation({
-        mutationFn: async (data: {email: string, password: string}) => {
+        mutationFn: async (data: { email: string, password: string }) => {
             const formData = new FormData()
             formData.set('email', data.email)
             formData.set('password', data.password)
             return loginAction(formData)
         },
         onSuccess: (data) => {
-            setSession(data.profile,{accessToken:data.accessToken,refreshToken: data.refreshToken})
+            setSession(data.profile, { accessToken: data.accessToken, refreshToken: data.refreshToken })
             router.push('/')
         }
     })
@@ -55,14 +56,20 @@ export function useLogout() {
     return useMutation({
         mutationFn: () => {
             const refreshToken = tokenStorage.getRefresh();
-            return refreshToken ? authApi.logout(refreshToken) : Promise.resolve({success:true})
+            return refreshToken ? authApi.logout(refreshToken) : Promise.resolve({ success: true })
         },
         onSettled: () => {
             clearSession()
             disconnectSocket()
             queryClient.clear()
-            router.push('/auth/login')
+            sileo.success({
+                title: "Successfully",
+                description: "User logged out successfully"
+            })
+            setTimeout(() => {
+                router.push('/auth/login')
+            }, 2000)
         }
     })
-    
+
 }

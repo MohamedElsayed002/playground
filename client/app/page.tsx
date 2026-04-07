@@ -1,8 +1,15 @@
+import type { Metadata } from "next"
 import { DotPattern } from '@/components/layouts/dot-pattern';
 import { Chat } from '@/features/chat';
 import { LiveStream } from '@/features/live-stream';
 import { Performance } from '@/features/performance';
 import { Tables } from '@/features/tables';
+import { UserBadge } from "@/components/users/user-badge";
+
+export const metadata: Metadata = {
+  title: "Playground",
+  description: "d(O_o)b"
+}
 
 export default function RootPage() {
   return (
@@ -12,7 +19,7 @@ export default function RootPage() {
       <main className='mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-10 text-white sm:px-6 lg:px-8'>
         <div className='w-full'>
           <h1 className='text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl'>
-            PlayGround
+            PlayGround <UserBadge/>
           </h1>
           <div className='mt-8 flex w-full flex-col'>
 

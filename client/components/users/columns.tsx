@@ -2,7 +2,7 @@
 
 import { User } from "@/types"
 import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal, ArrowUpDown } from "lucide-react"
+import { MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -114,7 +114,7 @@ export const columns: ColumnDef<User>[] = [
             <DropdownMenuItem
               className="text-red-500 focus:text-red-500"
               onClick={() => {
-                ;(table.options.meta as { onRequestDeleteUser?: (id: string, label?: string) => void })?.onRequestDeleteUser?.(
+                (table.options.meta as { onRequestDeleteUser?: (id: string, label?: string) => void })?.onRequestDeleteUser?.(
                   row.original.id,
                   row.original.name
                 )

@@ -1,50 +1,151 @@
 'use client'
 
-import { FormEvent, useState } from "react";
 import { useLogin } from "@/hooks/use-auth";
+import { useForm } from "@tanstack/react-form"
+import { sileo } from "sileo";
+import * as z from "zod"
+
+import { Button } from "../ui/button";
+import {
+    Card,
+    CardContent,
+    CardFooter,
+    CardHeader,
+    CardTitle
+} from "../ui/card";
+import {
+    Field,
+    FieldError,
+    FieldGroup,
+    FieldLabel
+} from "../ui/field"
+import { Input } from "../ui/input";
+import { Link } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+
+
+const formSchema = z.object({
+    email: z.string().email({message: 'Invalid email address'}),
+    password: z.string().min(3,'Min characters 3').max(99,'Max characters 99')
+})
+
 
 export function LoginForm() {
+    const router = useRouter()
     const login = useLogin()
-    const [form,setForm] = useState({email: '', password: ''})
+    const form = useForm({
+        defaultValues: {
+            email: "",
+            password: ""
+        },
+        validators: {
+            onSubmit: formSchema
+        },
+        onSubmit: async ({ value }) => {
+            login.mutate(value,{
+                onSuccess: (data) => {
+                    console.log(data.profile)
+                    sileo.success({
+                        title: "Logged in successfully"
+                    })
+                },
+                onError: (error) => {
+                    sileo.error({
+                        title: "Error",
+                        description: error.message
+                    })
+                }
+            })
+        }
+    })
 
-    const handleSubmit = (e: FormEvent) => {
-        e.preventDefault()
-        login.mutate(form)
-    }
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 w-full max-w-sm">
-            <h1 className="text-2xl font-bold">Sign in</h1>
+        <main className="container mx-auto min-h-screen place-items-center grid">
+            <Card className="w-full sm:max-w-md">
+                <CardHeader>
+                    <CardTitle className="text-4xl tracking-tight">Welcome to my Arsenal</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <form
+                        id="login-playground"
+                        onSubmit={(e) => {
+                            e.preventDefault()
+                            form.handleSubmit()
+                        }}
+                    >
+                        <FieldGroup>
+                            <form.Field
+                                name="email"
+                                children={(field) => {
+                                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                    return (
+                                        <Field
+                                            data-invalid={isInvalid}
+                                        >
+                                            <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                                            <Input
+                                                id={field.name}
+                                                name={field.name}
+                                                value={field.state.value}
+                                                onBlur={field.handleBlur}
+                                                onChange={(e) => field.handleChange(e.target.value)}
+                                                aria-invalid={isInvalid}
+                                                placeholder="mo@gmail.com"
+                                                autoComplete="off"
+                                            />
+                                            {isInvalid && (
+                                                <FieldError errors={field.state.meta.errors} />
+                                            )}
+                                        </Field>
+                                    )
+                                }}
+                            />
 
-            {login.error && (
-                <p className="text-red-500 text-sm">
-                    {(login.error as Error).message}
-                </p>
-            )}
-
-            <input 
-                type='email'
-                placeholder="Email"
-                value={form.email}
-                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                required
-                className="border rounded px-3 py-2 text-sm"
-                />
-                <input
-                    type='password'
-                    placeholder="Password"
-                    value={form.password}
-                    onChange={(e) => setForm((f) => ({...f, password: e.target.value}))}
-                    required
-                    className="border rounded px-3 py-2 text-sm"
-                />
-                <button
-                    type='submit'
-                    disabled={login.isPending}
-                    className="bg-blue-600 text-white rounded py-2 text-sm font-medium"
-                >
-                    {login.isPending ? 'Signing in' : 'Sign in'}
-                </button>
-        </form>
+                            <form.Field
+                                name="password"
+                                children={(field) => {
+                                    const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid
+                                    return (
+                                        <Field data-invalid={isInvalid}>
+                                            <FieldLabel htmlFor={field.name}>
+                                                Password
+                                            </FieldLabel>
+                                            <Input
+                                                id={field.name}
+                                                name={field.name}
+                                                type="password"
+                                                value={field.state.value}
+                                                onBlur={field.handleBlur}
+                                                onChange={(e) => field.handleChange(e.target.value)}
+                                                aria-invalid={isInvalid}
+                                                placeholder="*****"
+                                                autoComplete="off"
+                                            />
+                                            {isInvalid && (
+                                                <FieldError errors={field.state.meta.errors} />
+                                            )}
+                                        </Field>
+                                    )
+                                }}
+                            />
+                        </FieldGroup>
+                    </form>
+                </CardContent>
+                <CardFooter>
+                    <Field orientation="vertical">
+                        <Button className="w-full" type="submit" form="login-playground">
+                            Login
+                        </Button>
+                        <p>
+                            Create new account? <span className="underline cursor-pointer" onClick={() => router.push("/auth/register")}>
+                                Register
+                            </span>
+                        </p>
+                    </Field>
+                </CardFooter>
+            </Card>
+        </main>
     )
 }
