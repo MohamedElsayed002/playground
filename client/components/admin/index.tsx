@@ -94,6 +94,7 @@ export default function AdminPage() {
                                                     type='text'
                                                     placeholder="Type your message..."
                                                     className="h-12 rounded-2xl border-slate-200 bg-white/90 text-slate-900 shadow-sm focus-visible:ring-slate-400"
+                                                    // @ts-ignore
                                                     ref={inputRef}
                                                     {...field}
                                                 />

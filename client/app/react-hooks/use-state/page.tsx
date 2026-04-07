@@ -19,7 +19,7 @@ export default function Page() {
     })
     const [selectedOptions,setSelectedOption] = useState('react')
 
-    const handleChange = (e) => {
+    const handleChange = (e: any) => {
         e.preventDefault()
         setUserInfo({...userInfo,[e.target.name]: e.target.value})
     }

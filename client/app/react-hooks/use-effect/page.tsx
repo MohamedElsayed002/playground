@@ -49,7 +49,9 @@ export default function Page() {
         }, 2000)
 
         return () => clearInterval(run)
-    },[])
+    }, [])
+
+    if (!githubUser) return
 
     return (
         <div>
@@ -60,8 +62,11 @@ export default function Page() {
                     {counter}
                     <Button onClick={increment}>+</Button>
                     <Button onClick={decrement}>-</Button>
+                    {/* @ts-ignore */}
                     <img src={githubUser.avatar_url} width={200} height={200} alt={githubUser.name} />
+                    {/* @ts-ignore */}
                     <h1>{githubUser.name}</h1>
+                    {/* @ts-ignore */}
                     <h1>{githubUser.bio}</h1>
                 </>
             )}

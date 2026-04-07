@@ -25,7 +25,7 @@ export const getSingleUserClient = getUserDataDef.client(async ({ userId }) => {
 })
 
 
-export const getAllUsersClient = getAllUsersDef.client(async ({query}: {query: string}) => {
+export const getAllUsersClient = getAllUsersDef.client(async ({query}: {query?: string}) => {
     const res = await fetch('/api/all-users',{
         method: 'POST',
         headers: {

@@ -114,6 +114,7 @@ export const columns: ColumnDef<User>[] = [
             <DropdownMenuItem
               className="text-red-500 focus:text-red-500"
               onClick={() => {
+                // @ts-ignore
                 (table.options.meta as { onRequestDeleteUser?: (id: string, label?: string) => void })?.onRequestDeleteUser?.(
                   row.original.id,
                   row.original.name

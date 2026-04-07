@@ -55,6 +55,7 @@ export function DotPattern({
   const containerRef = useRef<HTMLDivElement>(null)
   const dotsRef = useRef<Dot[]>([])
   const mouseRef = useRef({ x: -1000, y: -1000 })
+  // @ts-ignore
   const animationRef = useRef<number>()
   const startTimeRef = useRef(Date.now())
 

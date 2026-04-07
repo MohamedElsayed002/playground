@@ -8,8 +8,9 @@ export default function Page() {
     const [value,setValue] = useState(0)
     const containerRef = useRef(null)
     console.log(containerRef)
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: any) => {
         e.preventDefault()
+        // @ts-ignore
         const name = containerRef.current.value
         console.log(name)
     }

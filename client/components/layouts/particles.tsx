@@ -79,6 +79,7 @@ export const Particles: React.FC<ParticlesProps> = ({
   const mousePosition = useMousePosition()
   const mouse = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   const canvasSize = useRef<{ w: number; h: number }>({ w: 0, h: 0 })
+  // @ts-ignore
   const animationRef = useRef<number>()
   const dpr = typeof window !== "undefined" ? window.devicePixelRatio : 1
 
