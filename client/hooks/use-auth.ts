@@ -1,13 +1,12 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
-import { authApi, tokenStorage } from '@/lib/api'
-import { loginAction, registerAction } from '@/actions/auth.actions'
-import { useAuthStore } from '@/store/auth.store'
-import { sileo } from 'sileo'
-import { disconnectSocket } from '@/lib/socket'
-
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useRouter } from "next/navigation"
+import { authApi, tokenStorage } from "@/lib/api"
+import { clearAuthCookiesAction, loginAction, registerAction } from "@/actions/auth.actions"
+import { useAuthStore } from "@/store/auth.store"
+import { sileo } from "sileo"
+import { disconnectSocket } from "@/lib/socket"
 
 export function useRegister() {
     const setSession = useAuthStore((s) => s.setSession)
@@ -28,11 +27,9 @@ export function useRegister() {
     })
 }
 
-
 export function useLogin() {
     const setSession = useAuthStore((s) => s.setSession)
     const router = useRouter()
-
 
     return useMutation({
         mutationFn: async (data: { email: string, password: string }) => {
@@ -54,9 +51,12 @@ export function useLogout() {
     const router = useRouter()
 
     return useMutation({
-        mutationFn: () => {
-            const refreshToken = tokenStorage.getRefresh();
-            return refreshToken ? authApi.logout(refreshToken) : Promise.resolve({ success: true })
+        mutationFn: async () => {
+            const refreshToken = tokenStorage.getRefresh()
+            if (refreshToken) {
+                await authApi.logout(refreshToken).catch(() => null)
+            }
+            await clearAuthCookiesAction()
         },
         onSettled: () => {
             clearSession()
@@ -66,10 +66,8 @@ export function useLogout() {
                 title: "Successfully",
                 description: "User logged out successfully"
             })
-            setTimeout(() => {
-                router.push('/auth/login')
-            }, 2000)
+            router.push('/auth/login')
+            router.refresh()
         }
     })
-
 }

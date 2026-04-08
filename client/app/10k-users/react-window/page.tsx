@@ -1,6 +1,10 @@
 import UsersList from "@/components/performance/user-list-react-window";
 import prisma from "@/lib/db";
+import type { Metadata } from "next";
 
+export const metadata: Metadata = {
+    title: 'react-window'
+}
 
 export default async function Page() {
 

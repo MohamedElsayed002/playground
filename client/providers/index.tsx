@@ -8,7 +8,6 @@ import { tokenStorage, authApi } from "@/lib/api";
 import { Toaster } from 'sileo'
 
 import { TanStackDevtools } from "@tanstack/react-devtools"
-import { aiDevtoolsPlugin } from "@tanstack/react-ai-devtools"
 
 function makeQueryClient() {
     return new QueryClient({
@@ -53,7 +52,6 @@ export default function Provider({ children }: { children: React.ReactNode }) {
                 const refreshToken = tokenStorage.getRefresh()
                 if (!refreshToken) return
                 const tokens = await authApi.refresh(refreshToken)
-                console.log('tokens', tokens)
                 setSession(tokens.profile, {
                     accessToken: tokens.accessToken,
                     refreshToken: tokens.refreshToken

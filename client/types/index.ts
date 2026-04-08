@@ -117,3 +117,8 @@ export interface MessageDeletedPayload {
     room_id: string 
     is_deleted: true
 }
+
+export type CodeSnippet = {
+    language: string;
+    code: string;
+  };

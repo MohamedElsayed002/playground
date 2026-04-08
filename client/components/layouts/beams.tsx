@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import React from "react"
 import { cn } from "@/lib/utils"
-import Basketball from "../ball"
+import Basketball from "./ball"
 
 export interface BackgroundBeamsProps {
   className?: string
@@ -108,7 +108,7 @@ export default function BackgroundBeamsDemo() {
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-foreground">
       <BackgroundBeams />
-      <Basketball/>
+      <Basketball />
     </div>
   )
 }

@@ -21,12 +21,12 @@ export default function GoogleOAuthCallbackPage() {
   const [message, setMessage] = useState("Signing you in…");
 
   useEffect(() => {
-    let cancelled = false;
-
     async function completeGoogleSignIn() {
       const hash = typeof window !== "undefined" ? window.location.hash : "";
       const match = /^#data=(.+)$/.exec(hash);
+      console.log("match",match);
       if (!match) {
+        console.log("No match",match);
         setMessage("Something went wrong. Redirecting to login…");
         sileo.error({
           title: "Google sign-in failed",
@@ -36,20 +36,24 @@ export default function GoogleOAuthCallbackPage() {
         return;
       }
 
+      let segment = match[1];
       try {
-        const tokens = decodeBase64UrlToJson<AuthTokens>(match[1]);
-        await saveOAuthTokensAction(tokens);
-        if (cancelled) return;
+        segment = decodeURIComponent(segment);
+      } catch {
+        /* use raw segment */
+      }
 
+      try {
+        const tokens = decodeBase64UrlToJson<AuthTokens>(segment);
+        await saveOAuthTokensAction(tokens);
         setSession(tokens.profile, {
           accessToken: tokens.accessToken,
           refreshToken: tokens.refreshToken,
         });
         window.history.replaceState(null, "", window.location.pathname);
         sileo.success({ title: "Logged in successfully" });
-        router.replace("/");
-      } catch {
-        if (cancelled) return;
+        window.location.href = "/"
+      } catch (err) {
         setMessage("Could not complete sign-in. Redirecting…");
         sileo.error({
           title: "Google sign-in failed",
@@ -60,9 +64,6 @@ export default function GoogleOAuthCallbackPage() {
     }
 
     void completeGoogleSignIn();
-    return () => {
-      cancelled = true;
-    };
   }, [router, setSession]);
 
   return (

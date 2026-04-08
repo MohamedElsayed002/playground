@@ -1,4 +1,9 @@
+import type { Metadata } from "next";
 import prisma from "@/lib/db";
+
+export const metadata: Metadata = {
+  title: 'Bad Perofmrance'
+}
 
 const fallbackAvatar =
   "https://placehold.co/80x80/e2e8f0/475569?text=User";

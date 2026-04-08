@@ -5,7 +5,7 @@ import { openaiRealtimeToken } from "@tanstack/ai-openai"
 export async function POST() {
     const token = await realtimeToken({
         adapter: openaiRealtimeToken({
-            model: "gpt-4o-realtime-preview",
+            model: "gpt-4o-mini-realtime-preview",
         }),
     })
 

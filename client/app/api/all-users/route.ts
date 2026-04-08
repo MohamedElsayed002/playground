@@ -5,7 +5,6 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const query = body?.query || "";
 
-    console.log(query)
     const users = await prisma.users.findMany({
         select: {
             email: true,

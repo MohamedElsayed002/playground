@@ -7,7 +7,6 @@ export const useUsers = () => {
     return useQuery<GQL_Response_User>({
         queryKey: ['all-users'],
         queryFn: () => gqlClient.request(GET_ALL_USERS),
-        // staleTime:
     })
 }
 
