@@ -2,7 +2,6 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 const ACCESS_COOKIE = "chat_access";
-/** Login/register only — redirect to app if already signed in. */
 const AUTH_LANDING_PAGES = new Set(["/auth/login", "/auth/register"]);
 const PRIVATE_PREFIXES = ["/chat", "/rooms"];
 const DEFAULT_PRIVATE_REDIRECT = "/";
@@ -38,8 +37,7 @@ export function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-// `/auth/oauth/google` is matched so middleware runs consistently; do not add it to
-// AUTH_LANDING_PAGES — the hash `#data=...` is client-only and must not be lost to a redirect.
+
 export const config = {
   matcher: [
     "/auth/login",

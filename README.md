@@ -144,3 +144,11 @@ Use each package’s `package.json` or notebook/kernel for install and start com
 ## Summary
 
 This project is a **full-stack AI and chat playground**: NestJS ties together **GraphQL**, **REST**, **WebSockets**, **Prisma**, and **multi-provider LLM** tooling; the Next client demonstrates **modern React**, **TanStack** data/AI/virtualization, **GraphQL + WebSocket clients**, and **realtime voice/text**; **LangGraph** notebooks and scripts isolate **graph construction**, **agents**, **tools**, **memory**, and **RAG** for step-by-step learning.
+
+---
+
+## Growth guide
+
+If you want to level up engineering habits toward senior expectations, follow:
+
+- [`docs/senior-mindset/README.md`](docs/senior-mindset/README.md)
