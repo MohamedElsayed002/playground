@@ -1,9 +1,14 @@
 import type { Metadata } from "next"
 import { DotPattern } from '@/components/layouts/dot-pattern';
-import { Chat } from '@/features/chat';
-import { LiveStream } from '@/features/live-stream';
-import { Performance } from '@/features/performance';
-import { Tables } from '@/features/tables';
+import {
+  APIsAndRealtime,
+  Chat,
+  LiveStream,
+  NoSQLVSSQL,
+  Performance,
+  RenderingStrategies,
+  Tables,
+} from "@/features";
 import { UserBadge } from "@/components/users/user-badge";
 
 export const metadata: Metadata = {
@@ -47,10 +52,36 @@ export default function RootPage() {
 
             <div className='my-8 h-px w-full bg-white/40' />
 
-            <h1 className='text-4xl font-bold text-center'>
-              Break
-            </h1>
+            <NoSQLVSSQL/>
+            <div className="my-8 h-px w-full bg-white/40" />
 
+            <APIsAndRealtime />
+            <div className="my-8 h-px w-full bg-white/40" />
+
+            <RenderingStrategies />
+            <div className="my-8 h-px w-full bg-white/40" />
+
+            {/* <Architecture /> */}
+            {/* <div className="my-8 h-px w-full bg-white/40" />
+
+            <SQLPerformance />
+            <div className="my-8 h-px w-full bg-white/40" />
+
+            <StateManagement />
+            <div className="my-8 h-px w-full bg-white/40" />
+
+            <AuthAccess />
+            <div className="my-8 h-px w-full bg-white/40" />
+
+            <CachingJobs />
+            <div className="my-8 h-px w-full bg-white/40" />
+
+            <CachingLayers />
+            <div className="my-8 h-px w-full bg-white/40" />
+
+            <LearningRoadmap />
+            <div className="my-8 h-px w-full bg-white/40" /> */}
+          
           </div>
         </div>
       </main>

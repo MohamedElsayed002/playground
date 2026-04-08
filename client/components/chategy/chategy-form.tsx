@@ -45,8 +45,9 @@ export function ChategyForm({
             <SelectValue placeholder="Choose" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="gemini">Openai Text Generation</SelectItem>
-            <SelectItem value="bot">Bot Conversation</SelectItem>
+            {/* Quota finished */}
+            {/* <SelectItem disabled={true} value="gemini">Text Generation</SelectItem> */}
+            {/* <SelectItem disabled={true} value="bot">Bot Conversation</SelectItem> */}
             <SelectItem value='code-execution'>Code Execution</SelectItem>
             <SelectItem value="file-analysis">File Analysis (PDF/Image)</SelectItem>
           </SelectContent>
