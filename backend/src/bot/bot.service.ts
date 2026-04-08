@@ -9,10 +9,10 @@ import {
 } from '@ai-sdk/google';
 import { GoogleAICacheManager } from '@google/generative-ai/server';
 import { generateText } from 'ai';
-import { InjectModel } from '@nestjs/mongoose';
 import { Bot, BotDocument } from './schema/bot.schema';
-import { Model } from 'mongoose';
 
+// I finished my google quota. I'm using openai now
+// this code only works with google not with openai 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
 });

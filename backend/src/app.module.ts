@@ -1,12 +1,9 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { UserModule } from './user/user.module';
-import { ProductsModule } from './products/products.module';
 import { ChatModule } from './chat/chat.module';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaService } from './prisma/prisma.service';
@@ -37,7 +34,6 @@ import { FileAnalysisModule } from './file-analysis/file-analysis.module';
     }),
     PrismaModule,
     UserModule,
-    ProductsModule,
     AiAgentModule,
     ChatModule,
     AuthModule,
@@ -46,7 +42,7 @@ import { FileAnalysisModule } from './file-analysis/file-analysis.module';
     CodeExecutionModule,
     FileAnalysisModule,
   ],
-  controllers: [AppController],
-  providers: [AppService, PrismaService],
+  controllers: [],
+  providers: [PrismaService],
 })
 export class AppModule {}
