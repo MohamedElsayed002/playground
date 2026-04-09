@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginDto, RegisterDto } from './dto/register.dto';
+import * as Sentry from "@sentry/nestjs"
 
 export interface JwtPayload {
   sub: string;
@@ -98,6 +99,10 @@ export class AuthService {
     }
 
     this.logger.log(`Login: ${user.email}`);
+    Sentry.logger.info('User logged from database', {
+      email: dto.email,
+      provider: 'database',
+    });
     return this.issueTokens(user, user.profile);
   }
 
@@ -169,6 +174,11 @@ export class AuthService {
       include: { profile: true },
     });
 
+    Sentry.logger.info('User logged in with OAuth (GMAIL)', {
+      email: profile.emails?.[0]?.value?.toLowerCase(),
+      avatarUrl,
+      provider: 'google',
+    });
     this.logger.log(`Google register: ${created.email}`);
     return this.issueTokens(created, created.profile!);
   }

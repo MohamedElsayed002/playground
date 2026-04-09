@@ -15,6 +15,7 @@ import {
     streamText
 } from 'ai';
 import { z } from "zod"
+import * as Sentry from '@sentry/nestjs'
 
 
 @Injectable()
@@ -114,7 +115,13 @@ export class GeminiService {
                 tools: Object.keys(tools).length ? tools : undefined,
                 providerOptions,
                 temperature,
-                maxOutputTokens: maxTokens
+                maxOutputTokens: maxTokens,
+                experimental_telemetry: {
+                    isEnabled:true,
+                    functionId: 'generateContent',
+                    recordInputs: true,
+                    recordOutputs: true
+                }
             })
 
             // Parse response
@@ -129,6 +136,11 @@ export class GeminiService {
                 cachedTokens: googleMetadata?.usageMetadata?.cachedContentTokenCount || 0,
             };
 
+            Sentry.logger.info('Generating Content', {
+                allOptions: options,
+                result,
+            })
+
             return {
                 text: result.text,
                 sources: googleMetadata?.groundingMetadata?.groundingChunks || [],
@@ -140,6 +152,9 @@ export class GeminiService {
                 rawResponse: result,
             };
         } catch (error) {
+            Sentry.logger.error('Error Generating Content', {
+                error: error.message
+            })
             this.logger.error(`Gemini API Error: ${error.message}`)
             throw error
         }
@@ -173,11 +188,20 @@ export class GeminiService {
                 prompt,
                 tools: Object.keys(tools).length > 0 ? tools : undefined,
                 temperature,
-                maxOutputTokens: maxTokens
+                maxOutputTokens: maxTokens,
+                experimental_telemetry: {
+                    isEnabled: true,
+                    functionId: 'streaming content',
+                    recordInputs: true,
+                    recordOutputs: true
+                }
             })
 
             return result.textStream
         } catch (error) {
+            Sentry.logger.error('Error Streaming content', {
+                error
+            })
             this.logger.error(`Streaming Error: ${error.message}`)
             throw error
         }

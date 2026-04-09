@@ -15,9 +15,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { GeminiModule } from './gemini/gemini.module';
 import { CodeExecutionModule } from './code-execution/code-execution.module';
 import { FileAnalysisModule } from './file-analysis/file-analysis.module';
+import { SentryModule } from "@sentry/nestjs/setup"
+import { APP_FILTER } from '@nestjs/core';
+import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -43,6 +47,12 @@ import { FileAnalysisModule } from './file-analysis/file-analysis.module';
     FileAnalysisModule,
   ],
   controllers: [],
-  providers: [PrismaService],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: SentryGlobalFilter
+    },
+    PrismaService
+  ],
 })
 export class AppModule {}

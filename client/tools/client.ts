@@ -34,7 +34,6 @@ export const getAllUsersClient = getAllUsersDef.client(async ({query}: {query?: 
         body: JSON.stringify({query})
     })
     const data = await res.json()
-    console.log(data)
     return data.users
 })
 

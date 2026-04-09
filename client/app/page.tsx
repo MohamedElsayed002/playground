@@ -60,27 +60,6 @@ export default function RootPage() {
 
             <RenderingStrategies />
             <div className="my-8 h-px w-full bg-white/40" />
-
-            {/* <Architecture /> */}
-            {/* <div className="my-8 h-px w-full bg-white/40" />
-
-            <SQLPerformance />
-            <div className="my-8 h-px w-full bg-white/40" />
-
-            <StateManagement />
-            <div className="my-8 h-px w-full bg-white/40" />
-
-            <AuthAccess />
-            <div className="my-8 h-px w-full bg-white/40" />
-
-            <CachingJobs />
-            <div className="my-8 h-px w-full bg-white/40" />
-
-            <CachingLayers />
-            <div className="my-8 h-px w-full bg-white/40" />
-
-            <LearningRoadmap />
-            <div className="my-8 h-px w-full bg-white/40" /> */}
           
           </div>
         </div>

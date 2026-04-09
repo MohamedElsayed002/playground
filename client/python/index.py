@@ -8,8 +8,15 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from openai import AsyncOpenAI
+import sentry_sdk
 
 from tanstack_ai import StreamChunkConverter, format_messages_for_openai, format_sse_chunk, format_sse_done
+
+sentry_sdk.init(
+    dsn="https://525058135dba65ef659258cd54580c82@o4510058158096384.ingest.de.sentry.io/4511188156940368",
+    send_default_pii=True,
+    enable_logs=True
+)
 
 # Configure logging
 logging.basicConfig(
@@ -96,7 +103,7 @@ async def chat_endpoint(request: ChatRequest):
     """
     try:
         logger.info(f"📥 POST /chat received - {len(request.messages)} messages")
-        
+        sentry_sdk.logger.info(f'This is an info {request.messages}')
         # Convert messages to OpenAI format
         openai_messages = format_messages_for_openai(request.messages)
         logger.info(f"✅ Converted {len(openai_messages)} messages to OpenAI format")
@@ -171,6 +178,10 @@ async def health_check():
     """Health check endpoint"""
     return {"status": "ok", "service": "tanstack-ai-fastapi-openai"}
 
+
+@app.get("/sentry-debug")
+async def trigger_error():
+    raise HTTPException('Errorrrr')
 
 if __name__ == "__main__":
     import uvicorn

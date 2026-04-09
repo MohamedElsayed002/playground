@@ -65,9 +65,9 @@ export default function Provider({ children }: { children: React.ReactNode }) {
     return (
         <QueryClientProvider client={queryClient}>
             {children}
-            <ReactQueryDevtools initialIsOpen={false} />
+             {/* <ReactQueryDevtools initialIsOpen={false} /> */}
             <Toaster theme="dark" position="top-center" />
-            <TanStackDevtools
+            {/* <TanStackDevtools
                 plugins={[
                     // ... other plugins
                     // aiDevtoolsPlugin(),
@@ -76,7 +76,7 @@ export default function Provider({ children }: { children: React.ReactNode }) {
                 eventBusConfig={{
                     connectToServerBus: true,
                 }}
-            />
+            /> */}
         </QueryClientProvider>
     )
 }

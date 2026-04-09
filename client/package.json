@@ -12,6 +12,8 @@
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^7.5.0",
+    "@sentry/browser": "^10.47.0",
+    "@sentry/nextjs": "^10.47.0",
     "@tanstack/ai": "^0.10.0",
     "@tanstack/ai-openai": "^0.7.3",
     "@tanstack/ai-react": "^0.7.8",

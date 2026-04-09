@@ -6,7 +6,8 @@ import {
     HttpStatus,
     UseGuards,
     Sse,
-    MessageEvent
+    MessageEvent,
+    Get
 } from '@nestjs/common';
 import {ApiTags, ApiOperation, ApiResponse, ApiBody } from "@nestjs/swagger"
 // import { ThrottlerGuard } from '@nestjs/throttler';
@@ -68,5 +69,11 @@ export class ChatController {
     })
     async streamChat(@Body() chatRequest: ChatRequestDto): Promise<Observable<MessageEvent>> {
         return this.chatService.streamChat(chatRequest)
+    }
+
+    @Get('/debug-sentry')
+    getError() {
+        console.log("I'm Batman")
+        throw new Error("My first Error")
     }
 }
