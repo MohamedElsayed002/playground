@@ -28,7 +28,8 @@ import { SentryGlobalFilter } from '@sentry/nestjs/setup';
     // MongooseModule.forRoot(process.env.MONGO_URL!),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      // autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      autoSchemaFile: true,
       sortSchema: true,
       subscriptions: {
         'graphql-ws': true,

@@ -15,7 +15,7 @@ import { useChategyFileAnalysis, useChategyPrompt } from "@/hooks/use-chategy"
 import type { ChategyMode, ChategyResponse } from "@/lib/chategy-api"
 
 export function ChategyWorkspace() {
-  const [mode, setMode] = useState<ChategyMode>("gemini")
+  const [mode, setMode] = useState<ChategyMode>("code-execution")
   const [prompt, setPrompt] = useState("")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [response, setResponse] = useState<ChategyResponse | null>(null)
