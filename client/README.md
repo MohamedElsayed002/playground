@@ -49,6 +49,17 @@ client/
   public/              # Static assets
 ```
 
+## Documentation References
+
+- Client approach and implementation notes: `client/docs/`
+- Current topics include:
+  - `client/docs/react-hooks.md`
+  - `client/docs/tanstack-virtual.md`
+  - `client/docs/react-window.md`
+  - `client/docs/tanstack-ai.md`
+  - `client/docs/useRef.md`
+- Add future architecture/performance decisions in this folder to keep project knowledge centralized.
+
 ## TanStack Usage in This Project
 
 - **TanStack Query**: request caching, background refetching, loading/error states.

@@ -1,68 +1,183 @@
+# Backend API Guide
 
+NestJS backend with REST + GraphQL + Socket.IO real-time channels.
 
-## Overview 
+## Overview
 
-Nest offers two ways of building GraphQL applications, the code first and the schema first methods. You should choose the one that works best for you. Most of the chapters in this GraphQL section are divided into two main parts: one you should follow if you adopt code first, and the other be used if you adopt schema first 
+This backend is designed around:
+- `NestJS` modules per feature (`auth`, `chat`, `bot`, `gemini`, etc.)
+- `Prisma + PostgreSQL` for relational data access
+- `GraphQL` (code-first) for chat queries/mutations/subscriptions
+- `Socket.IO` namespace for low-latency chat events
+- `Swagger` docs for REST endpoints
 
-In the code first approach, you use decorators and Typescript classes to generate the corresponding GraphQL schema. This approach is useful if you prefer to work exclusively with TypeScript and avoid context switching between language syntaxes
+Default local port:
+- `http://localhost:3000`
 
-In the schema first approach, the source of truth is GraphQL SDL (Schema Definition Language) files. SDL is a language-agnostic way to share schema files between different platforms. Nest automatically generates your Typescript definitions (using either classes or interfaces) based on the GraphQL schemas to reduce the need to write redundant boilerplate code
+## Run On A New Machine
 
+### 1) Prerequisites
 
-nest g res products
+- Node.js `>= 20`
+- npm (comes with Node)
+- PostgreSQL running locally or remotely
 
-```cmd
-pnpm add -D prisma
-pnpm add @prisma/client @prisma/adapter-pg pg
-pnpx prisma init --datasource-provider postgresql
+### 2) Install dependencies
 
-pnpx prisma migrate dev --name init
-OR
-pnpx prisma db pull
+From `backend/`:
 
-pnpx prisma generate
+```bash
+npm install
 ```
+
+### 3) Create environment file
+
+Create a `.env` file in `backend/`:
+
+```bash
+DATABASE_URL=postgresql://postgres:password@localhost:5432/playground
+JWT_SECRET=replace_with_a_long_secret
+FRONTEND_URL=http://localhost:3000
+
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+
+GOOGLE_GENERATIVE_AI_API_KEY=your_google_ai_key
+```
+
+Notes:
+- `DATABASE_URL` is required by Prisma.
+- `JWT_SECRET` signs/verifies access tokens.
+- Google OAuth variables are required only if you use Google login.
+- `GOOGLE_GENERATIVE_AI_API_KEY` is required for Gemini/Bot AI endpoints.
+
+### 4) Prepare database
+
+If you already have schema migrations:
+
+```bash
+npx prisma migrate dev
+```
+
+If you are pulling schema from existing DB:
+
+```bash
+npx prisma db pull
+npx prisma generate
+```
+
+### 5) Start backend
+
+```bash
+npm run start:dev
+```
+
+Production build/start:
+
+```bash
+npm run build
+npm run start:prod
+```
+
+## API Docs and Endpoints
+
+### Swagger (REST)
+
+- `http://localhost:3000/api`
+
+### GraphQL
+
+- HTTP endpoint: `http://localhost:3000/graphql`
+- Supports subscriptions over WebSocket (graphql-ws)
+
+### Socket.IO
+
+- Namespace: `ws://localhost:3000/chat`
+
+## Documentation References
+
+- Backend approach and design notes: `backend/docs/`
+- Start with: `backend/docs/README.md`
+- Keep architecture decisions and trade-offs documented there as the project evolves.
+
+## REST Routes
+
+### Auth (`/auth`)
+
+- `GET /auth/google` - start Google OAuth flow
+- `GET /auth/google/callback` - Google OAuth callback and redirect to frontend
+- `POST /auth/register` - register user
+- `POST /auth/login` - login user
+- `POST /auth/refresh` - refresh access token
+- `POST /auth/logout` - logout one session
+- `POST /auth/logout-all` - logout all sessions (JWT protected)
+- `GET /auth/me` - current user profile from token (JWT protected)
+
+### Chat (`/chat`)
+
+- `POST /chat` - non-stream AI chat response
+- `SSE /chat/stream` - streaming AI chat response
+- `GET /chat/debug-sentry` - debug Sentry error capture
+
+### Bot (`/bot`)
+
+- `POST /bot/create`
+- `GET /bot/chats`
+- `GET /bot/caching-food`
+- `GET /bot/code-execution`
+- `GET /bot/google-search`
+
+### Gemini (`/gemini`)
+
+- `POST /gemini`
+- `POST /gemini/stream-text`
+- `POST /gemini/generate-object`
+
+### Other REST modules
+
+- `POST /code-execution`
+- `POST /file-analysis`
+- `POST /ai-agent`
+
+## GraphQL Chat Operations (high-level)
+
+Main operations implemented in chat resolver:
+- Queries: `profile`, `room`, `roomsForUser`, `roomMembers`, `messages`, `message`
+- Mutations: `createRoom`, `sendMessage`, `editMessage`, `deleteMessage`, `markRead`
+- Subscriptions: `messageAdded(room_id)`, `messageUpdated(room_id)`, `messageRead(room_id)`
+
+## Socket.IO Events (`/chat`)
+
+Client emits:
+- `join_room`
+- `leave_room`
+- `send_message`
+- `edit_message`
+- `delete_message`
+- `typing_start`
+- `typing_stop`
+- `mark_read`
+
+Server broadcasts:
+- `new_message`
+- `message_updated`
+- `message_deleted`
+- `user_typing`
+- `message_read`
+- `user_joined`
+- `user_left`
 
 ## Prisma v7 Notes
 
-- In Prisma ORM v7, the database URL lives in `prisma.config.ts`, not in the `datasource` block of `schema.prisma`.
-- Prisma Client now requires a driver adapter. For PostgreSQL, use `@prisma/adapter-pg` and `pg`, then pass the adapter to `new PrismaClient({ adapter })` in your NestJS PrismaService.
+- Prisma v7 keeps connection configuration in `prisma.config.ts`.
+- PostgreSQL adapter is used via `@prisma/adapter-pg` and `pg`.
+- Run `npx prisma generate` after schema changes.
 
+## Useful Scripts
 
----
-
-## Chat Application
-
-- `chat.server.ts`: All DB logic (save, get, paginate)
-- `chat.gateway.ts`: Socket.IO real-time gateway
-- `chat.resolver.ts`: GraphQL queries/mutation/subscriptions 
-- `chat.model.ts`: ObjectTypes (Message, Room, Profile)
-- `chat.dto.ts`: Input Types
-
-## Two real-time channels 
-
-Socket.IO (`ws:localhost:3000/chat`) - for raw low-latency messaging 
-    - `join_room` / `leave_room`/ `send_message` events
-    - Broadcasts `new_message` to all room memebers
-
-GraphQL `http://localhost:3000/graphql` - for structured data:
-    - Queries `room`, `roomsForUser`, `messages`, `message`
-    - Mutations: `createRoom`, `sendMessage`
-    - Subscriptions: `messageAdded(room_id)` - live push via WebSocket
-
-
-**6 database tables with full relations**
-
-- **profiles**: Extends Supabase Auth - stores, username, avatar 
-- **rooms**: Both DMS and group chats in one table (flag: `is_group`)
-- **room_members**: Junciton table - connects users to rooms, with `role` (member/admin)
-- **messages**: All messages, with soft delete `jsonb` metadata for files/images
-`message_reads`: Read receipts - who saw which message (powers ✓✓) 
-- `reactions` Emoji reactions with a unique constraint per (message, user, emoji)
-
-
-## SQL vs NoSQL 
-
-The data has real relationships (uses <-> rooms <-> messages <-> reactions) and SQL was literally designed for exactly that. NoSQL shines when you data has no predicatable shape or when you're operating at hundereds of millions of writes per day 
-
-can you do for me the code prisma and postgresSQL. I think It has the same approach. and update the code in necessary parts and write the schema in file schema.prisma and give me the command to update the database
+- `npm run start:dev` - start with hot reload
+- `npm run build` - build application
+- `npm run start:prod` - run built app
+- `npm run lint` - run linting
+- `npm run test` - run unit tests
