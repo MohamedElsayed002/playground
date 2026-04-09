@@ -6,7 +6,7 @@ A learning and experimentation monorepo with three main areas: a **NestJS backen
 
 | Path | Role |
 |------|------|
-| [`backend/`](backend/) | NestJS API (REST, GraphQL, WebSockets, Prisma, AI services) |
+| [`backend/`](backend/) | NestJS API (REST, GraphQL, WebSockets, Prisma, AI services, vercel-ai-sdk) |
 | [`client/`](client/) | Next.js App Router UI, TanStack stack, chat, demos |
 | [`LangGraph/`](LangGraph/) | Jupyter notebooks and standalone Python agent scripts |
 
@@ -18,7 +18,10 @@ A learning and experimentation monorepo with three main areas: a **NestJS backen
 
 - **NestJS** (TypeScript) with modular architecture (`AppModule` wires feature modules).
 - **Swagger** at `/api` for HTTP API documentation.
-- **Helmet** and **CORS** enabled in [`main.ts`](backend/src/main.ts); default listen port **3001**.
+- **Helmet** and **CORS** enabled in [`main.ts`](backend/src/main.ts); default listen port **3000**.
+- **vercel-ai-sdk** code execution, file analysis using OpenAI, Gemini
+- **OAuth2.0** use can login with Gmail instead of sharing his password
+- **Sentry** o11y, and trace logs
 
 **Data and persistence**
 
@@ -51,7 +54,6 @@ A learning and experimentation monorepo with three main areas: a **NestJS backen
 - **DTO validation** with `class-validator` / `class-transformer`.
 - **Products** CRUD as a classic REST + entity example.
 - **Throttler** and related packages in `package.json` for rate limiting when enabled in modules.
-- **E2E / Jest** setup under [`test/`](backend/test/).
 
 ---
 
@@ -79,7 +81,7 @@ A learning and experimentation monorepo with three main areas: a **NestJS backen
 
 **Forms and state**
 
-- **React Hook Form** with **Zod** resolvers.
+- **Tanstack Form** with **Zod** resolvers.
 - **Zustand** for client state where needed.
 
 **Performance and tables**
