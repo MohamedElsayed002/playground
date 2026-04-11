@@ -8,6 +8,7 @@ import { tokenStorage, authApi } from "@/lib/api";
 import { Toaster } from 'sileo'
 
 import { TanStackDevtools } from "@tanstack/react-devtools"
+import { WebVitals } from "@/components/shared/web-vitals";
 
 function makeQueryClient() {
     return new QueryClient({
@@ -64,6 +65,7 @@ export default function Provider({ children }: { children: React.ReactNode }) {
 
     return (
         <QueryClientProvider client={queryClient}>
+            {/* <WebVitals/> */}
             {children}
             <Toaster theme="dark" position="top-center" />
         </QueryClientProvider>

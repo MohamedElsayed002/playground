@@ -16,7 +16,15 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
   openAnalyzer: false,
 })
 
-const nextConfig: NextConfig = {}
+const nextConfig: NextConfig = {
+  cacheComponents: true,
+  logging: {
+    fetches: {
+      fullUrl: true,
+    },
+    incomingRequests: true,
+  }
+}
 
 const sentryWrapped = withSentryConfig(nextConfig, {
   org: "unemployed-7m",

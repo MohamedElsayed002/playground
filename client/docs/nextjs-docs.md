@@ -148,3 +148,129 @@ ANALYZE=true pnpm build
 ```
 
 https://nextjs.org/docs/app/guides/package-bundling#nextbundle-analyzer-for-webpack
+
+---
+
+## Fetching Data
+
+- Identical `fetch` requests in a React component tree are `memoized` by default , so you can
+fetch data in the component that needs it instead of drilling props
+- `fetch` requests are not cached by default and will block the page from rendering until
+request is complete. `use cache` directive to cache results, or wrap the fetching component 
+in `<Suspense>` to stream fresh data at request time
+- During development, you can log `fetch` calls for better visibility and debugging. See the logging
+
+
+https://nextjs.org/docs/app/api-reference/directives/use-cache
+https://nextjs.org/docs/app/getting-started/caching
+
+https://nextjs.org/docs/app/api-reference/config/next-config-js/logging
+https://nextjs.org/docs/app/getting-started/fetching-data
+
+
+---
+
+## Mutating Data
+
+### Refresh Data
+
+After mutation, you may want to refresh the current page to show the latest data. You can do
+this by calling `refresh` form `next/cache` in a Server action
+
+```tsx
+'use server'
+ 
+import { auth } from '@/lib/auth'
+import { refresh } from 'next/cache'
+ 
+export async function updatePost(formData: FormData) {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error('Unauthorized')
+  }
+  // Mutate data
+  // ...
+ 
+  refresh()
+}
+```
+
+This refreshes the client router, ensuring the UI reflects the latest state. The `refresh()`
+function does not revalidate tagged data. to revalidate tagged data, use `updateTag` or 
+`revalidateTag` instead
+
+### Revalidate data
+
+After performing a mutation, you can revalidate the Next.js cache and show the updated data
+by calling `revalidatePath` or `revalidateTag` within the server function
+
+```tsx
+import { auth } from '@/lib/auth'
+import { revalidatePath } from 'next/cache'
+ 
+export async function createPost(formData: FormData) {
+  'use server'
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error('Unauthorized')
+  }
+  // Mutate data
+  // ...
+ 
+  revalidatePath('/posts')
+}
+```
+
+### Redirect after mutation 
+
+You may want to redirect the user to a different page a mutation. You can do this by
+calling `redirect` within the Server Function
+
+```tsx
+'use server'
+ 
+import { auth } from '@/lib/auth'
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+ 
+export async function createPost(formData: FormData) {
+  const session = await auth()
+  if (!session?.user) {
+    throw new Error('Unauthorized')
+  }
+  // Mutate data
+  // ...
+ 
+  revalidatePath('/posts')
+  redirect('/posts')
+}
+```
+
+---
+
+
+### Cookies 
+
+You can `get`, `set`, and `delete` cookies inside a Server Action using the `cookies` API
+
+When you **set or delete** a cookie in a server Action, Next.js re-renders the current page 
+and its layout on the server so the UI **reflects the new cookie value**
+
+```tsx
+'use server'
+ 
+import { cookies } from 'next/headers'
+ 
+export async function exampleAction() {
+  const cookieStore = await cookies()
+ 
+  // Get cookie
+  cookieStore.get('name')?.value
+ 
+  // Set cookie
+  cookieStore.set('name', 'Delba')
+ 
+  // Delete cookie
+  cookieStore.delete('name')
+}
+```
