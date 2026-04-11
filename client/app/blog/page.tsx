@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { cookies } from "next/headers"
-import { cacheLife, cacheTag, updateTag } from 'next/cache'
+// import { cacheLife, cacheTag, updateTag } from 'next/cache'
 import Link from 'next/link'
 
 
@@ -38,9 +38,9 @@ export default function BlogPage() {
 
 // Everyone sees the same blog posts (revalidated every hour)
 async function BlogPosts() {
-    'use cache'
-    cacheLife('hours')
-    cacheTag('posts')
+    // 'use cache'
+    // cacheLife('hours')
+    // cacheTag('posts')
 
     const res = await fetch('https://api.vercel.app/blog')
     const posts = await res.json()
@@ -84,7 +84,7 @@ async function CreatePost() {
     async function createPost(formData: FormData) {
         'use server'
         // await db.post.create({ data: { title: formData.get('title') } })
-        updateTag('posts')
+        // updateTag('posts')
     }
     return (
         <form action={createPost}>

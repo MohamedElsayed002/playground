@@ -17,13 +17,14 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 })
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
+  // Cause an error in different files
+  // cacheComponents: true,
   logging: {
     fetches: {
       fullUrl: true,
     },
     incomingRequests: true,
-  }
+  },
 }
 
 const sentryWrapped = withSentryConfig(nextConfig, {

@@ -65,7 +65,7 @@ export default function Provider({ children }: { children: React.ReactNode }) {
 
     return (
         <QueryClientProvider client={queryClient}>
-            {/* <WebVitals/> */}
+            <WebVitals />
             {children}
             <Toaster theme="dark" position="top-center" />
         </QueryClientProvider>

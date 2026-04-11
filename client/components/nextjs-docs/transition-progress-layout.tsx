@@ -1,8 +1,10 @@
 "use client";
 
+// @ts-expect-error
 import { ProgressBar, ProgressBarProvider } from "react-transition-progress";
 
 /** Same API as next/link; use this when you want the top progress bar on navigation. */
+// @ts-expect-error
 export { Link } from "react-transition-progress/next";
 
 export function TransitionProgressLayout({

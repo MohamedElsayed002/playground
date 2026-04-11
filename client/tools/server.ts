@@ -1,6 +1,23 @@
 import prisma from "@/lib/db";
 import { deleteUserDef, getUserDataDef, getUsersByNameDef, getUsersCountDef, updateUserDef } from "./definitions";
 
+
+export const getUserData = getUserDataDef.server(async ({userId}) => {
+    const user = await prisma.user.findUnique({
+        where: {
+            id :Number(userId)
+        }
+    })
+
+    return {
+        userId: user?.id,
+        image: user?.image ?? undefined,
+        bio: user?.bio ?? undefined,
+        name: user?.name,
+        lastName: user?.lastName
+    }
+})
+
 export const updateUser = updateUserDef.server(async ({ userId, name, lastName, phoneNumber, bio, sex, image }) => {
     const existingUser = await prisma.user.findUnique({
         where: { id: Number(userId) }

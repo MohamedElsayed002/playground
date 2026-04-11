@@ -1,7 +1,6 @@
 import { deleteUser, getTotalUsers, getUserData, getUsersByName, updateUser } from "@/tools/server";
-import { chat, toServerSentEventsResponse } from "@tanstack/ai"
+import { chat, toServerSentEventsResponse, type AnyTextAdapter } from "@tanstack/ai"
 import { openaiText } from "@tanstack/ai-openai";
-
 
 export async  function POST(req: Request) {
     if (!process.env.OPENAI_API_KEY) {
@@ -18,7 +17,7 @@ export async  function POST(req: Request) {
 
     try {
         const stream = chat({
-            adapter: openaiText('gpt-4o-mini'),
+            adapter: openaiText("gpt-5") as unknown as AnyTextAdapter,
             messages,
             tools: [getUserData, updateUser, deleteUser, getUsersByName,getTotalUsers]
         })
