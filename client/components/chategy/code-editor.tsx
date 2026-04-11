@@ -4,6 +4,7 @@ import { Check, Copy } from "lucide-react"
 import { type UseInViewOptions, useInView } from "motion/react"
 import { useTheme } from "next-themes"
 import * as React from "react"
+import { highlightCodeAction } from "@/actions/highlight-code"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -111,28 +112,41 @@ function CodeEditor({
     if (!(visibleCode.length && isInView)) {
       return
     }
+    if (writing && !isDone) {
+      return
+    }
+
+    let cancelled = false
 
     const loadHighlightedCode = async () => {
       try {
-        const { codeToHtml } = await import("shiki")
-
-        const highlighted = await codeToHtml(visibleCode, {
+        const highlighted = await highlightCodeAction(
+          visibleCode,
           lang,
-          themes: {
-            light: themes.light,
-            dark: themes.dark,
-          },
-          defaultColor: resolvedTheme === "dark" ? "dark" : "light",
-        })
-
-        setHighlightedCode(highlighted)
+          resolvedTheme === "dark" ? "dark" : "light",
+          themes,
+        )
+        if (!cancelled) {
+          setHighlightedCode(highlighted)
+        }
       } catch (e) {
         console.error(`Language "${lang}" could not be loaded.`, e)
       }
     }
 
     loadHighlightedCode()
-  }, [lang, themes, writing, isInView, duration, delay, visibleCode, resolvedTheme])
+    return () => {
+      cancelled = true
+    }
+  }, [
+    lang,
+    themes,
+    writing,
+    isDone,
+    isInView,
+    visibleCode,
+    resolvedTheme,
+  ])
 
   React.useEffect(() => {
     if (!writing) {
@@ -244,15 +258,31 @@ function CodeEditor({
         className="h-[calc(100%-2.75rem)] w-full text-sm p-4 font-mono relative overflow-auto flex-1"
         ref={editorRef}
       >
-        <div
-          className={cn(
-            "[&>pre,_&_code]:!bg-transparent [&>pre,_&_code]:[background:transparent_!important] [&>pre,_&_code]:border-none [&_code]:!text-[13px]",
-            cursor &&
-              !isDone &&
-              "[&_.line:last-of-type::after]:content-['|'] [&_.line:last-of-type::after]:animate-pulse [&_.line:last-of-type::after]:inline-block [&_.line:last-of-type::after]:w-[1ch] [&_.line:last-of-type::after]:-translate-px",
-          )}
-          dangerouslySetInnerHTML={{ __html: highlightedCode }}
-        />
+        {writing && !isDone ? (
+          <pre
+            className={cn(
+              "whitespace-pre-wrap break-words font-mono text-[13px] text-foreground",
+              cursor &&
+                "[&::after]:content-['|'] [&::after]:animate-pulse [&::after]:inline-block [&::after]:w-[1ch] [&::after]:-translate-px",
+            )}
+          >
+            {visibleCode}
+          </pre>
+        ) : highlightedCode ? (
+          <div
+            className={cn(
+              "[&>pre,_&_code]:!bg-transparent [&>pre,_&_code]:[background:transparent_!important] [&>pre,_&_code]:border-none [&_code]:!text-[13px]",
+              cursor &&
+                !isDone &&
+                "[&_.line:last-of-type::after]:content-['|'] [&_.line:last-of-type::after]:animate-pulse [&_.line:last-of-type::after]:inline-block [&_.line:last-of-type::after]:w-[1ch] [&_.line:last-of-type::after]:-translate-px",
+            )}
+            dangerouslySetInnerHTML={{ __html: highlightedCode }}
+          />
+        ) : (
+          <pre className="whitespace-pre-wrap break-words font-mono text-[13px] text-foreground">
+            {visibleCode}
+          </pre>
+        )}
       </div>
     </div>
   )

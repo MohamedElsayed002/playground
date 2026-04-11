@@ -2,7 +2,6 @@
 
 import { useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import Hls from "hls.js"
 import { ArrowRight } from "lucide-react"
 import Link, { useLinkStatus } from "next/link"
 import { Spinner } from "@/components/ui/spinner"
@@ -12,22 +11,19 @@ function LinkButton({ href }: { href: string }) {
 
   return (
     <Button className="relative w-10 h-10 lg:w-12 lg:h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform hover:opacity-50">
-      {/* Arrow */}
       <ArrowRight
         size={20}
-        className={`transition-opacity duration-200 ${
-          pending ? "opacity-0" : "opacity-100"
-        }`}
+        className={`transition-opacity duration-200 ${pending ? "opacity-0" : "opacity-100"
+          }`}
       />
 
-      {/* Spinner overlay */}
       {pending && (
         <div className="absolute inset-0 flex items-center justify-center">
           <Spinner className="w-4 h-4" />
         </div>
       )}
 
-      <span className="sr-only">Navigate</span>
+      <span className="sr-only">Navigate to {href}</span>
     </Button>
   )
 }
@@ -38,36 +34,42 @@ export function Performance() {
   const videoRef3 = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
-    const streams = [
-      {
-        url: "https://stream.mux.com/1RdbcBtpEUK6501pc6yaIvwo9UfSnOg02k1uHxat00xR3w.m3u8",
-        ref: videoRef1,
-      },
-      {
-        url: "https://stream.mux.com/t1TbTB8M1VYHkhxBuap4A8Vm1x015HTHyuQxqchDBago.m3u8",
-        ref: videoRef2,
-      },
-      {
-        url: "https://stream.mux.com/6yvj9SR5bjmXq9N3ak7gy427RwUs8R2ZoH4ndA7Q1018.m3u8",
-        ref: videoRef3,
-      },
-    ]
+    let hlsInstances: any[] = []
 
-    const hlsInstances: Hls[] = []
+    const initHls = async () => {
+      const Hls = (await import("hls.js")).default
 
-    streams.forEach(({ url, ref }) => {
-      const video = ref.current
-      if (!video) return
+      const streams = [
+        {
+          url: "https://stream.mux.com/1RdbcBtpEUK6501pc6yaIvwo9UfSnOg02k1uHxat00xR3w.m3u8",
+          ref: videoRef1
+        },
+        {
+          url: "https://stream.mux.com/t1TbTB8M1VYHkhxBuap4A8Vm1x015HTHyuQxqchDBago.m3u8",
+          ref: videoRef2
+        },
+        {
+          url: "https://stream.mux.com/6yvj9SR5bjmXq9N3ak7gy427RwUs8R2ZoH4ndA7Q1018.m3u8",
+          ref: videoRef3
+        }
+      ]
 
-      if (Hls.isSupported()) {
-        const hls = new Hls()
-        hls.loadSource(url)
-        hls.attachMedia(video)
-        hlsInstances.push(hls)
-      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        video.src = url
-      }
-    })
+      streams.forEach(({ url, ref }) => {
+        const video = ref.current
+        if (!video) return
+
+        if (Hls.isSupported()) {
+          const hls = new Hls()
+          hls.loadSource(url)
+          hls.attachMedia(video)
+          hlsInstances.push(hls)
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = url
+        }
+      })
+    }
+
+    initHls()
 
     return () => {
       hlsInstances.forEach((hls) => hls.destroy())
@@ -84,7 +86,7 @@ export function Performance() {
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-        {/* Card 1 */}
+        {/* Card 1: Bad Performance Example */}
         <div className="relative rounded-[1.5rem] lg:rounded-[2.5rem] bg-black flex-1 min-h-[250px] overflow-hidden group">
           <video
             ref={videoRef1}
@@ -112,7 +114,7 @@ export function Performance() {
           </div>
         </div>
 
-        {/* Card 2 */}
+        {/* Card 2: React-Window Optimization */}
         <div className="relative rounded-[1.5rem] lg:rounded-[2.5rem] bg-black p-5 lg:p-8 min-h-[180px] overflow-hidden group">
           <video
             ref={videoRef2}
@@ -141,7 +143,7 @@ export function Performance() {
           </div>
         </div>
 
-        {/* Card 3 */}
+        {/* Card 3: TanStack Virtualized Optimization */}
         <div className="relative rounded-[1.5rem] lg:rounded-[2.5rem] bg-black p-5 lg:p-8 min-h-[180px] overflow-hidden group">
           <video
             ref={videoRef3}
