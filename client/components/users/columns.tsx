@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 
 import { sileo } from "sileo"
 
-import Link from "next/link"
+import { Link } from "@/components/nextjs-docs/transition-progress-layout"
 
 export const columns: ColumnDef<User>[] = [
   {

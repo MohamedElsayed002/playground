@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/components/nextjs-docs/transition-progress-layout"
 
 export function Chat() {
     return (

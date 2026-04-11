@@ -16,8 +16,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
 }
 
-export default function SingleUserPage() {
+export default async function SingleUserPage({
+    searchParams,params
+} : {
+    params: Promise<{userId: string}>
+    searchParams : Promise<{[key: string]: string | string[] | undefined}>
+}) {
+    const userId = (await params).userId
+    const filters = (await searchParams)
     return <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fed7aa_0%,#ffedd5_35%,#fefce8_75%,#fafaf9_100%)]">
-        <SingleUser/>
+        <SingleUser userId={userId}/>
     </main>
 }

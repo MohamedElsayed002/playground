@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 // import { Geist, Geist_Mono, Local } from "next/font/google";
 import localFont from 'next/font/local'
-
 import "./globals.css";
 import Provider from "@/providers";
+import { TransitionProgressLayout } from "@/components/nextjs-docs/transition-progress-layout";
 
 
 const SariaStencilFont = localFont({
@@ -42,10 +42,11 @@ export default function RootLayout({
       className={`${SariaStencilFont.className} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Provider>
-          {children}
-          {/* <BackgroundBeamsDemo/> */}
-        </Provider>
+        <TransitionProgressLayout>
+          <Provider>
+            {children}
+          </Provider>
+        </TransitionProgressLayout>
       </body>
     </html>
   );

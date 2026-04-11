@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/components/nextjs-docs/transition-progress-layout"
 
 
 export function Tables() {
@@ -17,7 +17,7 @@ export function Tables() {
                         </div>
                         <Button variant="outline">
                             <Link href="/tanstack-table">
-                                <ArrowRight className="text-black" size={24}/>
+                                <ArrowRight className="text-black" size={24} />
                             </Link>
                         </Button>
                     </div>

@@ -6,12 +6,10 @@ import { Skeleton } from "../ui/skeleton"
 import { Button } from "../ui/button"
 
 
-export default function SingleUser() {
-    const params = useParams<{ userId: string }>()
-    const { data: user, isLoading, error, refetch } = useSingleUser(params.userId)
-
+export default function SingleUser({userId}: {userId: string}) {
+    // const params = useParams<{ userId: string }>()
+    const { data: user, isLoading, error, refetch } = useSingleUser(userId)
     const userData = user?.SingleUserFake
-
     return (
         <div className="container mx-auto my-20">
             <h1 className="text-4xl font-bold italic text-center md:text-left underline mb-4">User Info</h1>
