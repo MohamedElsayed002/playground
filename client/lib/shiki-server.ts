@@ -1,8 +1,8 @@
-import { createHighlighterCore } from "@shikijs/core"
-import { createOnigurumaEngine } from "@shikijs/engine-oniguruma"
-import githubDark from "@shikijs/themes/github-dark"
-import githubLight from "@shikijs/themes/github-light"
-import { normalizeShikiLang } from "@/lib/utils"
+import { createHighlighterCore } from "@shikijs/core";
+import { createOnigurumaEngine } from "@shikijs/engine-oniguruma";
+import githubDark from "@shikijs/themes/github-dark";
+import githubLight from "@shikijs/themes/github-light";
+import { normalizeShikiLang } from "@/lib/utils";
 
 /**
  * Fine-grained Shiki bundle: only these grammars and themes are ever loaded.
@@ -24,9 +24,9 @@ const langLoaders = [
   () => import("@shikijs/langs/html"),
   () => import("@shikijs/langs/css"),
   () => import("@shikijs/langs/sql"),
-] as const
+] as const;
 
-let highlighterPromise: ReturnType<typeof createHighlighterCore> | null = null
+let highlighterPromise: ReturnType<typeof createHighlighterCore> | null = null;
 
 function getHighlighter() {
   if (!highlighterPromise) {
@@ -34,28 +34,26 @@ function getHighlighter() {
       themes: [githubLight, githubDark],
       langs: [...langLoaders],
       engine: createOnigurumaEngine(import("shiki/wasm")),
-    })
+    });
   }
-  return highlighterPromise
+  return highlighterPromise;
 }
 
 export type HighlightCodeOptions = {
-  themes?: { light: string; dark: string }
-  defaultColor?: "light" | "dark"
-}
+  themes?: { light: string; dark: string };
+  defaultColor?: "light" | "dark";
+};
 
 export async function highlightCodeToHtml(
   code: string,
   lang: string,
   options: HighlightCodeOptions = {},
 ): Promise<string> {
-  const {
-    defaultColor = "light",
-    themes = { light: "github-light", dark: "github-dark" },
-  } = options
+  const { defaultColor = "light", themes = { light: "github-light", dark: "github-dark" } } =
+    options;
 
-  const normalized = normalizeShikiLang(lang)
-  const highlighter = await getHighlighter()
+  const normalized = normalizeShikiLang(lang);
+  const highlighter = await getHighlighter();
 
   const run = (langId: string) =>
     highlighter.codeToHtml(code, {
@@ -65,11 +63,11 @@ export async function highlightCodeToHtml(
         dark: themes.dark,
       },
       defaultColor,
-    })
+    });
 
   try {
-    return await run(normalized)
+    return await run(normalized);
   } catch {
-    return await run("typescript")
+    return await run("typescript");
   }
 }

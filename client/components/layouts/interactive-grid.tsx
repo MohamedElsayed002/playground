@@ -1,24 +1,24 @@
-"use client"
+"use client";
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { cn } from "@/lib/utils"
+import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 
 export interface InteractiveGridPatternProps {
-  className?: string
-  children?: React.ReactNode
+  className?: string;
+  children?: React.ReactNode;
   /** Size of each grid cell in pixels */
-  cellSize?: number
+  cellSize?: number;
   /** Glow color on hover */
-  glowColor?: string
+  glowColor?: string;
   /** Border color of grid lines */
-  borderColor?: string
+  borderColor?: string;
   /** Mouse proximity radius for subtle highlighting */
-  proximity?: number
+  proximity?: number;
 }
 
 interface _CellState {
-  hovered: boolean
-  proximity: number // 0-1 based on distance from mouse
+  hovered: boolean;
+  proximity: number; // 0-1 based on distance from mouse
 }
 
 export function InteractiveGridPattern({
@@ -29,49 +29,49 @@ export function InteractiveGridPattern({
   borderColor = "rgba(63, 63, 70, 0.4)",
   proximity = 100,
 }: InteractiveGridPatternProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [grid, setGrid] = useState({ rows: 0, cols: 0, scale: 1 })
-  const [hoveredCell, setHoveredCell] = useState<number | null>(null)
-  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 })
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [grid, setGrid] = useState({ rows: 0, cols: 0, scale: 1 });
+  const [hoveredCell, setHoveredCell] = useState<number | null>(null);
+  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
 
   const updateGrid = useCallback(() => {
-    const container = containerRef.current
-    if (!container) return
+    const container = containerRef.current;
+    if (!container) return;
 
-    const { width, height } = container.getBoundingClientRect()
-    const scale = Math.max(1, Math.min(width, height) / 800)
-    const scaledCellSize = cellSize * scale
+    const { width, height } = container.getBoundingClientRect();
+    const scale = Math.max(1, Math.min(width, height) / 800);
+    const scaledCellSize = cellSize * scale;
 
-    const cols = Math.ceil(width / scaledCellSize) + 1
-    const rows = Math.ceil(height / scaledCellSize) + 1
+    const cols = Math.ceil(width / scaledCellSize) + 1;
+    const rows = Math.ceil(height / scaledCellSize) + 1;
 
-    setGrid({ rows, cols, scale })
-  }, [cellSize])
+    setGrid({ rows, cols, scale });
+  }, [cellSize]);
 
   useEffect(() => {
-    updateGrid()
-    const container = containerRef.current
-    if (!container) return
+    updateGrid();
+    const container = containerRef.current;
+    if (!container) return;
 
-    const ro = new ResizeObserver(updateGrid)
-    ro.observe(container)
-    return () => ro.disconnect()
-  }, [updateGrid])
+    const ro = new ResizeObserver(updateGrid);
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, [updateGrid]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    const container = containerRef.current
-    if (!container) return
-    const rect = container.getBoundingClientRect()
-    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top })
-  }, [])
+    const container = containerRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }, []);
 
   const handleMouseLeave = useCallback(() => {
-    setMousePos({ x: -1000, y: -1000 })
-    setHoveredCell(null)
-  }, [])
+    setMousePos({ x: -1000, y: -1000 });
+    setHoveredCell(null);
+  }, []);
 
-  const scaledCellSize = cellSize * grid.scale
-  const scaledProximity = proximity * grid.scale
+  const scaledCellSize = cellSize * grid.scale;
+  const scaledProximity = proximity * grid.scale;
 
   return (
     <div
@@ -85,14 +85,14 @@ export function InteractiveGridPattern({
         {Array.from({ length: grid.rows }).map((_, rowIndex) => (
           <div key={rowIndex} className="flex">
             {Array.from({ length: grid.cols }).map((_, colIndex) => {
-              const index = rowIndex * grid.cols + colIndex
-              const cellX = colIndex * scaledCellSize + scaledCellSize / 2
-              const cellY = rowIndex * scaledCellSize + scaledCellSize / 2
-              const dx = mousePos.x - cellX
-              const dy = mousePos.y - cellY
-              const distance = Math.sqrt(dx * dx + dy * dy)
-              const proximityFactor = Math.max(0, 1 - distance / scaledProximity)
-              const isHovered = hoveredCell === index
+              const index = rowIndex * grid.cols + colIndex;
+              const cellX = colIndex * scaledCellSize + scaledCellSize / 2;
+              const cellY = rowIndex * scaledCellSize + scaledCellSize / 2;
+              const dx = mousePos.x - cellX;
+              const dy = mousePos.y - cellY;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              const proximityFactor = Math.max(0, 1 - distance / scaledProximity);
+              const isHovered = hoveredCell === index;
 
               return (
                 <div
@@ -115,7 +115,7 @@ export function InteractiveGridPattern({
                   onMouseEnter={() => setHoveredCell(index)}
                   onMouseLeave={() => setHoveredCell(null)}
                 />
-              )
+              );
             })}
           </div>
         ))}
@@ -143,9 +143,9 @@ export function InteractiveGridPattern({
       {/* Content layer */}
       {children && <div className="relative z-10 h-full w-full">{children}</div>}
     </div>
-  )
+  );
 }
 
 export default function InteractiveGridPatternDemo() {
-  return <InteractiveGridPattern />
+  return <InteractiveGridPattern />;
 }

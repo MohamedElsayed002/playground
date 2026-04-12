@@ -4,28 +4,28 @@ import { GQL_Response_User, GQL_Single_User } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useUsers = () => {
-    return useQuery<GQL_Response_User>({
-        queryKey: ['all-users'],
-        queryFn: () => gqlClient.request(GET_ALL_USERS),
-    })
-}
+  return useQuery<GQL_Response_User>({
+    queryKey: ["all-users"],
+    queryFn: () => gqlClient.request(GET_ALL_USERS),
+  });
+};
 
 export const useSingleUser = (id?: string) => {
-    return useQuery<GQL_Single_User>({
-        queryKey: ['single-user', id],
-        enabled: !!id,
-        queryFn: () => gqlClient.request(SINGLE_USER, { id }),
-    })
-}
+  return useQuery<GQL_Single_User>({
+    queryKey: ["single-user", id],
+    enabled: !!id,
+    queryFn: () => gqlClient.request(SINGLE_USER, { id }),
+  });
+};
 
 export const useDeleteUser = () => {
-    const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: (id: string) =>
-            gqlClient.request<{ RemoveUser: { status: number; message: string } }>(DELETE_USER, { id }),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['all-users'] })
-        }
-    })
-}
+  return useMutation({
+    mutationFn: (id: string) =>
+      gqlClient.request<{ RemoveUser: { status: number; message: string } }>(DELETE_USER, { id }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-users"] });
+    },
+  });
+};

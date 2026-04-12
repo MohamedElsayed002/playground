@@ -31,7 +31,7 @@ export const GET_ALL_USERS = `
   	}
   }
 }
-`
+`;
 
 export const SINGLE_USER = `
   query SingleUser($id: ID!) {

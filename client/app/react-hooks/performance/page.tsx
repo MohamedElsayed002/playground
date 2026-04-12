@@ -1,13 +1,10 @@
-"use client"
+"use client";
 
 import LowerState from "./components/example-3";
-import { useId } from "react"
+import { useId } from "react";
 export default function Page() {
+  const id = useId();
+  console.log(id);
 
-    const id = useId()
-    console.log(id)
-
-    return (
-        <LowerState/>
-    )
+  return <LowerState />;
 }

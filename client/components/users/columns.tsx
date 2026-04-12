@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { User } from "@/types"
-import { ColumnDef } from "@tanstack/react-table"
-import { MoreHorizontal } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { User } from "@/types";
+import { ColumnDef } from "@tanstack/react-table";
+import { MoreHorizontal } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,13 +11,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { DataTableColumnHeader } from "./data-table-column-header"
-import { Checkbox } from "@/components/ui/checkbox"
+} from "@/components/ui/dropdown-menu";
+import { DataTableColumnHeader } from "./data-table-column-header";
+import { Checkbox } from "@/components/ui/checkbox";
 
-import { sileo } from "sileo"
+import { sileo } from "sileo";
 
-import { Link } from "@/components/nextjs-docs/transition-progress-layout"
+import { Link } from "@/components/nextjs-docs/transition-progress-layout";
 
 export const columns: ColumnDef<User>[] = [
   {
@@ -39,13 +39,13 @@ export const columns: ColumnDef<User>[] = [
       />
     ),
     enableSorting: false,
-    enableHiding: false
+    enableHiding: false,
   },
   {
     accessorKey: "image",
     header: "Image",
     cell: ({ row }) => {
-      const image = row.getValue("image") as string
+      const image = row.getValue("image") as string;
       return (
         <img
           src={image || "/fallback.png"}
@@ -53,11 +53,11 @@ export const columns: ColumnDef<User>[] = [
           className="w-10 h-10 rounded-full object-cover"
           loading="lazy"
           onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src = "/fallback.jpg"
+            (e.currentTarget as HTMLImageElement).src = "/fallback.jpg";
           }}
         />
-      )
-    }
+      );
+    },
   },
   {
     accessorKey: "name",
@@ -71,18 +71,18 @@ export const columns: ColumnDef<User>[] = [
           Name 
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button> */}
-          <DataTableColumnHeader column={column} title='Name' />
+          <DataTableColumnHeader column={column} title="Name" />
         </>
-      )
-    }
+      );
+    },
   },
   {
     accessorKey: "bio",
-    header: "Bio"
+    header: "Bio",
   },
   {
     accessorKey: "sex",
-    header: "Gender"
+    header: "Gender",
   },
   {
     id: "actions",
@@ -99,10 +99,10 @@ export const columns: ColumnDef<User>[] = [
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
               onClick={() => {
-                navigator.clipboard.writeText(row.original.id)
+                navigator.clipboard.writeText(row.original.id);
                 sileo.success({
-                  title: 'User ID copied successfully'
-                })
+                  title: "User ID copied successfully",
+                });
               }}
             >
               Copy user ID
@@ -115,17 +115,18 @@ export const columns: ColumnDef<User>[] = [
               className="text-red-500 focus:text-red-500"
               onClick={() => {
                 // @ts-ignore
-                (table.options.meta as { onRequestDeleteUser?: (id: string, label?: string) => void })?.onRequestDeleteUser?.(
-                  row.original.id,
-                  row.original.name
-                )
+                (
+                  table.options.meta as {
+                    onRequestDeleteUser?: (id: string, label?: string) => void;
+                  }
+                )?.onRequestDeleteUser?.(row.original.id, row.original.name);
               }}
             >
               Delete User
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     },
   },
-]
+];

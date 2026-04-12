@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { cn } from "@/lib/utils"
-import GridPattern from "@/components/layouts/grid-pattern"
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import GridPattern from "@/components/layouts/grid-pattern";
 
 type GridBackgroundProps = React.PropsWithChildren<{
-  className?: string
-  patternClassName?: string
-  fadeClassName?: string
-  squares?: [number, number][]
-}>
+  className?: string;
+  patternClassName?: string;
+  fadeClassName?: string;
+  squares?: [number, number][];
+}>;
 
 export default function GridBackground({
   children,
@@ -35,6 +35,5 @@ export default function GridBackground({
       />
       <div className="relative z-1">{children}</div>
     </div>
-  )
+  );
 }
-

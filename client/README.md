@@ -1,6 +1,7 @@
 # Client App Guide
 
 This client is built with **Next.js (App Router)** and focuses on:
+
 - clean feature-based UI organization
 - reusable hooks and shared tools
 - TanStack-first data + table + virtualization patterns
@@ -19,15 +20,18 @@ This client is built with **Next.js (App Router)** and focuses on:
 ## Project Approach
 
 ### 1) Feature + route driven structure
+
 - Route pages live in `app/` (App Router).
 - Reusable UI and domain pieces live in `components/`.
 - Educational/demo content and architecture explanations live in `features/`.
 
 ### 2) Shared logic in hooks and tools
+
 - `hooks/` contains reusable client logic (`use-auth`, `use-rooms`, `use-messages`, etc.).
 - `tools/` and `lib/` contain API clients, utilities, GraphQL helpers, socket/db setup, and typed helpers.
 
 ### 3) Data flow and state strategy
+
 - Use TanStack Query for async server data, caching, and stale/refresh logic.
 - Use Zustand stores only for truly local client interaction state.
 - Keep components mostly presentational, and move behavior to hooks/actions where possible.
@@ -70,6 +74,7 @@ client/
 ## Performance Approach
 
 Key performance ideas used in this client:
+
 - Virtualization for large datasets (`10k-users`, virtual list/table examples).
 - Memoization and stable props where expensive rerenders happen.
 - Component splitting to isolate frequently updated UI.
@@ -90,6 +95,7 @@ SMTP_FROM=no-reply@example.com
 ```
 
 Notes:
+
 - `NEXT_PUBLIC_API_URL` is used by the client for backend auth/API calls.
 - `OPENAI_API_KEY` is needed for AI/realtime related API routes.
 - `DATABASE_URL` is required for Prisma/database usage.
@@ -105,6 +111,7 @@ npm run dev
 ```
 
 Open:
+
 - [http://localhost:3000](http://localhost:3000)
 
 ### Other scripts

@@ -1,40 +1,42 @@
 # Virtualization in React: Improving Performance for Large Lists
 
-Rendering large lists in React can quickly lead to performance bottlenecks, especially when dealing with thousands of elements. Virtualization is a technique that optimizes this by only rendering visible elements and efficiently managing DOM updates . 
-
+Rendering large lists in React can quickly lead to performance bottlenecks, especially when dealing with thousands of elements. Virtualization is a technique that optimizes this by only rendering visible elements and efficiently managing DOM updates .
 
 ## What Is Virtualization?
 
 Virtualization refers to the process of rendering only the portion of a list or grid that is visible to the user. When implemented correctly, this technique significantly reduces:
 
-- **DOM updates**: Only visible elements are in the DOM 
+- **DOM updates**: Only visible elements are in the DOM
 - **Memory usage**: Fewer elements means less memory consumption.
 - **Render time**: Minimizing DOM operations speeds up the UI
 
 ## Benefits of Virtualization in React
 
 ### 1. Performance Optimization
+
 Virtualization prevents the browser from becoming sluggish by rendering only the required content.
+
 ### 2. Improved User Experience
+
 Smooth scrolling and quick load times
+
 ### 3. Scalability:
+
 Suitable for applications with datasets of thousands or even millions of items
 
-
-## Popular Virtualization Libraries 
+## Popular Virtualization Libraries
 
 - react-window
-    - Lightweight and highly performant 
-    - Ideal for simple lists and grids
+  - Lightweight and highly performant
+  - Ideal for simple lists and grids
 - react-virtualized
-    - Feature-rich, supports advanced layouts 
-    - Suitable for more complex scenarios
+  - Feature-rich, supports advanced layouts
+  - Suitable for more complex scenarios
 - @tanstack/react-virtual
 
-
 ```tsx
-import React from 'react';
-import { FixedSizeList as List } from 'react-window';
+import React from "react";
+import { FixedSizeList as List } from "react-window";
 
 const items = Array.from({ length: 10000 }, (_, index) => `Item ${index + 1}`);
 
@@ -56,25 +58,24 @@ export const VirtualizedList = () => {
 };
 ```
 
-## More advanced examples 
+## More advanced examples
 
 ### 1. Virtualized Chat Application
 
-
 ```tsx
-import React, { useRef, useState } from 'react';
-import { VariableSizeList as List } from 'react-window';
+import React, { useRef, useState } from "react";
+import { VariableSizeList as List } from "react-window";
 
 const messages = Array.from({ length: 5000 }, (_, i) => ({
   id: i,
   text: `Message ${i + 1}`,
-  sender: i % 2 === 0 ? 'Alice' : 'Bob',
+  sender: i % 2 === 0 ? "Alice" : "Bob",
 }));
 
 const ChatRow = ({ index, style }: { index: number; style: React.CSSProperties }) => {
   const message = messages[index];
   return (
-    <div style={{ ...style, padding: '10px', background: index % 2 ? '#f1f1f1' : '#fff' }}>
+    <div style={{ ...style, padding: "10px", background: index % 2 ? "#f1f1f1" : "#fff" }}>
       <strong>{message.sender}:</strong> {message.text}
     </div>
   );
@@ -82,20 +83,27 @@ const ChatRow = ({ index, style }: { index: number; style: React.CSSProperties }
 
 export const VirtualizedChat = () => {
   const listRef = useRef<List>(null);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
 
   const scrollToBottom = () => {
-    listRef.current?.scrollToItem(messages.length - 1, 'end');
+    listRef.current?.scrollToItem(messages.length - 1, "end");
   };
 
   const sendMessage = () => {
-    messages.push({ id: messages.length, text: newMessage, sender: 'You' });
-    setNewMessage('');
+    messages.push({ id: messages.length, text: newMessage, sender: "You" });
+    setNewMessage("");
     scrollToBottom();
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '500px', border: '1px solid #ccc' }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        height: "500px",
+        border: "1px solid #ccc",
+      }}
+    >
       <List
         ref={listRef}
         height={400}
@@ -105,9 +113,9 @@ export const VirtualizedChat = () => {
       >
         {ChatRow}
       </List>
-      <div style={{ display: 'flex', padding: '10px', borderTop: '1px solid #ccc' }}>
+      <div style={{ display: "flex", padding: "10px", borderTop: "1px solid #ccc" }}>
         <input
-          style={{ flexGrow: 1, padding: '5px' }}
+          style={{ flexGrow: 1, padding: "5px" }}
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Type a message..."
@@ -122,8 +130,8 @@ export const VirtualizedChat = () => {
 ### 2. Virtualized E-commerce Product Catalog
 
 ```tsx
-import React from 'react';
-import { FixedSizeGrid as Grid } from 'react-window';
+import React from "react";
+import { FixedSizeGrid as Grid } from "react-window";
 
 const products = Array.from({ length: 5000 }, (_, i) => ({
   id: i,
@@ -135,8 +143,8 @@ const products = Array.from({ length: 5000 }, (_, i) => ({
 const ProductCell = ({ columnIndex, rowIndex, style }: any) => {
   const product = products[rowIndex * 4 + columnIndex];
   return product ? (
-    <div style={{ ...style, padding: '10px', textAlign: 'center' }}>
-      <img src={product.image} alt={product.name} style={{ width: '100%', borderRadius: '4px' }} />
+    <div style={{ ...style, padding: "10px", textAlign: "center" }}>
+      <img src={product.image} alt={product.name} style={{ width: "100%", borderRadius: "4px" }} />
       <p>{product.name}</p>
       <p>{product.price}</p>
     </div>
@@ -159,11 +167,11 @@ export const VirtualizedCatalog = () => {
 };
 ```
 
-### 3. Infinite Scroll with Virtualization 
+### 3. Infinite Scroll with Virtualization
 
 ```tsx
-import React, { useEffect, useState } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import React, { useEffect, useState } from "react";
+import { FixedSizeList as List } from "react-window";
 
 const fetchArticles = (page: number) => {
   return Array.from({ length: 20 }, (_, i) => ({
@@ -223,19 +231,17 @@ export const InfiniteScrollVirtualizedList = () => {
 ## Best Practices for Virtualization in React
 
 1. Use Fixed Dimensions When possible
-    - Fixed size lists and grids perform better than dynamic layouts
-2. Combine Virtualization with Lazy loading 
-    - Reduce initial load time by loading only the visible portion 
+   - Fixed size lists and grids perform better than dynamic layouts
+2. Combine Virtualization with Lazy loading
+   - Reduce initial load time by loading only the visible portion
 3. Optimize for Accessibility:
-    - Ensure virtualized components are keyboard navigable and screen reader compatible.
-
+   - Ensure virtualized components are keyboard navigable and screen reader compatible.
 
 ## When to Use Virtualization
 
 - High Data Volume: Applications like admin dashboards or data-heavy UIs benefit the most.
 - Infinite Scrolling: For apps requiring endless scrolling, e.g., social media feeds or e-commerce product lists.
 - Grids with High Complexity: Use for layouts with thousands of cells, such as spreadsheets or complex tables.
-
 
 ## When NOT to Use Virtualization
 

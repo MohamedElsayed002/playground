@@ -1,6 +1,6 @@
-"use server"
+"use server";
 
-import { highlightCodeToHtml, type HighlightCodeOptions } from "@/lib/shiki-server"
+import { highlightCodeToHtml, type HighlightCodeOptions } from "@/lib/shiki-server";
 
 export async function highlightCodeAction(
   code: string,
@@ -8,5 +8,5 @@ export async function highlightCodeAction(
   defaultColor: "light" | "dark",
   themes?: HighlightCodeOptions["themes"],
 ) {
-  return highlightCodeToHtml(code, lang, { defaultColor, themes })
+  return highlightCodeToHtml(code, lang, { defaultColor, themes });
 }

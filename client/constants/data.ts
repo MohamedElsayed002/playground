@@ -19,7 +19,6 @@ export const cvReviewerFreeExample = `{
     }
   }`;
 
-
 export const cvReviewerProExample = `{
     "tier": "pro",
     "analysis": {
@@ -58,7 +57,7 @@ export const jobTailorFreeExample = `{
     }
   }`;
 
-export   const jobTailorProExample = `{
+export const jobTailorProExample = `{
     "tier": "pro",
     "tailoredCV": {
       "tailoredSections": {

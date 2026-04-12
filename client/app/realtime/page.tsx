@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import { useMemo, useState } from "react"
-import { useRealtimeChat } from "@tanstack/ai-react"
-import { openaiRealtime } from "@tanstack/ai-openai"
+import { useMemo, useState } from "react";
+import { useRealtimeChat } from "@tanstack/ai-react";
+import { openaiRealtime } from "@tanstack/ai-openai";
 
 export default function RealtimeChatPage() {
-  const [text, setText] = useState("")
+  const [text, setText] = useState("");
 
-  const adapter = useMemo(() => openaiRealtime(), [])
+  const adapter = useMemo(() => openaiRealtime(), []);
 
   const {
     status,
@@ -20,34 +20,28 @@ export default function RealtimeChatPage() {
     sendText,
     error,
   } = useRealtimeChat({
-    getToken: () =>
-      fetch("/api/realtime-token", { method: "POST" }).then((r) => r.json()),
+    getToken: () => fetch("/api/realtime-token", { method: "POST" }).then((r) => r.json()),
     adapter,
     instructions: "You are a helpful assistant.",
     voice: "alloy",
-  })
+  });
 
   const handleSend = () => {
-    const trimmed = text.trim()
-    if (!trimmed) return
-    sendText(trimmed)
-    setText("")
-  }
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    sendText(trimmed);
+    setText("");
+  };
 
   return (
     <div className="min-h-screen overflow-y-scroll bg-[radial-gradient(circle_at_top,_#1e293b_0%,_#0f172a_40%,_#020617_100%)] text-white">
       <div className="mx-auto max-w-3xl px-6 py-14">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-              Realtime Chat
-            </p>
-            <h1 className="text-3xl font-semibold">
-              Live AI Session
-            </h1>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Realtime Chat</p>
+            <h1 className="text-3xl font-semibold">Live AI Session</h1>
             <p className="mt-2">
-              Start a realtime session, speak or send text, and watch transcripts
-              update instantly.
+              Start a realtime session, speak or send text, and watch transcripts update instantly.
             </p>
           </div>
           <button
@@ -89,9 +83,7 @@ export default function RealtimeChatPage() {
               </div>
             )}
             {!pendingUserTranscript && !pendingAssistantTranscript && (
-              <div className="text-slate-500">
-                Waiting for audio or text input...
-              </div>
+              <div className="text-slate-500">Waiting for audio or text input...</div>
             )}
           </div>
         </div>
@@ -139,5 +131,5 @@ export default function RealtimeChatPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

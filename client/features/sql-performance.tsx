@@ -1,10 +1,4 @@
-import {
-  FileSearch2,
-  Gauge,
-  SearchCheck,
-  TableProperties,
-  Zap,
-} from "lucide-react";
+import { FileSearch2, Gauge, SearchCheck, TableProperties, Zap } from "lucide-react";
 
 const comparisonRows = [
   {
@@ -87,9 +81,8 @@ export function SQLPerformance() {
           SQL Indexing vs Query Optimization
         </h2>
         <p className="text-center text-sm text-gray-300 md:text-left md:text-base">
-          Slow SQL is not always fixed by adding an index. Sometimes the real
-          problem is the query shape, the join strategy, or the amount of data
-          being scanned and returned.
+          Slow SQL is not always fixed by adding an index. Sometimes the real problem is the query
+          shape, the join strategy, or the amount of data being scanned and returned.
         </p>
       </div>
 
@@ -106,45 +99,30 @@ export function SQLPerformance() {
               key={row.aspect}
               className="grid grid-cols-1 border-b border-white/10 last:border-b-0 md:grid-cols-3"
             >
-              <div className="px-4 py-4 text-sm font-semibold text-white/90">
-                {row.aspect}
-              </div>
-              <div className="px-4 py-4 text-sm leading-6 text-gray-300">
-                {row.indexing}
-              </div>
-              <div className="px-4 py-4 text-sm leading-6 text-gray-300">
-                {row.optimization}
-              </div>
+              <div className="px-4 py-4 text-sm font-semibold text-white/90">{row.aspect}</div>
+              <div className="px-4 py-4 text-sm leading-6 text-gray-300">{row.indexing}</div>
+              <div className="px-4 py-4 text-sm leading-6 text-gray-300">{row.optimization}</div>
             </div>
           ))}
         </div>
 
         <div className="rounded-[2rem] border border-orange-300/20 bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.18),_rgba(15,23,42,0.94)_55%)] p-6">
-          <p className="text-xs uppercase tracking-[0.25em] text-orange-200/80">
-            Quick guide
-          </p>
+          <p className="text-xs uppercase tracking-[0.25em] text-orange-200/80">Quick guide</p>
           <h3 className="mt-3 text-2xl font-semibold text-white">
             Indexes help access. Optimization helps everything else.
           </h3>
           <p className="mt-3 text-sm leading-6 text-gray-300">
-            If a query filters on the same columns often, indexing may help a
-            lot. But if the query returns too much data or joins badly, you also
-            need to optimize the query itself.
+            If a query filters on the same columns often, indexing may help a lot. But if the query
+            returns too much data or joins badly, you also need to optimize the query itself.
           </p>
 
           <div className="mt-6 space-y-3">
             <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
-                Index first for
-              </p>
-              <p className="mt-2 text-sm text-white">
-                repeated lookups and joins
-              </p>
+              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Index first for</p>
+              <p className="mt-2 text-sm text-white">repeated lookups and joins</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
-                Optimize query for
-              </p>
+              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Optimize query for</p>
               <p className="mt-2 text-sm text-white">
                 large scans, bad pagination, and heavy reports
               </p>

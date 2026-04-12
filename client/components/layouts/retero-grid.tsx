@@ -1,25 +1,28 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { useMemo } from "react"
-import { cn } from "@/lib/utils"
-import Basketball from "./ball"
+import { motion } from "framer-motion";
+import { useMemo } from "react";
+import { cn } from "@/lib/utils";
+import Basketball from "./ball";
 
 function FloatingPaths({ position }: { position: number }) {
   const paths = useMemo(
     () =>
       Array.from({ length: 36 }, (_, i) => ({
         id: i,
-        d: `M-${380 - i * 5 * position} -${189 + i * 6}C-${380 - i * 5 * position
-          } -${189 + i * 6} -${312 - i * 5 * position} ${216 - i * 6} ${152 - i * 5 * position
-          } ${343 - i * 6}C${616 - i * 5 * position} ${470 - i * 6} ${684 - i * 5 * position
-          } ${875 - i * 6} ${684 - i * 5 * position} ${875 - i * 6}`,
+        d: `M-${380 - i * 5 * position} -${189 + i * 6}C-${
+          380 - i * 5 * position
+        } -${189 + i * 6} -${312 - i * 5 * position} ${216 - i * 6} ${
+          152 - i * 5 * position
+        } ${343 - i * 6}C${616 - i * 5 * position} ${470 - i * 6} ${
+          684 - i * 5 * position
+        } ${875 - i * 6} ${684 - i * 5 * position} ${875 - i * 6}`,
         width: 0.5 + i * 0.03,
         opacity: 0.1 + i * 0.03,
         duration: 20 + (i % 10) * 1.5,
       })),
     [position],
-  )
+  );
 
   return (
     <svg
@@ -29,7 +32,7 @@ function FloatingPaths({ position }: { position: number }) {
       viewBox="0 0 696 316"
       preserveAspectRatio="xMidYMid slice"
     >
-      {paths.map(path => (
+      {paths.map((path) => (
         <motion.path
           key={path.id}
           d={path.d}
@@ -50,12 +53,12 @@ function FloatingPaths({ position }: { position: number }) {
         />
       ))}
     </svg>
-  )
+  );
 }
 
 export interface BackgroundPathsProps {
-  className?: string
-  children?: React.ReactNode
+  className?: string;
+  children?: React.ReactNode;
 }
 
 export function BackgroundPaths({ className, children }: BackgroundPathsProps) {
@@ -87,12 +90,14 @@ export function BackgroundPaths({ className, children }: BackgroundPathsProps) {
       {/* Content layer */}
       {children && <div className="relative z-10 h-full w-full">{children}</div>}
     </div>
-  )
+  );
 }
 
 export default function BackgroundPathsDemo() {
-  return <div>
-    <BackgroundPaths />
-    <Basketball />
-  </div>
+  return (
+    <div>
+      <BackgroundPaths />
+      <Basketball />
+    </div>
+  );
 }

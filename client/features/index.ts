@@ -14,18 +14,18 @@ import { StateManagement } from "./state-management";
 import { Tables } from "./tables";
 
 export {
-    APIsAndRealtime,
-    Architecture,
-    AuthAccess,
-    CachingLayers,
-    CachingJobs,
-    Chat,
-    LearningRoadmap,
-    LiveStream,
-    NoSQLVSSQL,
-    Performance,
-    RenderingStrategies,
-    SQLPerformance,
-    StateManagement,
-    Tables
-}
+  APIsAndRealtime,
+  Architecture,
+  AuthAccess,
+  CachingLayers,
+  CachingJobs,
+  Chat,
+  LearningRoadmap,
+  LiveStream,
+  NoSQLVSSQL,
+  Performance,
+  RenderingStrategies,
+  SQLPerformance,
+  StateManagement,
+  Tables,
+};

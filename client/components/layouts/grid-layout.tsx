@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import React from "react"
-import { cn } from "@/lib/utils"
+import React from "react";
+import { cn } from "@/lib/utils";
 
 interface GridPatternProps {
-  width?: number
-  height?: number
-  x?: number
-  y?: number
-  squares?: [number, number][]
-  strokeDasharray?: string
-  className?: string
-  [key: string]: any
+  width?: number;
+  height?: number;
+  x?: number;
+  y?: number;
+  squares?: [number, number][];
+  strokeDasharray?: string;
+  className?: string;
+  [key: string]: any;
 }
 
 export function GridPattern({
@@ -24,7 +24,7 @@ export function GridPattern({
   className,
   ...props
 }: GridPatternProps) {
-  const id = React.useId()
+  const id = React.useId();
 
   return (
     <svg
@@ -56,9 +56,9 @@ export function GridPattern({
         </svg>
       )}
     </svg>
-  )
+  );
 }
 
-export type { GridPatternProps }
+export type { GridPatternProps };
 
-export default GridPattern
+export default GridPattern;

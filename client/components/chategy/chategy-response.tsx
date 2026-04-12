@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import type { ChategyResponse } from "@/lib/chategy-api"
-import { CodeEditor } from "./code-editor"
-import { extractCodeSnippets, normalizeShikiLang } from "@/lib/utils"
+import type { ChategyResponse } from "@/lib/chategy-api";
+import { CodeEditor } from "./code-editor";
+import { extractCodeSnippets, normalizeShikiLang } from "@/lib/utils";
 
 type Props = {
-  response: ChategyResponse | null
-}
+  response: ChategyResponse | null;
+};
 
 export function ChategyResponsePanel({ response }: Props) {
   if (!response) {
@@ -14,11 +14,10 @@ export function ChategyResponsePanel({ response }: Props) {
       <div className="rounded-xl border border-dashed border-slate-300 p-6 text-sm text-slate-500">
         No response yet. Send a request
       </div>
-    )
+    );
   }
 
-  const codeSnippets =
-    response.mode === "code-execution" ? extractCodeSnippets(response.data) : []
+  const codeSnippets = response.mode === "code-execution" ? extractCodeSnippets(response.data) : [];
 
   return (
     <div className="space-y-3">
@@ -61,5 +60,5 @@ export function ChategyResponsePanel({ response }: Props) {
         {response && response.data.analysis}
       </p>
     </div>
-  )
+  );
 }

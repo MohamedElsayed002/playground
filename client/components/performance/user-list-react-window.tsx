@@ -17,25 +17,15 @@ type UsersListProps = {
   users: User[];
 };
 
-const fallbackAvatar =
-  "https://placehold.co/80x80/e2e8f0/475569?text=User";
+const fallbackAvatar = "https://placehold.co/80x80/e2e8f0/475569?text=User";
 
 export default function UsersList({ users }: UsersListProps) {
+  const router = useRouter();
 
-  const router = useRouter()
-
-  const Row = ({
-    index,
-    style,
-  }: {
-    index: number;
-    style: CSSProperties;
-  }) => {
-
-
-    useHotkey('Control+Space', () => {
-      router.push('/')
-    })
+  const Row = ({ index, style }: { index: number; style: CSSProperties }) => {
+    useHotkey("Control+Space", () => {
+      router.push("/");
+    });
 
     const user = users[index];
     const fullName = [user.name, user.lastName].filter(Boolean).join(" ");
@@ -71,27 +61,23 @@ export default function UsersList({ users }: UsersListProps) {
     );
   };
 
-
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8">
-
-      <span onClick={() => router.push('/')} className="flex gap-4 cursor-pointer">
+      <span onClick={() => router.push("/")} className="flex gap-4 cursor-pointer">
         <ArrowLeft size={20} />
         Back / Ctrl+Space
       </span>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium uppercase tracking-[0.3em] text-slate-500">
-          10k Users
-        </p>
+        <p className="text-sm font-medium uppercase tracking-[0.3em] text-slate-500">10k Users</p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
             <h2 className="text-3xl font-semibold tracking-tight text-slate-900">
               React Window List
             </h2>
             <p className="max-w-2xl text-sm text-slate-600">
-              A virtualized list that keeps scrolling smooth while still showing
-              richer profile cards.
+              A virtualized list that keeps scrolling smooth while still showing richer profile
+              cards.
             </p>
           </div>
           <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">

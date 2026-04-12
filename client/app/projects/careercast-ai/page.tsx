@@ -1,14 +1,12 @@
-import type { Metadata} from "next"
+import type { Metadata } from "next";
 import GridBackground from "@/components/layouts/grid-background";
 import CareercastAI from "@/features/careercast-ai";
 
-
 export const metadata: Metadata = {
-  title: 'CareerCast AI'
-}
+  title: "CareerCast AI",
+};
 
 export default function Page() {
-
   return (
     <GridBackground
       className="min-h-dvh bg-gray-300 dark:bg-zinc-950"
@@ -24,7 +22,7 @@ export default function Page() {
         [6, 10],
       ]}
     >
-      <CareercastAI/>
+      <CareercastAI />
     </GridBackground>
   );
 }

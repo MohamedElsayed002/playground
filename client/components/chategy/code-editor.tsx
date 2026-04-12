@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { Check, Copy } from "lucide-react"
-import { type UseInViewOptions, useInView } from "motion/react"
-import { useTheme } from "next-themes"
-import * as React from "react"
-import { highlightCodeAction } from "@/actions/highlight-code"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { Check, Copy } from "lucide-react";
+import { type UseInViewOptions, useInView } from "motion/react";
+import { useTheme } from "next-themes";
+import * as React from "react";
+import { highlightCodeAction } from "@/actions/highlight-code";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface CopyButtonProps {
-  content: string
-  size?: "sm" | "default" | "lg"
-  variant?: "default" | "ghost" | "outline"
-  className?: string
-  onCopy?: (content: string) => void
+  content: string;
+  size?: "sm" | "default" | "lg";
+  variant?: "default" | "ghost" | "outline";
+  className?: string;
+  onCopy?: (content: string) => void;
 }
 
 function CopyButton({
@@ -23,18 +23,18 @@ function CopyButton({
   className,
   onCopy,
 }: CopyButtonProps) {
-  const [copied, setCopied] = React.useState(false)
+  const [copied, setCopied] = React.useState(false);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(content)
-      setCopied(true)
-      onCopy?.(content)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      onCopy?.(content);
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy text: ", err)
+      console.error("Failed to copy text: ", err);
     }
-  }
+  };
 
   return (
     <Button
@@ -45,31 +45,31 @@ function CopyButton({
     >
       {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
     </Button>
-  )
+  );
 }
 
 type CodeEditorProps = Omit<React.ComponentProps<"div">, "onCopy"> & {
-  children: string
-  lang: string
+  children: string;
+  lang: string;
   themes?: {
-    light: string
-    dark: string
-  }
-  duration?: number
-  delay?: number
-  header?: boolean
-  dots?: boolean
-  icon?: React.ReactNode
-  cursor?: boolean
-  inView?: boolean
-  inViewMargin?: UseInViewOptions["margin"]
-  inViewOnce?: boolean
-  copyButton?: boolean
-  writing?: boolean
-  title?: string
-  onDone?: () => void
-  onCopy?: (content: string) => void
-}
+    light: string;
+    dark: string;
+  };
+  duration?: number;
+  delay?: number;
+  header?: boolean;
+  dots?: boolean;
+  icon?: React.ReactNode;
+  cursor?: boolean;
+  inView?: boolean;
+  inViewMargin?: UseInViewOptions["margin"];
+  inViewOnce?: boolean;
+  copyButton?: boolean;
+  writing?: boolean;
+  title?: string;
+  onDone?: () => void;
+  onCopy?: (content: string) => void;
+};
 
 function CodeEditor({
   children: code,
@@ -95,28 +95,28 @@ function CodeEditor({
   onCopy,
   ...props
 }: CodeEditorProps) {
-  const { resolvedTheme } = useTheme()
+  const { resolvedTheme } = useTheme();
 
-  const editorRef = React.useRef<HTMLDivElement>(null)
-  const [visibleCode, setVisibleCode] = React.useState("")
-  const [highlightedCode, setHighlightedCode] = React.useState("")
-  const [isDone, setIsDone] = React.useState(false)
+  const editorRef = React.useRef<HTMLDivElement>(null);
+  const [visibleCode, setVisibleCode] = React.useState("");
+  const [highlightedCode, setHighlightedCode] = React.useState("");
+  const [isDone, setIsDone] = React.useState(false);
 
   const inViewResult = useInView(editorRef, {
     once: inViewOnce,
     margin: inViewMargin,
-  })
-  const isInView = !inView || inViewResult
+  });
+  const isInView = !inView || inViewResult;
 
   React.useEffect(() => {
     if (!(visibleCode.length && isInView)) {
-      return
+      return;
     }
     if (writing && !isDone) {
-      return
+      return;
     }
 
-    let cancelled = false
+    let cancelled = false;
 
     const loadHighlightedCode = async () => {
       try {
@@ -125,71 +125,63 @@ function CodeEditor({
           lang,
           resolvedTheme === "dark" ? "dark" : "light",
           themes,
-        )
+        );
         if (!cancelled) {
-          setHighlightedCode(highlighted)
+          setHighlightedCode(highlighted);
         }
       } catch (e) {
-        console.error(`Language "${lang}" could not be loaded.`, e)
+        console.error(`Language "${lang}" could not be loaded.`, e);
       }
-    }
+    };
 
-    loadHighlightedCode()
+    loadHighlightedCode();
     return () => {
-      cancelled = true
-    }
-  }, [
-    lang,
-    themes,
-    writing,
-    isDone,
-    isInView,
-    visibleCode,
-    resolvedTheme,
-  ])
+      cancelled = true;
+    };
+  }, [lang, themes, writing, isDone, isInView, visibleCode, resolvedTheme]);
 
   React.useEffect(() => {
     if (!writing) {
-      setVisibleCode(code)
-      onDone?.()
-      return
+      setVisibleCode(code);
+      onDone?.();
+      return;
     }
 
     if (!(code.length && isInView)) {
-      return
+      return;
     }
 
-    const characters = Array.from(code)
-    let index = 0
-    const totalDuration = duration * 1000
-    const interval = totalDuration / characters.length
-    let intervalId: NodeJS.Timeout
+    const characters = Array.from(code);
+    let index = 0;
+    const totalDuration = duration * 1000;
+    const interval = totalDuration / characters.length;
+    let intervalId: NodeJS.Timeout;
 
     const timeout = setTimeout(() => {
       intervalId = setInterval(() => {
         if (index < characters.length) {
-          setVisibleCode(prev => {
-            const currentIndex = index
-            index += 1
-            return prev + characters[currentIndex]
-          })
+          setVisibleCode((prev) => {
+            const currentIndex = index;
+            index += 1;
+            return prev + characters[currentIndex];
+          });
           editorRef.current?.scrollTo({
             top: editorRef.current?.scrollHeight,
             behavior: "smooth",
-          })
+          });
         } else {
-          clearInterval(intervalId)
-          setIsDone(true)
-          onDone?.()
+          clearInterval(intervalId);
+          setIsDone(true);
+          onDone?.();
         }
-      }, interval)
-    }, delay * 1000)
+      }, interval);
+    }, delay * 1000);
 
     return () => {
-      clearTimeout(timeout)
-      clearInterval(intervalId)
-    }
-  }, [code, duration, delay, isInView, writing, onDone])
+      clearTimeout(timeout);
+      clearInterval(intervalId);
+    };
+  }, [code, duration, delay, isInView, writing, onDone]);
 
   return (
     <div
@@ -285,10 +277,10 @@ function CodeEditor({
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export { CodeEditor, CopyButton, type CodeEditorProps, type CopyButtonProps }
+export { CodeEditor, CopyButton, type CodeEditorProps, type CopyButtonProps };
 
 const demoCode = `import { useState } from "react"
 
@@ -300,12 +292,12 @@ export function Counter() {
       Count: {count}
     </button>
   )
-}`
+}`;
 
 export function CodeEditorDemo() {
   return (
     <CodeEditor lang="tsx" title="Counter.tsx" copyButton duration={3}>
       {demoCode}
     </CodeEditor>
-  )
+  );
 }

@@ -3,16 +3,15 @@ import prisma from "@/lib/db";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: 'tanstack-virtualized'
-}
+  title: "tanstack-virtualized",
+};
 
 export default async function Page() {
+  const users = await prisma.user.findMany();
 
-    const users = await prisma.user.findMany()
-
-    return (
-        <main>
-            <UsersList users={users}/>
-        </main>
-    )
+  return (
+    <main>
+      <UsersList users={users} />
+    </main>
+  );
 }

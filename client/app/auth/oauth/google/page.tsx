@@ -24,9 +24,8 @@ export default function GoogleOAuthCallbackPage() {
     async function completeGoogleSignIn() {
       const hash = typeof window !== "undefined" ? window.location.hash : "";
       const match = /^#data=(.+)$/.exec(hash);
-      console.log("match",match);
       if (!match) {
-        console.log("No match",match);
+        console.log("No match", match);
         setMessage("Something went wrong. Redirecting to login…");
         sileo.error({
           title: "Google sign-in failed",
@@ -52,8 +51,8 @@ export default function GoogleOAuthCallbackPage() {
         });
         window.history.replaceState(null, "", window.location.pathname);
         sileo.success({ title: "Logged in successfully" });
-        window.location.href = "/"
-      } catch (err) {
+        window.location.href = "/";
+      } catch {
         setMessage("Could not complete sign-in. Redirecting…");
         sileo.error({
           title: "Google sign-in failed",

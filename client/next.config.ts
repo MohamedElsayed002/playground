@@ -1,20 +1,19 @@
-import { withSentryConfig } from "@sentry/nextjs"
-import type { NextConfig } from "next"
+import { withSentryConfig } from "@sentry/nextjs";
+import type { NextConfig } from "next";
 
-const analyzeEnabled =
-  process.env.ANALYZE === "true" || process.env.ANALYZE === "1"
+const analyzeEnabled = process.env.ANALYZE === "true" || process.env.ANALYZE === "1";
 
 if (analyzeEnabled) {
   console.log(
-    "[bundle-analyzer] Enabled: after the build, open analyze/client.html in your browser (from this app directory)."
-  )
+    "[bundle-analyzer] Enabled: after the build, open analyze/client.html in your browser (from this app directory).",
+  );
 }
 
 const withBundleAnalyzer = require("@next/bundle-analyzer")({
   enabled: analyzeEnabled,
   /** Static HTML is written under analyze/; avoids relying on the OS opening a browser. */
   openAnalyzer: false,
-})
+});
 
 const nextConfig: NextConfig = {
   // Cause an error in different files
@@ -25,7 +24,7 @@ const nextConfig: NextConfig = {
     },
     incomingRequests: true,
   },
-}
+};
 
 const sentryWrapped = withSentryConfig(nextConfig, {
   org: "unemployed-7m",
@@ -37,6 +36,6 @@ const sentryWrapped = withSentryConfig(nextConfig, {
 
   automaticVercelMonitors: true,
   disableLogger: true,
-})
+});
 
-export default withBundleAnalyzer(sentryWrapped)
+export default withBundleAnalyzer(sentryWrapped);

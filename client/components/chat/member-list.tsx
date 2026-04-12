@@ -1,19 +1,18 @@
-'use client'
+"use client";
 
-import { useRoomMembers } from "@/hooks/use-rooms"
-import { useChatStore } from "@/store/chat.store"
-import { Avatar } from "../users/avatar"
-import { OnlineIndicator } from "./online-indicator"
-
+import { useRoomMembers } from "@/hooks/use-rooms";
+import { useChatStore } from "@/store/chat.store";
+import { Avatar } from "../users/avatar";
+import { OnlineIndicator } from "./online-indicator";
 
 interface MemberListProps {
-  roomId: string
+  roomId: string;
 }
 
 export function MemberList({ roomId }: MemberListProps) {
-  const { data: members, isLoading } = useRoomMembers(roomId)
+  const { data: members, isLoading } = useRoomMembers(roomId);
 
-  const onlineSet = useChatStore((s) => s.onlineUsers[roomId])
+  const onlineSet = useChatStore((s) => s.onlineUsers[roomId]);
 
   if (isLoading) {
     return (
@@ -25,21 +24,21 @@ export function MemberList({ roomId }: MemberListProps) {
           </div>
         ))}
       </aside>
-    )
+    );
   }
 
-  const admins = members?.filter((m) => m.role === 'admin') ?? []
-  const regular = members?.filter((m) => m.role !== 'admin') ?? []
+  const admins = members?.filter((m) => m.role === "admin") ?? [];
+  const regular = members?.filter((m) => m.role !== "admin") ?? [];
 
   // @ts-expect-error
-  const renderMember = (m: typeof members[0]) => {
+  const renderMember = (m: (typeof members)[0]) => {
     // isOnline: combine the profile's DB value with the live socket presence
     const isOnline = onlineSet ? onlineSet.has(m.user_id) : (m.profile?.is_online ?? false);
 
     return (
       <div key={m.user_id} className="flex items-center gap-2.5 py-1">
         <Avatar
-          username={m.profile?.username ?? '?'}
+          username={m.profile?.username ?? "?"}
           avatarUrl={m.profile?.avatar_url}
           isOnline={isOnline}
           size="sm"
@@ -76,5 +75,5 @@ export function MemberList({ roomId }: MemberListProps) {
         )}
       </div>
     </aside>
-  )
+  );
 }

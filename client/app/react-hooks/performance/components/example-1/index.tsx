@@ -1,22 +1,21 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import List from "./list"
-import Counter from "./counter"
+import List from "./list";
+import Counter from "./counter";
 
 const data = [
-    { id: 1, name: 'Mohamed' },
-    { id: 2, name: 'Elsayed' },
-    { id: 3, name: 'Ali' }
-]
+  { id: 1, name: "Mohamed" },
+  { id: 2, name: "Elsayed" },
+  { id: 3, name: "Ali" },
+];
 
 export default function LowerState() {
-    const [people, setPeople] = useState(data)
+  // const [people, setPeople] = useState(data)
 
-    return (
-        <section>
-            <Counter />
-            <List people={data} />
-        </section>
-    )
+  return (
+    <section>
+      <Counter />
+      <List people={data} />
+    </section>
+  );
 }

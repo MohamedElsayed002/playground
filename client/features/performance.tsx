@@ -1,20 +1,19 @@
-"use client"
+"use client";
 
-import { useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { ArrowRight } from "lucide-react"
-import Link, { useLinkStatus } from "next/link"
-import { Spinner } from "@/components/ui/spinner"
+import { useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import Link, { useLinkStatus } from "next/link";
+import { Spinner } from "@/components/ui/spinner";
 
 function LinkButton({ href }: { href: string }) {
-  const { pending } = useLinkStatus()
+  const { pending } = useLinkStatus();
 
   return (
     <Button className="relative w-10 h-10 lg:w-12 lg:h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform hover:opacity-50">
       <ArrowRight
         size={20}
-        className={`transition-opacity duration-200 ${pending ? "opacity-0" : "opacity-100"
-          }`}
+        className={`transition-opacity duration-200 ${pending ? "opacity-0" : "opacity-100"}`}
       />
 
       {pending && (
@@ -25,62 +24,60 @@ function LinkButton({ href }: { href: string }) {
 
       <span className="sr-only">Navigate to {href}</span>
     </Button>
-  )
+  );
 }
 
 export function Performance() {
-  const videoRef1 = useRef<HTMLVideoElement>(null)
-  const videoRef2 = useRef<HTMLVideoElement>(null)
-  const videoRef3 = useRef<HTMLVideoElement>(null)
+  const videoRef1 = useRef<HTMLVideoElement>(null);
+  const videoRef2 = useRef<HTMLVideoElement>(null);
+  const videoRef3 = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    let hlsInstances: any[] = []
+    const hlsInstances: any[] = [];
 
     const initHls = async () => {
-      const Hls = (await import("hls.js")).default
+      const Hls = (await import("hls.js")).default;
 
       const streams = [
         {
           url: "https://stream.mux.com/1RdbcBtpEUK6501pc6yaIvwo9UfSnOg02k1uHxat00xR3w.m3u8",
-          ref: videoRef1
+          ref: videoRef1,
         },
         {
           url: "https://stream.mux.com/t1TbTB8M1VYHkhxBuap4A8Vm1x015HTHyuQxqchDBago.m3u8",
-          ref: videoRef2
+          ref: videoRef2,
         },
         {
           url: "https://stream.mux.com/6yvj9SR5bjmXq9N3ak7gy427RwUs8R2ZoH4ndA7Q1018.m3u8",
-          ref: videoRef3
-        }
-      ]
+          ref: videoRef3,
+        },
+      ];
 
       streams.forEach(({ url, ref }) => {
-        const video = ref.current
-        if (!video) return
+        const video = ref.current;
+        if (!video) return;
 
         if (Hls.isSupported()) {
-          const hls = new Hls()
-          hls.loadSource(url)
-          hls.attachMedia(video)
-          hlsInstances.push(hls)
+          const hls = new Hls();
+          hls.loadSource(url);
+          hls.attachMedia(video);
+          hlsInstances.push(hls);
         } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-          video.src = url
+          video.src = url;
         }
-      })
-    }
+      });
+    };
 
-    initHls()
+    initHls();
 
     return () => {
-      hlsInstances.forEach((hls) => hls.destroy())
-    }
-  }, [])
+      hlsInstances.forEach((hls) => hls.destroy());
+    };
+  }, []);
 
   return (
     <>
-      <h2 className="text-3xl font-semibold mb-4 md:text-left text-center">
-        Performance
-      </h2>
+      <h2 className="text-3xl font-semibold mb-4 md:text-left text-center">Performance</h2>
       <p className="text-gray-400 -mt-2 mb-5">
         fetch 10k Users tanstack/virtual, react-window, fetching (bad performance)
       </p>
@@ -133,12 +130,8 @@ export function Performance() {
             </div>
 
             <div>
-              <h3 className="text-lg lg:text-2xl font-medium leading-tight mb-1">
-                react-window
-              </h3>
-              <p className="text-[10px] lg:text-sm opacity-80">
-                performance optimized.
-              </p>
+              <h3 className="text-lg lg:text-2xl font-medium leading-tight mb-1">react-window</h3>
+              <p className="text-[10px] lg:text-sm opacity-80">performance optimized.</p>
             </div>
           </div>
         </div>
@@ -162,9 +155,7 @@ export function Performance() {
                 <div className="text-lg lg:text-2xl font-medium leading-tight mb-1">
                   TANSTACK VIRTUALIZED
                 </div>
-                <p className="text-[10px] lg:text-sm opacity-80">
-                  performance optimized
-                </p>
+                <p className="text-[10px] lg:text-sm opacity-80">performance optimized</p>
               </div>
 
               <Link href="/10k-users/tanstack-virtualized">
@@ -175,5 +166,5 @@ export function Performance() {
         </div>
       </div>
     </>
-  )
+  );
 }

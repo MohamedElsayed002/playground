@@ -1,14 +1,14 @@
-import { cn } from "@/lib/utils"
-import { highlightCodeToHtml } from "@/lib/shiki-server"
+import { cn } from "@/lib/utils";
+import { highlightCodeToHtml } from "@/lib/shiki-server";
 
 type CodeBlockProps = {
-  code: string
-  lang: string
-  className?: string
+  code: string;
+  lang: string;
+  className?: string;
   /** Inline color for dual-theme output when SSR cannot read client theme. */
-  defaultColor?: "light" | "dark"
-  themes?: { light: string; dark: string }
-}
+  defaultColor?: "light" | "dark";
+  themes?: { light: string; dark: string };
+};
 
 /**
  * Server-only syntax highlighting: Shiki runs on the server and ships HTML to the client,
@@ -21,7 +21,7 @@ export async function CodeBlock({
   defaultColor = "light",
   themes,
 }: CodeBlockProps) {
-  const html = await highlightCodeToHtml(code, lang, { defaultColor, themes })
+  const html = await highlightCodeToHtml(code, lang, { defaultColor, themes });
 
   return (
     <div
@@ -31,5 +31,5 @@ export async function CodeBlock({
       )}
       dangerouslySetInnerHTML={{ __html: html }}
     />
-  )
+  );
 }

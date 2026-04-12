@@ -1,26 +1,26 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { cn } from "@/lib/utils"
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 export interface MeteorsProps {
-  className?: string
-  children?: React.ReactNode
+  className?: string;
+  children?: React.ReactNode;
   /** Number of meteors */
-  count?: number
+  count?: number;
   /** Meteor angle in degrees (215 = diagonal down-left) */
-  angle?: number
+  angle?: number;
   /** Meteor color */
-  color?: string
+  color?: string;
   /** Tail gradient color */
-  tailColor?: string
+  tailColor?: string;
 }
 
 interface MeteorData {
-  id: number
-  left: number
-  delay: number
-  duration: number
+  id: number;
+  left: number;
+  delay: number;
+  duration: number;
 }
 
 export function Meteors({
@@ -31,7 +31,7 @@ export function Meteors({
   color = "#64748b",
   tailColor = "#64748b",
 }: MeteorsProps) {
-  const [meteors, setMeteors] = useState<MeteorData[]>([])
+  const [meteors, setMeteors] = useState<MeteorData[]>([]);
 
   // Generate meteor data on client only to avoid hydration mismatch
   useEffect(() => {
@@ -42,8 +42,8 @@ export function Meteors({
         delay: Math.random() * 5,
         duration: 3 + Math.random() * 7,
       })),
-    )
-  }, [count])
+    );
+  }, [count]);
 
   return (
     <div className={cn("fixed inset-0 overflow-hidden bg-neutral-950", className)}>
@@ -76,7 +76,7 @@ export function Meteors({
       />
 
       {/* Meteors */}
-      {meteors.map(meteor => (
+      {meteors.map((meteor) => (
         <span
           key={meteor.id}
           className="absolute h-0.5 w-0.5 rounded-full"
@@ -114,9 +114,9 @@ export function Meteors({
       {/* Content layer */}
       {children && <div className="relative z-10 h-full w-full">{children}</div>}
     </div>
-  )
+  );
 }
 
 export default function MeteorsDemo() {
-  return <Meteors />
+  return <Meteors />;
 }

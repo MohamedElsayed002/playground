@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import React, { useEffect, useRef } from 'react';
-import * as THREE from 'three';
+import React, { useEffect, useRef } from "react";
+import * as THREE from "three";
 
 const Basketball: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -13,7 +13,12 @@ const Basketball: React.FC = () => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x111111);
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000,
+    );
     camera.position.z = 2.5;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -165,8 +170,8 @@ const Basketball: React.FC = () => {
       vertexShader,
       fragmentShader,
       uniforms: {
-        uTime: { value: 0 }
-      }
+        uTime: { value: 0 },
+      },
     });
 
     const ball = new THREE.Mesh(geometry, material);
@@ -190,10 +195,10 @@ const Basketball: React.FC = () => {
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
       renderer.dispose();
       if (containerRef.current) {
         containerRef.current.removeChild(renderer.domElement);

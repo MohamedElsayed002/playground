@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import React from "react"
-import { cn } from "@/lib/utils"
-import Basketball from "./ball"
+import { motion } from "framer-motion";
+import React from "react";
+import { cn } from "@/lib/utils";
+import Basketball from "./ball";
 
 export interface BackgroundBeamsProps {
-  className?: string
+  className?: string;
 }
 
 const pathData = [
@@ -30,14 +30,14 @@ const pathData = [
   "M-6 -597C-6 -597 62 -192 526 -65C990 62 1058 467 1058 467",
   "M16 -621C16 -621 84 -216 548 -89C1012 38 1080 443 1080 443",
   "M38 -645C38 -645 106 -240 570 -113C1034 14 1102 419 1102 419",
-]
+];
 
 // Pre-calculated animation values for each path
 const animations = pathData.map((_, i) => ({
   duration: 4 + (i % 5) * 0.8,
   delay: i * 0.15,
   initialProgress: (i * 5) % 100,
-}))
+}));
 
 export const BackgroundBeams = React.memo(({ className }: BackgroundBeamsProps) => {
   return (
@@ -99,10 +99,10 @@ export const BackgroundBeams = React.memo(({ className }: BackgroundBeamsProps) 
         </defs>
       </svg>
     </div>
-  )
-})
+  );
+});
 
-BackgroundBeams.displayName = "BackgroundBeams"
+BackgroundBeams.displayName = "BackgroundBeams";
 
 export default function BackgroundBeamsDemo() {
   return (
@@ -110,5 +110,5 @@ export default function BackgroundBeamsDemo() {
       <BackgroundBeams />
       <Basketball />
     </div>
-  )
+  );
 }

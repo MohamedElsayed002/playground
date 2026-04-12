@@ -16,7 +16,7 @@ function normalizePath(pathname: string) {
 
 function isPrivatePath(pathname: string) {
   return PRIVATE_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }
 
@@ -37,13 +37,6 @@ export function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-
 export const config = {
-  matcher: [
-    "/auth/login",
-    "/auth/register",
-    "/auth/oauth/google",
-    "/chat/:path*",
-    "/rooms/:path*",
-  ],
+  matcher: ["/auth/login", "/auth/register", "/auth/oauth/google", "/chat/:path*", "/rooms/:path*"],
 };

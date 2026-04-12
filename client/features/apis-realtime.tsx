@@ -1,11 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  Cable,
-  GitPullRequestArrow,
-  Radio,
-  Waves,
-} from "lucide-react";
+import { ArrowUpRight, Cable, GitPullRequestArrow, Radio, Waves } from "lucide-react";
 
 const comparisonRows = [
   {
@@ -111,9 +105,9 @@ export function APIsAndRealtime() {
           REST API vs GraphQL vs Socket.IO
         </h2>
         <p className="text-center text-sm text-gray-300 md:text-left md:text-base">
-          These tools solve different communication problems. REST is great for
-          standard HTTP APIs, GraphQL is strong when clients need flexible data
-          fetching, and Socket.IO is built for real-time event updates.
+          These tools solve different communication problems. REST is great for standard HTTP APIs,
+          GraphQL is strong when clients need flexible data fetching, and Socket.IO is built for
+          real-time event updates.
         </p>
       </div>
 
@@ -131,58 +125,37 @@ export function APIsAndRealtime() {
               key={row.aspect}
               className="grid grid-cols-1 border-b border-white/10 last:border-b-0 md:grid-cols-4"
             >
-              <div className="px-4 py-4 text-sm font-semibold text-white/90">
-                {row.aspect}
-              </div>
-              <div className="px-4 py-4 text-sm leading-6 text-gray-300">
-                {row.rest}
-              </div>
-              <div className="px-4 py-4 text-sm leading-6 text-gray-300">
-                {row.graphql}
-              </div>
-              <div className="px-4 py-4 text-sm leading-6 text-gray-300">
-                {row.socketio}
-              </div>
+              <div className="px-4 py-4 text-sm font-semibold text-white/90">{row.aspect}</div>
+              <div className="px-4 py-4 text-sm leading-6 text-gray-300">{row.rest}</div>
+              <div className="px-4 py-4 text-sm leading-6 text-gray-300">{row.graphql}</div>
+              <div className="px-4 py-4 text-sm leading-6 text-gray-300">{row.socketio}</div>
             </div>
           ))}
         </div>
 
         <div className="rounded-[2rem] border border-violet-300/20 bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.18),_rgba(15,23,42,0.94)_55%)] p-6">
-          <p className="text-xs uppercase tracking-[0.25em] text-cyan-200/80">
-            Quick guide
-          </p>
+          <p className="text-xs uppercase tracking-[0.25em] text-cyan-200/80">Quick guide</p>
           <h3 className="mt-3 text-2xl font-semibold text-white">
             Use the transport that matches the user experience.
           </h3>
           <p className="mt-3 text-sm leading-6 text-gray-300">
-            If the user asks for data, REST is usually the simplest choice. If
-            the screen needs many shapes of related data, GraphQL can reduce
-            round trips. If the server must push updates instantly, use
-            Socket.IO.
+            If the user asks for data, REST is usually the simplest choice. If the screen needs many
+            shapes of related data, GraphQL can reduce round trips. If the server must push updates
+            instantly, use Socket.IO.
           </p>
 
           <div className="mt-6 space-y-3">
             <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
-                Simple default
-              </p>
+              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Simple default</p>
               <p className="mt-2 text-sm text-white">REST for CRUD apps</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
-                Flexible reads
-              </p>
-              <p className="mt-2 text-sm text-white">
-                GraphQL for complex frontend data needs
-              </p>
+              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Flexible reads</p>
+              <p className="mt-2 text-sm text-white">GraphQL for complex frontend data needs</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
-                Live updates
-              </p>
-              <p className="mt-2 text-sm text-white">
-                Socket.IO for chat, rooms, and presence
-              </p>
+              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Live updates</p>
+              <p className="mt-2 text-sm text-white">Socket.IO for chat, rooms, and presence</p>
             </div>
           </div>
         </div>
@@ -232,9 +205,7 @@ export function APIsAndRealtime() {
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
                   <Icon className="size-5 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">
-                  {example.title}
-                </h3>
+                <h3 className="text-lg font-semibold text-white">{example.title}</h3>
               </div>
 
               <pre className="overflow-x-auto rounded-2xl border border-white/10 bg-black/40 p-4 text-sm leading-6 text-cyan-200">
@@ -249,8 +220,8 @@ export function APIsAndRealtime() {
         <div>
           <p className="text-sm font-medium text-white">Reference idea</p>
           <p className="text-sm text-gray-300">
-            REST handles standard APIs, GraphQL handles flexible queries, and
-            Socket.IO handles real-time events.
+            REST handles standard APIs, GraphQL handles flexible queries, and Socket.IO handles
+            real-time events.
           </p>
         </div>
 

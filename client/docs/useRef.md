@@ -283,35 +283,34 @@ export default function VideoPlayer() {
 ### Real World Example
 
 ```jsx
-const isFetching = useRef(false)
+const isFetching = useRef(false);
 
 async function fetchData() {
-    if(isFetching.current) return 
+  if (isFetching.current) return;
 
-    isFetching.current = true 
-    await fetch('/api/data')
-    isFetching.current = false
+  isFetching.current = true;
+  await fetch("/api/data");
+  isFetching.current = false;
 }
 ```
 
 Debounce with useRef
 
 ```jsx
-function useDebounce(callback,delay) {
-    const timeoutRef = useRef()
+function useDebounce(callback, delay) {
+  const timeoutRef = useRef();
 
-    return (...args) => {
-        clearTimeout(timeoutRef.current)
-        timeoutRef.current = setTimeout(() => {
-            callback(...args)
-        },delay)
-    }
+  return (...args) => {
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      callback(...args);
+    }, delay);
+  };
 }
 ```
 
-- Keeps the same timeout ID across renders 
+- Keeps the same timeout ID across renders
 - No re-render needed
-
 
 Throttle Example
 
@@ -323,7 +322,7 @@ function useThrottle(callback,delay) {
         const now = Date.now()
 
         if(now - lastCall.current >= delay) {
-            lastCall.current = now 
+            lastCall.current = now
             callback(...args)
         }
     }

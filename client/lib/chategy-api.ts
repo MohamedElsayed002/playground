@@ -28,9 +28,7 @@ async function requestJson<T>(path: string, body: unknown): Promise<T> {
   });
 
   if (!res.ok) {
-    const error = await res
-      .json()
-      .catch(() => ({ message: `Request failed with ${res.status}` }));
+    const error = await res.json().catch(() => ({ message: `Request failed with ${res.status}` }));
     throw new Error(error.message ?? "Request failed");
   }
 
@@ -44,9 +42,7 @@ async function requestFormData<T>(path: string, data: FormData): Promise<T> {
   });
 
   if (!res.ok) {
-    const error = await res
-      .json()
-      .catch(() => ({ message: `Request failed with ${res.status}` }));
+    const error = await res.json().catch(() => ({ message: `Request failed with ${res.status}` }));
     throw new Error(error.message ?? "Request failed");
   }
 

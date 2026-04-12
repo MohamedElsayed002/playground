@@ -14,8 +14,7 @@ type UsersListProps = {
   users: User[];
 };
 
-const fallbackAvatar =
-  "https://placehold.co/80x80/e2e8f0/475569?text=User";
+const fallbackAvatar = "https://placehold.co/80x80/e2e8f0/475569?text=User";
 
 export default function UsersList({ users }: UsersListProps) {
   const parentRef = useRef<HTMLDivElement>(null);
@@ -30,17 +29,14 @@ export default function UsersList({ users }: UsersListProps) {
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8">
       <div className="space-y-2">
-        <p className="text-sm font-medium uppercase tracking-[0.3em] text-slate-500">
-          10k Users
-        </p>
+        <p className="text-sm font-medium uppercase tracking-[0.3em] text-slate-500">10k Users</p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-1">
             <h2 className="text-3xl font-semibold tracking-tight text-slate-900">
               TanStack Virtual List
             </h2>
             <p className="max-w-2xl text-sm text-slate-600">
-              A virtualized scroll region with richer profile cards and minimal
-              rendering cost.
+              A virtualized scroll region with richer profile cards and minimal rendering cost.
             </p>
           </div>
           <div className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
@@ -54,10 +50,7 @@ export default function UsersList({ users }: UsersListProps) {
           Browse users with TanStack Virtual.
         </div>
 
-        <div
-          ref={parentRef}
-          className="h-[900px] overflow-auto bg-slate-100/70"
-        >
+        <div ref={parentRef} className="h-[900px] overflow-auto bg-slate-100/70">
           <div
             style={{
               height: `${rowVirtualizer.getTotalSize()}px`,
@@ -66,9 +59,7 @@ export default function UsersList({ users }: UsersListProps) {
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
               const user = users[virtualRow.index];
-              const fullName = [user.name, user.lastName]
-                .filter(Boolean)
-                .join(" ");
+              const fullName = [user.name, user.lastName].filter(Boolean).join(" ");
 
               return (
                 <div

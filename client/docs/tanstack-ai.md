@@ -2,44 +2,40 @@
 
 Tanstack AI is a lightweight, type-safe SDK for building production-ready AI experiences. its framework-agnostic core provides type-safe tool/function calling, streaming responses,amd firest-class React and Solid integrations, with adapters for multiple LLM providers - enabling predictable, composable, and testable AI features across any stack.
 
-
-
-## Key Features 
+## Key Features
 
 - **Type-Safe**: Full Typescript support with Zod schema inference
-- **Streaming**: Built-in streaming support for real-time responses 
+- **Streaming**: Built-in streaming support for real-time responses
 - **Isomorphic Tools**: Define once with `toolDefinition` implement with `.server()` or `client()`
 - **Framework Agnostic**: Core library works anywhere
 - **Multiple Providers**: OpenRouter, OpenAI, Anthropic, Gemini
 - **Approval Flow**: Built-in support for tool approval workflows
 - **Automatic Execution**: Both server and client tools execute automatiically
 
-
 ```ts
-import { chat } from '@tanstack/ai'
-import { toolDefinition } from '@tanstack/ai'
-import { openaiText } from '@tanstack/ai-openai'
+import { chat } from "@tanstack/ai";
+import { toolDefinition } from "@tanstack/ai";
+import { openaiText } from "@tanstack/ai-openai";
 
 // Define a tool
 const getProductsDef = toolDefinition({
-  name: 'getProducts',
+  name: "getProducts",
   inputSchema: z.object({ query: z.string() }),
   outputSchema: z.array(z.object({ id: z.string(), name: z.string() })),
-})
+});
 
 // Create server implementation
 const getProducts = getProductsDef.server(async ({ query }) => {
-  return await db.products.search(query)
-})
+  return await db.products.search(query);
+});
 
 // Use in AI chat
 chat({
-  adapter: openaiText('gpt-5.2'),
-  messages: [{ role: 'user', content: 'Find products' }],
-  tools: [getProducts]
-})
+  adapter: openaiText("gpt-5.2"),
+  messages: [{ role: "user", content: "Find products" }],
+  tools: [getProducts],
+});
 ```
-
 
 ---
 
@@ -84,8 +80,7 @@ export const Route = createFileRoute("/api/chat")({
         } catch (error) {
           return new Response(
             JSON.stringify({
-              error:
-                error instanceof Error ? error.message : "An error occurred",
+              error: error instanceof Error ? error.message : "An error occurred",
             }),
             {
               status: 500,
@@ -98,7 +93,6 @@ export const Route = createFileRoute("/api/chat")({
   },
 });
 ```
-
 
 ```ts
 import { chat, toServerSentEventsResponse } from "@tanstack/ai";
@@ -114,7 +108,7 @@ export async function POST(request: Request) {
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -125,7 +119,7 @@ export async function POST(request: Request) {
     const stream = chat({
       adapter: openaiText("gpt-5.2"),
       messages,
-      conversationId
+      conversationId,
     });
 
     // Convert stream to HTTP response
@@ -138,14 +132,13 @@ export async function POST(request: Request) {
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }
 ```
 
-
-## Client Setup 
+## Client Setup
 
 To use the chat API from your React frontend, create a `Chat` component:
 
@@ -229,7 +222,7 @@ export function Chat() {
   );
 }
 ```
- 
+
 ---
 
 ## Tool Definition
@@ -255,7 +248,7 @@ const getWeatherDef = toolDefintion({
   })
 })
 
-// Step 2 Create a server implementation 
+// Step 2 Create a server implementation
 const getWeatherServer = getWeatherDef.server(async ({location,unit}) => {
   const response = await fetch('..')
   const data = await response.json()
@@ -266,20 +259,18 @@ const getWeatherServer = getWeatherDef.server(async ({location,unit}) => {
 })
 ```
 
-
-
 ### Server-Side
 
 ```ts
-import { chat, toServerSentEventsResponse } from "@tanstack/ai"
-import { openaiText} from "@tanstack/ai-openai"
-import { getWeatherDef} from '../tools'
+import { chat, toServerSentEventsResponse } from "@tanstack/ai";
+import { openaiText } from "@tanstack/ai-openai";
+import { getWeatherDef } from "../tools";
 
 export async function POST(req: Request) {
-  const { messages } = await request.json()
+  const { messages } = await request.json();
 
   // Create server imp
-    const getWeather = getWeatherDef.server(async ({ location, unit }) => {
+  const getWeather = getWeatherDef.server(async ({ location, unit }) => {
     const response = await fetch(`https://api.weather.com/v1/current?...`);
     return await response.json();
   });
@@ -287,22 +278,21 @@ export async function POST(req: Request) {
   const stream = chat({
     adapter: openaiText("gpt-5.2"),
     messages,
-    tools: [getWeather]
-  })
+    tools: [getWeather],
+  });
 
-  return toServerSendEventsResponse(stream)
+  return toServerSendEventsResponse(stream);
 }
 ```
 
-
-## Client-Side 
+## Client-Side
 
 ```ts
 import { useChat, fetchServerSentEvents } from "@tanstack/ai-react";
-import { 
-  clientTools, 
-  createChatClientOptions, 
-  type InferChatMessages 
+import {
+  clientTools,
+  createChatClientOptions,
+  type InferChatMessages
 } from "@tanstack/ai-client";
 import { updateUIDef, saveToStorageDef } from "./tools";
 
@@ -331,10 +321,10 @@ type ChatMessages = InferChatMessages<typeof textOptions>;
 
 function ChatComponent() {
   const { messages, sendMessage } = useChat(textOptions);
-  
+
   // messages is now fully typed with tool names and outputs!
   return <Messages messages={messages} />;
-} 
+}
 ```
 
 ---
@@ -349,27 +339,26 @@ The tanstack AI tool system provides a powerful, flexible architecture for enabl
 - **Tool States** provide real-time feedback and enable robust UIs
 - **Approval Flow** gives users control over sensitive operations This architecture enables building sophisticated AI applications that can:
   - Fetch data from APIs and databases
-  - Perform calculations and transformations 
+  - Perform calculations and transformations
   - Update UIs and manage state
   - Execute multi-step workflows
   - Require user approval for sensitive actions
 
-
 ```ts
-import { chat, toServerSentEventsResponse} from "@tanstack/ai"
-import { openaiText } from "@tanstack/ai-openai"
-import { getWeather, sendEmail } from "./tools"
+import { chat, toServerSentEventsResponse } from "@tanstack/ai";
+import { openaiText } from "@tanstack/ai-openai";
+import { getWeather, sendEmail } from "./tools";
 
 export async function POST(req: Request) {
-  const { messages } = await request.json()
+  const { messages } = await request.json();
 
   const stream = chat({
     adapter: openaiText("gpt-5.2"),
     messages,
-    tools: [getWeather, sendEmail]
-  })
+    tools: [getWeather, sendEmail],
+  });
 
-  return toServerSendEventsResponse(stream)
+  return toServerSendEventsResponse(stream);
 }
 ```
 
@@ -389,8 +378,7 @@ function ChatCompnent() {
 }
 ```
 
-
-Monitoring Tool States in React 
+Monitoring Tool States in React
 
 ```ts
 function ChatComponent() {
@@ -442,8 +430,7 @@ function ChatComponent() {
 }
 ```
 
-
-Approval Flow 
+Approval Flow
 
 For sensitive operations, tools can require user approval before execution:
 
@@ -502,7 +489,7 @@ return (
 )
 ```
 
-## Defining Server Tools 
+## Defining Server Tools
 
 Server tools use the isomorphic `toolDefinition()` API with the `.server()` method
 
@@ -535,11 +522,9 @@ const getUserData = getUserDataDef.server(async ({userId}) => {
 })
 ```
 
+Using Server Tools
 
-Using Server Tools 
-
-Pass tools to the chat function 
-
+Pass tools to the chat function
 
 ```ts
 import { chat, toServerSentEventsResponse} from "@tanstack/ai"
@@ -559,9 +544,9 @@ export async function POST(request: Request) {
 }
 ```
 
-## Tool Organization Pattern 
+## Tool Organization Pattern
 
-For better organization, define tool schemas and implementations separately 
+For better organization, define tool schemas and implementations separately
 
 ```ts
 // tools/definitions.ts
@@ -651,17 +636,15 @@ const getUserData = getUserDataDef.server(async ({ userId }) => {
 
 ## Client Tools
 
-Client tools execute in the browser, enabling UI updates, local Storage access, and browser API interactions. Unlike server tools, client tools don't have an `execute` function in their server defintion 
+Client tools execute in the browser, enabling UI updates, local Storage access, and browser API interactions. Unlike server tools, client tools don't have an `execute` function in their server defintion
 
+### When to Use Client Tools
 
-### When to Use Client Tools 
-
-- **UI Updates**: Show notifications, update forms, toggle visbility 
-- **Local Storage**: Save user preferences,  cache data 
+- **UI Updates**: Show notifications, update forms, toggle visbility
+- **Local Storage**: Save user preferences, cache data
 - **Browser APIs**: Access geolocation, camera, clipboard
 - **State Management**: Update React state
 - **Navigation** Change routes, scroll to sections
-
 
 ```tsx
 import { toolDefinition } from "@tanstack/ai"
@@ -693,7 +676,6 @@ export const saveToLocalStorageDef = toolDefinition({
 
 ```
 
-
 ```ts
 import { chat, toServerSendEventsStream } from "@tanstack/ai"
 import { openaiText } from "@tanstack/ai-openai"
@@ -714,20 +696,16 @@ export async function POST(request: Request) {
 ```
 
 ```tsx
-import { useChat, fetchServerSendEvents } from "@tanstack/ai-react"
-import {
-  clientTools,
-  createChatClientOptions,
-  type InferChatMessages
-} from "@tanstack/ai-client"
-import { updateUIDef, saveToLocalStorageDef } from "@/tools/definitions"
-import { useState } from "react"
+import { useChat, fetchServerSendEvents } from "@tanstack/ai-react";
+import { clientTools, createChatClientOptions, type InferChatMessages } from "@tanstack/ai-client";
+import { updateUIDef, saveToLocalStorageDef } from "@/tools/definitions";
+import { useState } from "react";
 
 function ChatComponent() {
-  const [notifications,setNotification] = useState(null)
+  const [notifications, setNotification] = useState(null);
 
   // Step 1: Create client implementations
-   const updateUI = updateUIDef.client((input) => {
+  const updateUI = updateUIDef.client((input) => {
     // Update React state - fully typed!
     setNotification({ message: input.message, type: input.type });
     return { success: true };
@@ -739,34 +717,31 @@ function ChatComponent() {
   });
 
   // Step 2: Create typed tools array (no 'as const' needed!)
-  const tools = clientTools(updateUI,saveToLocalStorage)
+  const tools = clientTools(updateUI, saveToLocalStorage);
 
   const chatOptions = createChatClientOptions({
     connection: fetchServerSendEvents("/api/chat"),
-    tools
-  })
+    tools,
+  });
 
-  // Step 3 Infer message types for full type safety 
+  // Step 3 Infer message types for full type safety
 
-  type ChatMessages = InferChatMessages<typeof chatOptions>
+  type ChatMessages = InferChatMessages<typeof chatOptions>;
 
-  const { messages, sendMessage, isLoading} = useChat(chatOptions)
+  const { messages, sendMessage, isLoading } = useChat(chatOptions);
 
-  // Step 4: Render with full type safety 
-    return (
+  // Step 4: Render with full type safety
+  return (
     <div>
       {messages.map((message) => (
         <MessageComponent key={message.id} message={message} />
       ))}
       {notification && (
-        <div className={`notification ${notification.type}`}>
-          {notification.message}
-        </div>
+        <div className={`notification ${notification.type}`}>{notification.message}</div>
       )}
     </div>
   );
 }
-
 
 // Messages component with full type safety
 function MessageComponent({ message }: { message: ChatMessages[number] }) {
@@ -776,7 +751,7 @@ function MessageComponent({ message }: { message: ChatMessages[number] }) {
         if (part.type === "text") {
           return <p>{part.content}</p>;
         }
-        
+
         if (part.type === "tool-call") {
           // ✅ part.name is narrowed to specific tool names
           if (part.name === "update_ui") {
@@ -794,14 +769,13 @@ function MessageComponent({ message }: { message: ChatMessages[number] }) {
     </div>
   );
 }
-
 ```
 
-## Best Practices 
+## Best Practices
 
 - **Keep client tools simple**: Since client tools run in the browser, avoid heavy compulations or large dependencies that could bload your bundle size.
 - **Handle erros gracefully**: Define clear error handling in your tool implementations and return meaningful error messages in your output schema
-- **Update UI reactively**:  Use your framework's state management to update the UI in response to tool executions
+- **Update UI reactively**: Use your framework's state management to update the UI in response to tool executions
 - **Secure sensitive data**: Never store sensistive data (like API keys or personal info) in localStorage or expose it via client tools.
 - **Provide feedback** Use tools states to inform users about ongoing operations and results of client tool executions (loading spiiners, success messages, error alerts)
 - **Type everything**: Leverage Typescript and Zod schemas for full type safety from tool definitions to implementations to usage

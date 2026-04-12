@@ -1,51 +1,55 @@
 import { CodeSnippet } from "@/types";
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
-
 
 export function formatMessageTime(iso: string): string {
   const date = new Date(iso);
-  const now  = new Date();
-  const diff  = now.getTime() - date.getTime();
-  const oneDay  = 86_400_000;
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const oneDay = 86_400_000;
   const oneWeek = 7 * oneDay;
- 
+
   if (diff < oneDay && date.getDate() === now.getDate()) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
   if (diff < oneWeek) {
-    return date.toLocaleDateString([], { weekday: 'short' }) + ' ' +
-           date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return (
+      date.toLocaleDateString([], { weekday: "short" }) +
+      " " +
+      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    );
   }
-  return date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+  return date.toLocaleDateString([], { day: "numeric", month: "short" });
 }
- 
 
 export const extractImageUrl = (text: string) => {
-  const match = text.match(/!\[[^\]]*]\((https?:\/\/[^)]+)\)/i)
-  return match ? match[1] : null
-}
+  const match = text.match(/!\[[^\]]*]\((https?:\/\/[^)]+)\)/i);
+  return match ? match[1] : null;
+};
 
 export const stripMarkdownImage = (text: string) =>
-  text.replace(/!\[[^\]]*]\((https?:\/\/[^)]+)\)/gi, "").trim()
+  text.replace(/!\[[^\]]*]\((https?:\/\/[^)]+)\)/gi, "").trim();
 
 export const formatJsonLike = (value: unknown) => {
-  if (value === null || value === undefined) return "null"
+  if (value === null || value === undefined) return "null";
   if (typeof value === "string") {
-      try { return JSON.stringify(JSON.parse(value), null, 2) } catch { return value }
+    try {
+      return JSON.stringify(JSON.parse(value), null, 2);
+    } catch {
+      return value;
+    }
   }
-  if (typeof value === "object") return JSON.stringify(value, null, 2)
-  return String(value)
-}
-
+  if (typeof value === "object") return JSON.stringify(value, null, 2);
+  return String(value);
+};
 
 /** Map API language labels to Shiki grammar ids. */
 export function normalizeShikiLang(language: string): string {
-  const key = language.trim().toLowerCase() || "code"
+  const key = language.trim().toLowerCase() || "code";
   const map: Record<string, string> = {
     js: "javascript",
     javascript: "javascript",
@@ -72,8 +76,8 @@ export function normalizeShikiLang(language: string): string {
     css: "css",
     sql: "sql",
     code: "typescript",
-  }
-  return map[key] ?? (["txt", "text", "plaintext"].includes(key) ? "plaintext" : key)
+  };
+  return map[key] ?? (["txt", "text", "plaintext"].includes(key) ? "plaintext" : key);
 }
 
 export function extractCodeSnippets(payload: unknown): CodeSnippet[] {

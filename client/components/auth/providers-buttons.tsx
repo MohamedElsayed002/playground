@@ -9,9 +9,9 @@ function signInWithGoogle() {
 }
 
 export const SocialMediaButtons = () => {
-    return (
-        <div className="flex flex-col gap-4 px-4 my-4">
-            {/* <Button
+  return (
+    <div className="flex flex-col gap-4 px-4 my-4">
+      {/* <Button
                 variant="ghost"
                 className="w-full flex items-center gap-2"
                 type="button"
@@ -26,21 +26,15 @@ export const SocialMediaButtons = () => {
                 />
                 Continue with Github
             </Button> */}
-            <Button
-                variant="ghost"
-                className="w-full flex items-center gap-2"
-                type="button"
-                onClick={signInWithGoogle}
-            >
-                <Image
-                    src="/providers/google.svg"
-                    width={20}
-                    priority
-                    height={20}
-                    alt="Google"
-                />
-                Continue with Google
-            </Button>
-        </div>
-    );
+      <Button
+        variant="ghost"
+        className="w-full flex items-center gap-2"
+        type="button"
+        onClick={signInWithGoogle}
+      >
+        <Image src="/providers/google.svg" width={20} priority height={20} alt="Google" />
+        Continue with Google
+      </Button>
+    </div>
+  );
 };
