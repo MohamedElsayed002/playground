@@ -86,7 +86,7 @@ export const columns: ColumnDef<User>[] = [
   },
   {
     id: "actions",
-    cell: ({ row, cell }) => {
+    cell: ({ row, table }) => {
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -114,7 +114,6 @@ export const columns: ColumnDef<User>[] = [
             <DropdownMenuItem
               className="text-red-500 focus:text-red-500"
               onClick={() => {
-                // @ts-ignore
                 (
                   table.options.meta as {
                     onRequestDeleteUser?: (id: string, label?: string) => void;

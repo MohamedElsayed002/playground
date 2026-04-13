@@ -1,11 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  Braces,
-  Database,
-  GitBranchPlus,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowUpRight, Braces, Database, GitBranchPlus, ShieldCheck } from "lucide-react";
 
 const comparisonRows = [
   {
@@ -80,13 +74,10 @@ export function NoSQLVSSQL() {
   return (
     <section className="space-y-6">
       <div className="flex flex-col gap-3 md:max-w-3xl">
-        <h2 className="text-center text-3xl font-semibold md:text-left">
-          NoSQL vs SQL
-        </h2>
+        <h2 className="text-center text-3xl font-semibold md:text-left">NoSQL vs SQL</h2>
         <p className="text-center text-sm text-gray-300 md:text-left md:text-base">
-          A quick comparison between document databases like MongoDB and
-          relational databases like PostgreSQL, focused on schema design,
-          scaling, consistency, and real-world use cases.
+          A quick comparison between document databases like MongoDB and relational databases like
+          PostgreSQL, focused on schema design, scaling, consistency, and real-world use cases.
         </p>
       </div>
 
@@ -103,52 +94,36 @@ export function NoSQLVSSQL() {
               key={row.aspect}
               className="grid grid-cols-1 border-b border-white/10 last:border-b-0 md:grid-cols-3"
             >
-              <div className="px-4 py-4 text-sm font-semibold text-white/90">
-                {row.aspect}
-              </div>
-              <div className="px-4 py-4 text-sm leading-6 text-gray-300">
-                {row.sql}
-              </div>
-              <div className="px-4 py-4 text-sm leading-6 text-gray-300">
-                {row.nosql}
-              </div>
+              <div className="px-4 py-4 text-sm font-semibold text-white/90">{row.aspect}</div>
+              <div className="px-4 py-4 text-sm leading-6 text-gray-300">{row.sql}</div>
+              <div className="px-4 py-4 text-sm leading-6 text-gray-300">{row.nosql}</div>
             </div>
           ))}
         </div>
 
         <div className="rounded-[2rem] border border-amber-300/20 bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.18),_rgba(15,23,42,0.92)_55%)] p-6">
-          <p className="text-xs uppercase tracking-[0.25em] text-amber-200/80">
-            Rule of thumb
-          </p>
+          <p className="text-xs uppercase tracking-[0.25em] text-amber-200/80">Rule of thumb</p>
           <h3 className="mt-3 text-2xl font-semibold text-white">
             Model the data first, then pick the database.
           </h3>
           <p className="mt-3 text-sm leading-6 text-gray-300">
-            SQL is usually the safer default when relationships and transactions
-            matter. NoSQL shines when the shape of the data changes often or the
-            system needs document-style flexibility at scale.
+            SQL is usually the safer default when relationships and transactions matter. NoSQL
+            shines when the shape of the data changes often or the system needs document-style
+            flexibility at scale.
           </p>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
             <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
-                Best for SQL
-              </p>
+              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Best for SQL</p>
               <p className="mt-2 text-sm text-white">Banking, ERP, orders</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
-                Best for NoSQL
-              </p>
+              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Best for NoSQL</p>
               <p className="mt-2 text-sm text-white">Feeds, CMS, logs, chat</p>
             </div>
             <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
-                Tradeoff
-              </p>
-              <p className="mt-2 text-sm text-white">
-                Flexibility vs stronger constraints
-              </p>
+              <p className="text-xs uppercase tracking-[0.2em] text-gray-400">Tradeoff</p>
+              <p className="mt-2 text-sm text-white">Flexibility vs stronger constraints</p>
             </div>
           </div>
         </div>
@@ -198,9 +173,7 @@ export function NoSQLVSSQL() {
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
                   <Icon className="size-5 text-white" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">
-                  {example.title}
-                </h3>
+                <h3 className="text-lg font-semibold text-white">{example.title}</h3>
               </div>
 
               <pre className="overflow-x-auto rounded-2xl border border-white/10 bg-black/40 p-4 text-sm leading-6 text-emerald-200">
