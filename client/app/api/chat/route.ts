@@ -2,6 +2,8 @@ import { deleteUser, getTotalUsers, getUserData, getUsersByName, updateUser } fr
 import { chat, toServerSentEventsResponse, type AnyTextAdapter } from "@tanstack/ai";
 import { openaiText } from "@tanstack/ai-openai";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   if (!process.env.OPENAI_API_KEY) {
     return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {

@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { authApi } from "@/lib/api";
+import { API_URL, authApi } from "@/lib/api";
 import type { AuthTokens } from "@/types";
 
 const ACCESS_COOKIE = "chat_access";
@@ -92,7 +92,7 @@ export async function getSession(): Promise<UserResponse | null> {
   if (!accessToken) return null;
 
   try {
-    const me = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`, {
+    const me = await fetch(`${API_URL}/auth/me`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

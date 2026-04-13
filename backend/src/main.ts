@@ -40,7 +40,7 @@ async function bootstrap() {
 
 if (require.main === module) {
   bootstrap().then(app => {
-    app.listen(3000)
+    app.listen(3001)
   })
 }
 export { bootstrap, appInstance }

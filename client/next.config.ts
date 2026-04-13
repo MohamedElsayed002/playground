@@ -16,6 +16,7 @@ const withBundleAnalyzer = require("@next/bundle-analyzer")({
 });
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   // Cause an error in different files
   // cacheComponents: true,
   logging: {

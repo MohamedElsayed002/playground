@@ -1,0 +1,11 @@
+__pycache__
+*.pyc
+.git
+.env
+agent/7998cb55-*
+agent/*.sqlite3
+*.ipynb
+images
+*.pdf
+*.txt
+!requirements.txt
