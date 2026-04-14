@@ -55,9 +55,9 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fde68a_0%,_#fff7ed_35%,_#eef2ff_75%,_#f8fafc_100%)]">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#fde68a_0%,_#fff7ed_35%,_#eef2ff_75%,_#f8fafc_100%)]">
       <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="flex flex-col gap-3">
+        <section className="flex flex-col gap-3">
           <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Admin Console</p>
           <h1 className="text-3xl md:text-4xl font-semibold text-slate-900">
             Message Control Room
@@ -65,7 +65,7 @@ export default function AdminPage() {
           <p className="text-slate-600 max-w-2xl">
             Send prompts and review the full conversation history in one place.
           </p>
-        </div>
+        </section>
 
         <div className="mt-10 grid grid-cols-1 xl:grid-cols-[340px_1fr_360px] gap-8">
           <div className="rounded-3xl border border-slate-200/70 bg-white/70 backdrop-blur-xl shadow-[0_20px_50px_-30px_rgba(15,23,42,0.4)] p-6">
@@ -252,6 +252,6 @@ export default function AdminPage() {
           <RealtimeChatPanel />
         </div>
       </div>
-    </div>
+    </main>
   );
 }

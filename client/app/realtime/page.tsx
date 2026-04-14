@@ -34,7 +34,7 @@ export default function RealtimeChatPage() {
   };
 
   return (
-    <div className="min-h-screen overflow-y-scroll bg-[radial-gradient(circle_at_top,_#1e293b_0%,_#0f172a_40%,_#020617_100%)] text-white">
+    <main className="min-h-screen overflow-y-scroll bg-[radial-gradient(circle_at_top,_#1e293b_0%,_#0f172a_40%,_#020617_100%)] text-white">
       <div className="mx-auto max-w-3xl px-6 py-14">
         <div className="flex items-center justify-between">
           <div>
@@ -130,6 +130,6 @@ export default function RealtimeChatPage() {
           ))}
         </div>
       </div>
-    </div>
+    </main>
   );
 }

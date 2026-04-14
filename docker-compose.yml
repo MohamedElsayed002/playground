@@ -5,6 +5,15 @@ services:
       - "3001:3001"
     env_file:
       - ./backend/.env
+    develop:
+      watch:
+        - action: rebuild
+          path: ./backend
+          ignore:
+            - node_modules/
+            - dist/
+            - .git/
+            - .next/
 
   client:
     build:
@@ -20,6 +29,14 @@ services:
       INTERNAL_API_URL: http://backend:3001
     depends_on:
       - backend
+    develop:
+      watch:
+        - action: rebuild
+          path: ./client
+          ignore:
+            - node_modules/
+            - .next/
+            - .git/
 
   langgraph:
     build: ./LangGraph

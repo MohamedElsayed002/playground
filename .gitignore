@@ -22,3 +22,4 @@ client/components/users/columns.tsx
 client/features/live-stream.tsx
 DOCKER.md
 .env
+/infra

@@ -70,7 +70,7 @@ export function ChategyWorkspace() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,#cffafe_0%,#e2e8f0_40%,#f8fafc_100%)]">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#cffafe_0%,#e2e8f0_40%,#f8fafc_100%)]">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12">
         <div className="mb-8 space-y-2">
           <p className="textxs uppercase tracking-[0.3em] text-slate-500">Chategy</p>
@@ -114,6 +114,6 @@ export function ChategyWorkspace() {
           </Card>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
