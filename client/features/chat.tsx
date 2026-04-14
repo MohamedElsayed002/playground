@@ -9,16 +9,17 @@ export function Chat() {
       <p className="text-gray-400 -mt-2 mb-2">Socket.IO Private/Group chat</p>
       {/* <p className="text-gray-400 mb-5">Send me a message my ID 3e7c6026-9164-43c5-8893-63da41e4789e 😵‍💫</p> */}
       <div className="grid grid-cols-1 md:grid-cols-3">
-        <div className="w-full md:w-[371px]  h-[188px] bg-blue-500 rounded-4xl p-5 flex flex-col justify-between">
+        <div className="w-full md:w-[371px] h-[188px] bg-blue-700 text-white rounded-4xl p-5 flex flex-col justify-between">
           <h1 className="text-lg lg:text-3xl font-medium leading-tight mb-1">
             Socket IO/ Tanstack Query
           </h1>
           <div className="flex justify-between items-center">
             <div>
-              <p>with Shadcn Components</p>
+              <p className="text-white/90">with Shadcn Components</p>
             </div>
-            <Button variant="outline">
-              <Link href="/rooms">
+            <Button asChild variant="outline" size="icon-lg" className="size-12">
+              <Link href="/rooms" aria-label="Open chat rooms">
+                <span className="sr-only">Open chat rooms</span>
                 <ArrowRight className="text-black" size={24} />
               </Link>
             </Button>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Link, { useLinkStatus } from "next/link";
 import { Spinner } from "@/components/ui/spinner";
@@ -10,7 +9,7 @@ function LinkButton({ href }: { href: string }) {
   const { pending } = useLinkStatus();
 
   return (
-    <Button className="relative w-10 h-10 lg:w-12 lg:h-12 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform hover:opacity-50">
+    <span className="relative inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition-transform hover:scale-105 hover:opacity-50">
       <ArrowRight
         size={20}
         className={`transition-opacity duration-200 ${pending ? "opacity-0" : "opacity-100"}`}
@@ -23,7 +22,7 @@ function LinkButton({ href }: { href: string }) {
       )}
 
       <span className="sr-only">Navigate to {href}</span>
-    </Button>
+    </span>
   );
 }
 
@@ -92,7 +91,15 @@ export function Performance() {
             muted
             loop
             playsInline
-          />
+          >
+            <track
+              kind="captions"
+              src="/captions/performance-bad-en.vtt"
+              srcLang="en"
+              label="English captions"
+              default
+            />
+          </video>
 
           <div className="relative z-10 h-full p-6 lg:p-10 flex flex-col justify-between text-white">
             <h2 className="text-2xl lg:text-3xl max-w-xs font-medium leading-tight">
@@ -104,7 +111,7 @@ export function Performance() {
                 fetch 10k users instantly
               </p>
 
-              <Link href="/10k-users/bad-performance">
+              <Link href="/10k-users/bad-performance" aria-label="Open bad performance demo">
                 <LinkButton href="/10k-users/bad-performance" />
               </Link>
             </div>
@@ -120,11 +127,19 @@ export function Performance() {
             muted
             loop
             playsInline
-          />
+          >
+            <track
+              kind="captions"
+              src="/captions/performance-react-window-en.vtt"
+              srcLang="en"
+              label="English captions"
+              default
+            />
+          </video>
 
           <div className="relative z-10 h-full flex flex-col justify-between text-white">
             <div className="flex justify-between items-start">
-              <Link href="/10k-users/react-window">
+              <Link href="/10k-users/react-window" aria-label="Open react-window demo">
                 <LinkButton href="/10k-users/react-window" />
               </Link>
             </div>
@@ -145,7 +160,15 @@ export function Performance() {
             muted
             loop
             playsInline
-          />
+          >
+            <track
+              kind="captions"
+              src="/captions/performance-tanstack-en.vtt"
+              srcLang="en"
+              label="English captions"
+              default
+            />
+          </video>
 
           <div className="relative z-10 h-full flex flex-col justify-between text-white">
             <div className="flex justify-between items-start" />
@@ -158,7 +181,7 @@ export function Performance() {
                 <p className="text-[10px] lg:text-sm opacity-80">performance optimized</p>
               </div>
 
-              <Link href="/10k-users/tanstack-virtualized">
+              <Link href="/10k-users/tanstack-virtualized" aria-label="Open TanStack Virtualized demo">
                 <LinkButton href="/10k-users/tanstack-virtualized" />
               </Link>
             </div>

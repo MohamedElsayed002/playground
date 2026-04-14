@@ -26,7 +26,7 @@ export function LiveStream() {
       <p className="text-gray-400 -mt-2 mb-5">
         Bots/ Livechat/ tanstack-hotkeywords/ tanstack-ai / tools
       </p>
-      <div className="grid grid-cols-1 md:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 lg:gap-38">
         <div className="w-full md:w-[371px]  h-[188px] text-black bg-[radial-gradient(circle_at_top,_#fde68a_0%,_#fff7ed_35%,_#eef2ff_75%,_#f8fafc_100%)] rounded-4xl p-5 flex flex-col justify-between">
           <h1 className="text-lg lg:text-3xl font-medium leading-tight mb-1">Admin</h1>
           <p className="text-sm lg:text-base opacity-85 max-w-[240px] -mt-8">
@@ -38,9 +38,10 @@ export function LiveStream() {
                 Press <Badge className="bg-black ml-2">Ctrl+Alt+9</Badge>
               </span>
             </div>
-            <Button variant="outline">
-              <Link href="/admin">
+            <Button variant="outline" size="icon-lg" className="size-12" asChild>
+              <Link href="/admin" aria-label="Navigate to admin page bot">
                 <ArrowRight className="text-black" size={24} />
+                <span className="sr-only">Admin Page</span>
               </Link>
             </Button>
           </div>
@@ -56,9 +57,10 @@ export function LiveStream() {
                 Press <Badge className="bg-black ml-2">Ctrl+Alt+8</Badge>
               </span>
             </div>
-            <Button variant="outline">
-              <Link href="/realtime">
+            <Button variant="outline" size="icon-lg" className="size-12" asChild>
+              <Link href="/realtime" aria-label="Navigate to relatime chat general chat">
                 <ArrowRight className="text-black" size={24} />
+                <span className="sr-only">General realtime chat</span>
               </Link>
             </Button>
           </div>
@@ -74,9 +76,10 @@ export function LiveStream() {
                 Press <Badge className="bg-black ml-2">Ctrl+Alt+0</Badge>
               </span>
             </div>
-            <Button variant="outline">
-              <Link href="/chategy">
+            <Button variant="outline" size="icon-lg" className="size-12" asChild>
+              <Link href="/chategy" aria-label="navigate to code exueciton/pdf page">
                 <ArrowRight className="text-black" size={24} />
+                <span className="sr-only">Code Execution</span>
               </Link>
             </Button>
           </div>

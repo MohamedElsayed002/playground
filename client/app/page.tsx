@@ -10,6 +10,7 @@ import {
   Tables,
 } from "@/features";
 import { UserBadge } from "@/components/users/user-badge";
+import { Projects } from "@/features/projects";
 
 export const metadata: Metadata = {
   title: "Playground",
@@ -45,13 +46,16 @@ export default function RootPage() {
 
             <div className="my-8 h-px w-full bg-white/40" />
 
+            <Projects />
+            <div className="my-8 h-px w-full bg-white/40" />
+
             <NoSQLVSSQL />
             <div className="my-8 h-px w-full bg-white/40" />
 
             <APIsAndRealtime />
             <div className="my-8 h-px w-full bg-white/40" />
 
-            <RenderingStrategies />
+            {/* <RenderingStrategies /> */}
             <div className="my-8 h-px w-full bg-white/40" />
           </div>
         </div>
