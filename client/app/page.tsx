@@ -11,13 +11,32 @@ import {
 } from "@/features";
 import { UserBadge } from "@/components/users/user-badge";
 import { Projects } from "@/features/projects";
+import { api } from "@/lib/api/client";
 
 export const metadata: Metadata = {
   title: "Playground",
   description: "d(O_o)b",
 };
 
-export default function RootPage() {
+export default async  function RootPage() {
+
+const { data, error } = await api.POST("/api/v1/auth/login", {
+  body: {
+    username: "mohamed@gmail.com",
+    password: "01093588197Mm!",
+    scope: "",
+  },
+
+  headers: {
+    "Content-Type": "application/x-www-form-urlencoded",
+  },
+
+  bodySerializer(body) {
+    return new URLSearchParams(body as Record<string, string>);
+  },
+});
+  console.log(data,error)
+
   return (
     <DotPattern className="min-h-screen bg-[radial-gradient(circle_at_top,_#065f46_0%,_#022c22_40%,_#020617_100%)]">
       <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-10 text-white sm:px-6 lg:px-8">

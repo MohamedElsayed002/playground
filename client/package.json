@@ -10,7 +10,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "analyze": "cross-env ANALYZE=true next build --webpack"
+    "analyze": "cross-env ANALYZE=true next build --webpack",
+    "generate:api": "openapi-typescript http://localhost:8000/openapi.json -o lib/api/schema.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -38,6 +39,8 @@
     "next": "16.2.0",
     "next-themes": "^0.4.6",
     "nodemailer": "^8.0.3",
+    "openai-fetch": "^3.4.2",
+    "openapi-fetch": "^0.17.0",
     "pg": "^8.20.0",
     "prisma": "^7.5.0",
     "radix-ui": "^1.4.3",
@@ -70,6 +73,7 @@
     "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.0",
+    "openapi-typescript": "^7.13.0",
     "prettier": "^3.8.2",
     "shadcn": "^4.1.0",
     "tailwindcss": "^4",
