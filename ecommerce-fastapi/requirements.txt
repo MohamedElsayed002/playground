@@ -1,0 +1,44 @@
+# ─────────────────────────────────────────────────────────────
+# Core Framework
+# ─────────────────────────────────────────────────────────────
+fastapi==0.115.6          # The framework itself
+uvicorn[standard]==0.32.1 # ASGI server (like `node index.js` in Node)
+python-multipart==0.0.20  # Required for file uploads & form data
+
+# ─────────────────────────────────────────────────────────────
+# Database  (SQLAlchemy = TypeORM equivalent)
+# ─────────────────────────────────────────────────────────────
+sqlalchemy[asyncio]==2.0.36  # ORM with async support
+asyncpg==0.30.0              # Async PostgreSQL driver (like pg / postgres npm pkg)
+alembic==1.14.0              # DB migrations (like TypeORM migrations)
+
+# ─────────────────────────────────────────────────────────────
+# Auth & Security
+# ─────────────────────────────────────────────────────────────
+python-jose[cryptography]==3.3.0  # JWT handling
+passlib[bcrypt]==1.7.4            # Password hashing (bcrypt)
+
+# ─────────────────────────────────────────────────────────────
+# Config / Settings  (pydantic-settings = @nestjs/config equivalent)
+# ─────────────────────────────────────────────────────────────
+pydantic-settings==2.7.0
+pydantic[email]==2.10.3     # Email validation in schemas
+python-dotenv==1.0.1        # Load .env file
+
+# ─────────────────────────────────────────────────────────────
+# File / Image Processing
+# ─────────────────────────────────────────────────────────────
+pillow==11.0.0         # Image validation & resizing
+aiofiles==24.1.0       # Async file I/O
+
+# ─────────────────────────────────────────────────────────────
+# PDF Extraction
+# ─────────────────────────────────────────────────────────────
+pdfplumber==0.11.4     # Extract text, tables from PDFs
+
+# ─────────────────────────────────────────────────────────────
+# Dev / Testing
+# ─────────────────────────────────────────────────────────────
+httpx==0.28.1          # Async HTTP client (used by FastAPI TestClient)
+pytest==8.3.4
+pytest-asyncio==0.25.0
