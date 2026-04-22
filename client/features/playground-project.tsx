@@ -2,6 +2,7 @@
 
 import { useHotkey } from "@tanstack/react-hotkeys";
 import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -100,54 +101,153 @@ export default function PlaygroundProject() {
         </div>
       </section>
 
-      {/* Story + goals */}
-      {/* <section className="mt-12 grid gap-8 lg:grid-cols-2">
+      {/* Performance section */}
+      <section className="mt-12">
         <div className="rounded-2xl border bg-white p-7 shadow-sm dark:bg-zinc-950">
-          <h2 className="text-xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-            What I optimize for
+          <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+            10k users performance: the difference between the 3 approaches
           </h2>
-          <ul className="mt-4 space-y-3 text-sm text-zinc-700 dark:text-zinc-300">
-            <li className="flex gap-3">
-              <span className="mt-1 inline-block size-2 rounded-full bg-zinc-900 dark:bg-zinc-100" />
-              <span>
-                <span className="font-medium text-zinc-900 dark:text-zinc-100">Clarity over novelty</span>: small
-                features wired through real layers (auth, API, UI) instead of disconnected snippets.
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="mt-1 inline-block size-2 rounded-full bg-zinc-900 dark:bg-zinc-100" />
-              <span>
-                <span className="font-medium text-zinc-900 dark:text-zinc-100">Traceability</span>: write notes while
-                building so future-me knows why a dependency or pattern is there.
-              </span>
-            </li>
-            <li className="flex gap-3">
-              <span className="mt-1 inline-block size-2 rounded-full bg-zinc-900 dark:bg-zinc-100" />
-              <span>
-                <span className="font-medium text-zinc-900 dark:text-zinc-100">Room to try tools</span>: new libraries get
-                a honest evaluation against real constraints—not a one-file demo.
-              </span>
-            </li>
-          </ul>
-        </div>
+          <p className="mt-3 max-w-4xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+            The section in <span className="font-medium">client/features/performance.tsx</span> compares
+            the same data volume with three rendering strategies so the impact is easy to see in
+            practice.
+          </p>
 
-        <div className="rounded-2xl border bg-white p-7 shadow-sm dark:bg-zinc-950">
-          <h2 className="text-xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
-            Learning without selling yourself short
-          </h2>
-          <p className="mt-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-            This project started and continues as a <span className="font-medium">learning and experimentation</span>{" "}
-            space—that is not a weakness. Senior engineers still read docs daily; the difference is framing: I use this
-            repo for <span className="font-medium">deliberate practice</span> with production-shaped boundaries (security,
-            errors, performance), not to collect unfinished tutorials.
-          </p>
-          <p className="mt-3 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-            If you are deciding what to put on a portfolio: honesty reads well when paired with{" "}
-            <span className="font-medium">depth and documentation</span>. You can say you explore new tools here; pair it
-            with what you shipped and what you learned.
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Bad performance</p>
+              <p className="mt-2 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
+                Fetches and renders all 10k users immediately. This increases initial render time,
+                mounts too many DOM nodes, and hurts responsiveness.
+              </p>
+            </div>
+            <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">react-window</p>
+              <p className="mt-2 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
+                Virtualizes rows so only visible items are mounted. It reduces work and memory usage,
+                improving scroll and interaction.
+              </p>
+            </div>
+            <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                TanStack Virtualized
+              </p>
+              <p className="mt-2 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
+                Also virtualized, with strong control and composability. It keeps large lists smooth
+                while integrating well with richer UI patterns.
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-4 rounded-xl border bg-zinc-50 p-4 text-xs leading-relaxed text-zinc-700 dark:bg-zinc-900 dark:text-zinc-300">
+            <span className="font-semibold text-zinc-900 dark:text-zinc-100">Result:</span> both
+            virtualized versions perform much better than the non-virtualized 10k baseline.
           </p>
         </div>
-      </section> */}
+      </section>
+
+      {/* Evidence */}
+      <section className="mt-12">
+        <div className="rounded-2xl border bg-white p-7 shadow-sm dark:bg-zinc-950">
+          <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+            Proof: bundle analysis, Web Vitals, and Lighthouse
+          </h2>
+          <p className="mt-3 max-w-4xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+            These screenshots document the optimization impact and overall quality status across the
+            app.
+          </p>
+
+          <h3 className="mt-6 text-base font-semibold text-zinc-950 dark:text-zinc-50">
+            Client bundle analyzer (before vs after)
+          </h3>
+          <div className="mt-3 grid gap-4 lg:grid-cols-2">
+            <figure className="rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900">
+              <Image
+                src="/client-bundler-before.png"
+                alt="Client bundle treemap before optimization"
+                width={1600}
+                height={900}
+                className="h-auto w-full rounded-md"
+              />
+              <figcaption className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+                Before optimization.
+              </figcaption>
+            </figure>
+            <figure className="rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900">
+              <Image
+                src="/client-bundler-after.png"
+                alt="Client bundle treemap after optimization"
+                width={1600}
+                height={900}
+                className="h-auto w-full rounded-md"
+              />
+              <figcaption className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+                After optimization.
+              </figcaption>
+            </figure>
+          </div>
+
+          <h3 className="mt-6 text-base font-semibold text-zinc-950 dark:text-zinc-50">
+            Node.js bundle analyzer (before vs after)
+          </h3>
+          <div className="mt-3 grid gap-4 lg:grid-cols-2">
+            <figure className="rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900">
+              <Image
+                src="/nodejs-bundler-before.png"
+                alt="Node.js bundle treemap before optimization"
+                width={1600}
+                height={900}
+                className="h-auto w-full rounded-md"
+              />
+              <figcaption className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+                Before optimization.
+              </figcaption>
+            </figure>
+            <figure className="rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900">
+              <Image
+                src="/nodejs-bundler-after.png"
+                alt="Node.js bundle treemap after optimization"
+                width={1600}
+                height={900}
+                className="h-auto w-full rounded-md"
+              />
+              <figcaption className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+                After optimization.
+              </figcaption>
+            </figure>
+          </div>
+
+          <h3 className="mt-6 text-base font-semibold text-zinc-950 dark:text-zinc-50">
+            Overall page health
+          </h3>
+          <div className="mt-3 grid gap-4 lg:grid-cols-2">
+            <figure className="rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900">
+              <Image
+                src="/webvitals.png"
+                alt="Web Vitals output with good FCP, TTFB, LCP, and CLS values"
+                width={1600}
+                height={900}
+                className="h-auto w-full rounded-md"
+              />
+              <figcaption className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+                Web Vitals across pages are in the good range.
+              </figcaption>
+            </figure>
+            <figure className="rounded-xl border bg-zinc-50 p-3 dark:bg-zinc-900">
+              <Image
+                src="/lighthouse.png"
+                alt="Lighthouse results all green for performance, accessibility, best practices, and SEO"
+                width={1600}
+                height={900}
+                className="h-auto w-full rounded-md"
+              />
+              <figcaption className="mt-2 text-xs text-zinc-600 dark:text-zinc-400">
+                Lighthouse is green across all categories.
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </section>
 
       {/* Layout + docs */}
       <section className="mt-12">
@@ -165,6 +265,56 @@ export default function PlaygroundProject() {
 client/      → Next.js App Router, TanStack, chat, demos, docs
 LangGraph/   → Python notebooks + agents (graphs, tools, RAG)`}
           </pre>
+        </div>
+      </section>
+
+      {/* AI routes + approach */}
+      <section className="mt-12">
+        <div className="rounded-2xl border bg-white p-7 shadow-sm dark:bg-zinc-950">
+          <h2 className="text-2xl font-semibold tracking-tight text-zinc-950 dark:text-zinc-50">
+            AI section approach
+          </h2>
+          <p className="mt-3 max-w-4xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+            The AI card in <span className="font-medium">client/features/live-stream.tsx</span> links to
+            three focused routes so each capability can be tested independently.
+          </p>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Admin</p>
+              <p className="mt-2 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
+                Database-focused tools to fetch, search, update, and delete users from the app with
+                controlled server-side actions.
+              </p>
+            </div>
+            <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                Realtime Voice Chat
+              </p>
+              <p className="mt-2 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
+                Realtime conversation flow for general chat, focused on streaming UX and live
+                interactions.
+              </p>
+            </div>
+            <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">ChatEGY</p>
+              <p className="mt-2 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
+                Tool-driven assistant workflows: deep search, code execution, and file analysis (for
+                images and PDF inputs).
+              </p>
+            </div>
+          </div>
+
+          <h3 className="mt-6 text-base font-semibold text-zinc-950 dark:text-zinc-50">
+            API route design (`/api/chat`)
+          </h3>
+          <p className="mt-2 max-w-4xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+            In <span className="font-medium">client/app/api/chat/route.ts</span>, I use{" "}
+            <span className="font-medium">@tanstack/ai</span> with an OpenAI adapter and stream the
+            response as Server-Sent Events. The route is force-dynamic, validates environment
+            configuration early, and exposes explicit tools (get user data, update, delete, search,
+            totals) so model output can trigger concrete server actions safely.
+          </p>
         </div>
       </section>
 
@@ -234,6 +384,9 @@ LangGraph/   → Python notebooks + agents (graphs, tools, RAG)`}
               "LangChain",
               "Sentry",
               "Tailwind CSS",
+              "Docker",
+              "Python",
+              "FastAPI"
             ].map((tool) => (
               <span
                 key={tool}
@@ -242,6 +395,23 @@ LangGraph/   → Python notebooks + agents (graphs, tools, RAG)`}
                 {tool}
               </span>
             ))}
+          </div>
+
+          <div className="mt-8 rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
+            <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
+              Deployment and containerization
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
+              The project is containerized with Docker, and images are published to Docker Hub.
+            </p>
+            <a
+              href="https://hub.docker.com/repositories/mosayed2002"
+              target="_blank"
+              rel="noreferrer"
+              className="mt-3 inline-block text-sm font-medium text-zinc-900 underline underline-offset-4 hover:opacity-80 dark:text-zinc-100"
+            >
+              Docker Hub: mosayed2002
+            </a>
           </div>
         </div>
       </section>
