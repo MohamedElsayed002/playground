@@ -12,6 +12,7 @@ import {
   ColumnFiltersState,
   getFilteredRowModel,
   VisibilityState,
+  PaginationState,
 } from "@tanstack/react-table";
 
 import {
@@ -43,6 +44,7 @@ import {
 import { DataTablePagination } from "./pagination";
 import { useDeleteUser } from "@/hooks/use-users";
 import { sileo } from "sileo";
+import { usePaginationSearchParams } from "./search-params.pagination";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -53,8 +55,11 @@ export function DataTable<TData extends { id: string }, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  const [searchParams, setSearchParams] = usePaginationSearchParams();
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([
+    { id: "name", value: searchParams.name },
+  ]);
 
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
@@ -63,6 +68,10 @@ export function DataTable<TData extends { id: string }, TValue>({
   const [pendingDeleteIds, setPendingDeleteIds] = useState<string[]>([]);
   const [pendingDeleteLabel, setPendingDeleteLabel] = useState("");
   const { mutateAsync: deleteUser, isPending: isDeleting } = useDeleteUser();
+  const paginationState: PaginationState = {
+    pageIndex: searchParams.pageIndex,
+    pageSize: searchParams.pageSize,
+  };
 
   const table = useReactTable({
     data,
@@ -70,13 +79,32 @@ export function DataTable<TData extends { id: string }, TValue>({
     getCoreRowModel: getCoreRowModel(),
     // For pagination
     getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: (updater) => {
+      const next =
+        typeof updater === "function"
+          ? updater(paginationState)
+          : updater;
+      void setSearchParams({
+        pageIndex: next.pageIndex,
+        pageSize: next.pageSize,
+      });
+    },
 
     // Sorting
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
 
     // Filter
-    onColumnFiltersChange: setColumnFilters,
+    onColumnFiltersChange: (updater) => {
+      const next = typeof updater === "function" ? updater(columnFilters) : updater;
+      setColumnFilters(next);
+
+      const nameFilter = next.find((filter) => filter.id === "name");
+      void setSearchParams({
+        name: typeof nameFilter?.value === "string" ? nameFilter.value : "",
+        pageIndex: 0,
+      });
+    },
     getFilteredRowModel: getFilteredRowModel(),
 
     // Visibility
@@ -90,6 +118,7 @@ export function DataTable<TData extends { id: string }, TValue>({
       columnFilters,
       columnVisibility,
       rowSelection,
+      pagination: paginationState,
     },
     meta: {
       onRequestDeleteUser: (id: string, label?: string) => {
@@ -154,7 +183,7 @@ export function DataTable<TData extends { id: string }, TValue>({
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter names..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+          value={searchParams.name}
           onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
           className="max-w-sm"
         />

@@ -6,12 +6,10 @@ import {
   LiveStream,
   NoSQLVSSQL,
   Performance,
-  RenderingStrategies,
   Tables,
 } from "@/features";
 import { UserBadge } from "@/components/users/user-badge";
 import { Projects } from "@/features/projects";
-import { api } from "@/lib/api/client";
 
 export const metadata: Metadata = {
   title: "Playground",
@@ -20,22 +18,22 @@ export const metadata: Metadata = {
 
 export default async  function RootPage() {
 
-const { data, error } = await api.POST("/api/v1/auth/login", {
-  body: {
-    username: "mohamed@gmail.com",
-    password: "01093588197Mm!",
-    scope: "",
-  },
+// const { data, error } = await api.POST("/api/v1/auth/login", {
+//   body: {
+//     username: "mohamed@gmail.com",
+//     password: "01093588197Mm!",
+//     scope: "",
+//   },
 
-  headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
-  },
+//   headers: {
+//     "Content-Type": "application/x-www-form-urlencoded",
+//   },
 
-  bodySerializer(body) {
-    return new URLSearchParams(body as Record<string, string>);
-  },
-});
-  console.log(data,error)
+//   bodySerializer(body) {
+//     return new URLSearchParams(body as Record<string, string>);
+//   },
+// });
+//   console.log(data,error)
 
   return (
     <DotPattern className="min-h-screen bg-[radial-gradient(circle_at_top,_#065f46_0%,_#022c22_40%,_#020617_100%)]">
@@ -72,9 +70,6 @@ const { data, error } = await api.POST("/api/v1/auth/login", {
             <div className="my-8 h-px w-full bg-white/40" />
 
             <APIsAndRealtime />
-            <div className="my-8 h-px w-full bg-white/40" />
-
-            {/* <RenderingStrategies /> */}
             <div className="my-8 h-px w-full bg-white/40" />
           </div>
         </div>

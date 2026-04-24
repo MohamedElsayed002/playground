@@ -25,6 +25,15 @@ const nextConfig: NextConfig = {
     },
     incomingRequests: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'playground-images-914561792613.s3.amazonaws.com',
+        port: '',
+      }
+    ]
+  }
 };
 
 const sentryWrapped = withSentryConfig(nextConfig, {
