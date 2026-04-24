@@ -13,8 +13,11 @@ import io
 from app.core.config import settings
 from app.exceptions.handlers import UnprocessableFileException
 from app.schemas.file import FileUploadResponse, PDFExtractResponse, PDFPageContent
+import boto3
 
 
+s3 = boto3.client("s3")
+BUCKET_NAME = settings.BUCKET_NAME
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _safe_filename(original: str) -> str:
@@ -88,15 +91,29 @@ async def upload_image(
 
     # Generate safe unique filename
     filename = _safe_filename(upload.filename or "image.jpg")
-    dest_dir = Path(settings.UPLOAD_DIR) / subfolder
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    dest_path = dest_dir / filename
 
-    # Write async — doesn't block the event loop
-    async with aiofiles.open(dest_path, "wb") as f:
-        await f.write(file_bytes)
+    # Saving it locally
+    # dest_dir = Path(settings.UPLOAD_DIR) / subfolder
+    # dest_dir.mkdir(parents=True, exist_ok=True)
+    # dest_path = dest_dir / filename
 
-    url = f"/static/{subfolder}/{filename}"
+
+    # # Write async — doesn't block the event loop
+    # async with aiofiles.open(dest_path, "wb") as f:
+    #     await f.write(file_bytes)
+
+    # url = f"/static/{subfolder}/{filename}"
+
+    s3_key = f"{subfolder}/{filename}"
+
+    s3.put_object(
+        Bucket=BUCKET_NAME,
+        Key=s3_key,
+        Body=file_bytes,
+        ContentType=content_type
+    )
+
+    url = f"https://{BUCKET_NAME}.s3.amazonaws.com/{s3_key}"
 
     return FileUploadResponse(
         filename=filename,
@@ -125,17 +142,28 @@ async def upload_document(upload: UploadFile) -> FileUploadResponse:
     file_bytes = await _read_upload_chunks(upload, settings.max_file_size_bytes)
 
     filename = _safe_filename(upload.filename or "document.pdf")
-    dest_dir = Path(settings.UPLOAD_DIR) / "documents"
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    dest_path = dest_dir / filename
+    # dest_dir = Path(settings.UPLOAD_DIR) / "documents"
+    # dest_dir.mkdir(parents=True, exist_ok=True)
+    # dest_path = dest_dir / filename
 
-    async with aiofiles.open(dest_path, "wb") as f:
-        await f.write(file_bytes)
+    # async with aiofiles.open(dest_path, "wb") as f:
+    #     await f.write(file_bytes)
+
+    s3_key = f"/documents/{filename}"
+
+    s3.put_object(
+        Bucket=BUCKET_NAME,
+        Key=s3_key,
+        Body=file_bytes,
+        ContentType=content_type
+    )
+
+    url = f"https://{BUCKET_NAME}.s3.amazonaws.com/{s3_key}"
 
     return FileUploadResponse(
         filename=filename,
         original_name=upload.filename or "document",
-        url=f"/static/documents/{filename}",
+        url=url,
         size_bytes=len(file_bytes),
         content_type=content_type,
     )

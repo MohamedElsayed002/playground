@@ -39,6 +39,7 @@ class Settings(BaseSettings):
 
     # CORS 
     CORS_ORIGINS: str = "http://localhost:3000"
+    BUCKET_NAME: str
 
     # Pydantic-settings config: reads from .env file
     model_config = SettingsConfigDict(env_file=".env",case_sensitive=True)
