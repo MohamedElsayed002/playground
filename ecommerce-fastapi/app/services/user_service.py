@@ -28,14 +28,14 @@ async def list_users(
         select(User).order_by(User.created_at.desc()).offset(offset).limit(page_size)
     )
 
-    users = result.scalar().all()
+    users = list(result.scalars().all())
 
     return {
         "items": users,
         "total": total,
         "page": page,
         "page_size": page_size,
-        "pages": math.ceil(total/page_size)
+        "pages": math.ceil(total / page_size) if total else 0,
     }
 
 

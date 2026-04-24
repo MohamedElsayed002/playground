@@ -47,4 +47,5 @@ class Category(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Category id={self.id} name={self.name}>"
+        state = self.__dict__
+        return f"<Category id={state.get('id')} name={state.get('name')}>"

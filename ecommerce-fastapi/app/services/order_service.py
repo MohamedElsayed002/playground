@@ -50,8 +50,8 @@ async def create_order(db:AsyncSession, user_id: int, data: OrderCreate):
         # Check stock 
         if product.stock_quantity < item_data.quantity:
             raise BadRequestException(
-                f"Insufficient stock for '{product.name}'.",
-                f"Available: {product.stock_quantity}, Request: {item_data.quantity}"
+                f"Insufficient stock for '{product.name}'. "
+                f"Available: {product.stock_quantity}, requested: {item_data.quantity}."
             )
         
         # Snapshot price at order time
@@ -126,7 +126,7 @@ async def list_user_orders(
     offset = (page - 1) * page_size
 
     count = (await db.execute(
-        select(func.count(Order.id)).where(Order.user_Id == user_id)
+        select(func.count(Order.id)).where(Order.user_id == user_id)
     )).scalar_one()
 
     result = await db.execute(
@@ -135,10 +135,10 @@ async def list_user_orders(
 
     return {
         "items": list(result.scalars().all()),
-        "total_items": count,
+        "total": count,
+        "page": page,
         "pages": math.ceil(count / page_size) if count else 0,
         "page_size": page_size,
-        "total_pages": math.ceil(count/page_size)
     }
 
 
@@ -166,7 +166,7 @@ async def cancel_order(db:AsyncSession, order_id: int, user_id: int) -> Order:
     """
         User cancels their own order (only if still pending/confirmed)
     """
-    order = await get_order(db,order_id=user_id)
+    order = await get_order(db, order_id=order_id, user_id=user_id)
 
     if order.status not in (OrderStatus.PENDING, OrderStatus.CONFIRMED):
         raise BadRequestException(

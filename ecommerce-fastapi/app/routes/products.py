@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, UploadFile, File, status 
+from fastapi import APIRouter, Depends, Query, UploadFile, File, status, Form 
 from sqlalchemy.ext.asyncio import AsyncSession 
 
 from app.core.dependencies import get_db, require_admin 
@@ -17,9 +17,10 @@ async def list_categoires(db: AsyncSession= Depends(get_db)):
     """
         Get all categories (flat list). Public
     """
-    return await product_service.list_categories(db)
+    categories = await product_service.list_categories(db)
+    return [CategoryResponse.model_validate(category) for category in categories]
 
-@router.get("/categoires/{category_id}",response_model=CategoryWithChildren)
+@router.get("/categories/{category_id}",response_model=CategoryWithChildren)
 async def get_category(
     category_id: int, 
     db: AsyncSession = Depends(get_db)
@@ -27,7 +28,8 @@ async def get_category(
     """
         Get a category with its sub-categories. Public
     """
-    return await product_service.get_category(db,category_id)
+    category = await product_service.get_category(db,category_id)
+    return CategoryWithChildren.model_validate(category)
 
 
 @router.post(
@@ -37,13 +39,31 @@ async def get_category(
     dependencies=[Depends(require_admin)],
 )
 async def create_category(
-    data: CategoryCreate,
+    name: str = Form(...),
+    description: str | None = Form(default=None),
+    parent_id: int | None = Form(default=None),
+    file: UploadFile | None = File(default=None),
     db: AsyncSession = Depends(get_db)
 ):
     """
     [Admin] Create a new category.
+    Send as multipart/form-data when uploading an image.
     """
-    return await product_service.create_category(db,data)
+    image_url: str | None = None
+
+    if file is not None:
+        upload_result = await file_service.upload_image(file, subfolder="categories")
+        image_url = upload_result.url
+
+    data = CategoryCreate(
+        name=name,
+        description=description,
+        image_url=image_url,
+        parent_id=parent_id,
+    )
+
+    category = await product_service.create_category(db, data)
+    return CategoryResponse.model_validate(category)
 
 @router.patch(
     "/categories/{category_id}",
@@ -52,13 +72,35 @@ async def create_category(
 )
 async def update_category(
     category_id: int,
-    data: CategoryUpdate,
+    name: str | None = Form(default=None),
+    description: str | None = Form(default=None),
+    parent_id: int | None = Form(default=None),
+    image_url: str | None = Form(default=None),
+    file: UploadFile | None = File(default=None),
     db: AsyncSession = Depends(get_db)
 ):
     """
-        Admin Update a category
+        Admin Update a category.
+        Send as multipart/form-data when updating fields or uploading an image.
     """
-    return await product_service.update_category(db,category_id,data)
+    update_data: dict[str, str | int | None] = {}
+
+    if name is not None:
+        update_data["name"] = name
+    if description is not None:
+        update_data["description"] = description
+    if parent_id is not None:
+        update_data["parent_id"] = parent_id
+    if image_url is not None:
+        update_data["image_url"] = image_url
+
+    if file is not None:
+        upload_result = await file_service.upload_image(file, subfolder="categories")
+        update_data["image_url"] = upload_result.url
+
+    data = CategoryUpdate(**update_data)
+    category = await product_service.update_category(db,category_id,data)
+    return CategoryResponse.model_validate(category)
 
 @router.delete(
     "/categories/{category_id}",
@@ -185,3 +227,34 @@ async def upload_product_image(
         is_primary=is_primary,
     )
     return image
+
+
+@router.delete(
+    "/products/{product_id}/images/{image_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_admin)],
+)
+async def delete_product_image(
+    product_id: int,
+    image_id: int,
+    db: AsyncSession = Depends(get_db),
+):
+    """[Admin] Delete a specific image for a product."""
+    await product_service.delete_product_image(db, product_id, image_id)
+
+
+@router.delete(
+    "/products/{product_id}/images",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_admin)],
+)
+async def delete_product_image_compat(
+    product_id: int,
+    image_id: int = Query(..., ge=1),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    [Admin] Backward-compatible delete endpoint using a query param.
+    Preferred route: DELETE /products/{product_id}/images/{image_id}
+    """
+    await product_service.delete_product_image(db, product_id, image_id)

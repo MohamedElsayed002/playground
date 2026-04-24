@@ -1,7 +1,8 @@
 import math 
 import re 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_
+from sqlalchemy import select, func, or_, update
+from sqlalchemy.orm import selectinload
 
 from app.models.product import Product, ProductImage
 from app.models.category import (Category)
@@ -11,7 +12,7 @@ from app.schemas.product import (
     CategoryCreate,
     CategoryUpdate
 )
-from app.exceptions.handlers import NotFoundException, ConflictException
+from app.exceptions.handlers import NotFoundException, ConflictException, BadRequestException
 
 def _slugify(text: str) -> str:
     text = text.lower().strip()
@@ -53,6 +54,18 @@ async def list_categories(db: AsyncSession) -> list[Category]:
     return list(result.scalars().all())
 
 async def get_category(db: AsyncSession, category_id: int) -> Category:
+    result = await db.execute(
+        select(Category)
+        .options(selectinload(Category.children))
+        .where(Category.id == category_id)
+    )
+    cat = result.scalar_one_or_none()
+    if not cat:
+        raise NotFoundException("Category", category_id)
+    return cat
+
+
+async def _get_category_for_update(db: AsyncSession, category_id: int) -> Category:
     result = await db.execute(select(Category).where(Category.id == category_id))
     cat = result.scalar_one_or_none()
     if not cat:
@@ -60,16 +73,39 @@ async def get_category(db: AsyncSession, category_id: int) -> Category:
     return cat
 
 async def update_category(db: AsyncSession, category_id: int, data: CategoryUpdate) -> Category:
-    cat = await get_category(db,category_id)
-    for field, value in data.model_dump(exclude_unset=True).items():
-        setattr(cat,field,value)
+    cat = await _get_category_for_update(db, category_id)
+    updates = data.model_dump(exclude_unset=True)
+
+    if "parent_id" in updates:
+        parent_id = updates["parent_id"]
+
+        if parent_id == category_id:
+            raise BadRequestException("A category cannot be its own parent")
+
+        if parent_id is not None:
+            await _get_category_for_update(db, parent_id)
+
+    for field, value in updates.items():
+        setattr(cat, field, value)
     await db.flush()
     await db.refresh(cat)
     return cat
 
 
 async def delete_category(db: AsyncSession, category_id: int) -> None:
-    cat = await get_category(db,category_id)
+    cat = await _get_category_for_update(db, category_id)
+
+    await db.execute(
+        update(Category)
+        .where(Category.parent_id == category_id)
+        .values(parent_id=None)
+    )
+    await db.execute(
+        update(Product)
+        .where(Product.category_id == category_id)
+        .values(category_id=None)
+    )
+
     await db.delete(cat)
     await db.flush()
 
@@ -111,11 +147,10 @@ async def list_products(
             or_(
                 Product.name.ilike(search_term),
                 Product.description.ilike(search_term)
-            )
-        )
+            )        )
 
     # Get total count for pagination metadata
-    count_query = select(func.count()).select_form(query.scalar_subquery())
+    count_query = select(func.count()).select_from(query.subquery())
     total = (await db.execute(count_query)).scalar_one()
 
     # Apply pagination
@@ -200,3 +235,25 @@ async def add_product_image(
     await db.flush()
     await db.refresh(image)
     return image
+
+
+async def delete_product_image(
+    db: AsyncSession,
+    product_id: int,
+    image_id: int,
+) -> None:
+    """Delete a product image that belongs to the given product."""
+    await get_product(db, product_id)
+
+    result = await db.execute(
+        select(ProductImage).where(
+            ProductImage.id == image_id,
+            ProductImage.product_id == product_id,
+        )
+    )
+    image = result.scalar_one_or_none()
+    if not image:
+        raise NotFoundException("Product image", image_id)
+
+    await db.delete(image)
+    await db.flush()
