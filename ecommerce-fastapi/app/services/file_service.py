@@ -16,7 +16,12 @@ from app.schemas.file import FileUploadResponse, PDFExtractResponse, PDFPageCont
 import boto3
 
 
-s3 = boto3.client("s3")
+s3 = boto3.client(
+    "s3",
+    region_name=settings.AWS_REGION,
+    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
+    )
 BUCKET_NAME = settings.BUCKET_NAME
 # ── Helpers ───────────────────────────────────────────────────────────────────
 

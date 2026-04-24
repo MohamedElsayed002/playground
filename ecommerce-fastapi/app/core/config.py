@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     # CORS 
     CORS_ORIGINS: str = "http://localhost:3000"
     BUCKET_NAME: str
+    AWS_REGION: str 
+    AWS_SECRET_ACCESS_KEY: str 
+    AWS_ACCESS_KEY_ID: str
+
 
     # Pydantic-settings config: reads from .env file
     model_config = SettingsConfigDict(env_file=".env",case_sensitive=True)
