@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
 import { DotPattern } from "@/components/layouts/dot-pattern";
-import {
-  APIsAndRealtime,
-  Chat,
-  LiveStream,
-  NoSQLVSSQL,
-  Performance,
-  Tables,
-} from "@/features";
+import { APIsAndRealtime, Chat, LiveStream, NoSQLVSSQL, Performance, Tables } from "@/features";
 import { UserBadge } from "@/components/users/user-badge";
 import { Projects } from "@/features/projects";
 
@@ -16,24 +9,23 @@ export const metadata: Metadata = {
   description: "d(O_o)b",
 };
 
-export default async  function RootPage() {
+export default async function RootPage() {
+  // const { data, error } = await api.POST("/api/v1/auth/login", {
+  //   body: {
+  //     username: "mohamed@gmail.com",
+  //     password: "01093588197Mm!",
+  //     scope: "",
+  //   },
 
-// const { data, error } = await api.POST("/api/v1/auth/login", {
-//   body: {
-//     username: "mohamed@gmail.com",
-//     password: "01093588197Mm!",
-//     scope: "",
-//   },
+  //   headers: {
+  //     "Content-Type": "application/x-www-form-urlencoded",
+  //   },
 
-//   headers: {
-//     "Content-Type": "application/x-www-form-urlencoded",
-//   },
-
-//   bodySerializer(body) {
-//     return new URLSearchParams(body as Record<string, string>);
-//   },
-// });
-//   console.log(data,error)
+  //   bodySerializer(body) {
+  //     return new URLSearchParams(body as Record<string, string>);
+  //   },
+  // });
+  //   console.log(data,error)
 
   return (
     <DotPattern className="min-h-screen bg-[radial-gradient(circle_at_top,_#065f46_0%,_#022c22_40%,_#020617_100%)]">

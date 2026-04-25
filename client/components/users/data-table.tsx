@@ -56,7 +56,9 @@ export function DataTable<TData extends { id: string }, TValue>({
   data,
 }: DataTableProps<TData, TValue>) {
   const [searchParams, setSearchParams] = usePaginationSearchParams();
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>(
+    searchParams.sort ? [searchParams.sort] : [],
+  );
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([
     { id: "name", value: searchParams.name },
   ]);
@@ -80,10 +82,7 @@ export function DataTable<TData extends { id: string }, TValue>({
     // For pagination
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: (updater) => {
-      const next =
-        typeof updater === "function"
-          ? updater(paginationState)
-          : updater;
+      const next = typeof updater === "function" ? updater(paginationState) : updater;
       void setSearchParams({
         pageIndex: next.pageIndex,
         pageSize: next.pageSize,
@@ -91,7 +90,15 @@ export function DataTable<TData extends { id: string }, TValue>({
     },
 
     // Sorting
-    onSortingChange: setSorting,
+    onSortingChange: (updater) => {
+      const next = typeof updater === "function" ? updater(sorting) : updater;
+      setSorting(next);
+
+      void setSearchParams({
+        sort: next[0] ?? null,
+        pageIndex: 0,
+      });
+    },
     getSortedRowModel: getSortedRowModel(),
 
     // Filter

@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import { useAuthStore } from "@/store/auth.store";
 import { tokenStorage, authApi } from "@/lib/api";
 import { Toaster } from "sileo";
-import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 // import { TanStackDevtools } from "@tanstack/react-devtools"
 import { WebVitals } from "@/components/shared/web-vitals";
@@ -64,9 +64,7 @@ export default function Provider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <WebVitals />
-      <NuqsAdapter>
-        {children}
-      </NuqsAdapter>
+      <NuqsAdapter>{children}</NuqsAdapter>
       <Toaster theme="dark" position="top-center" />
     </QueryClientProvider>
   );

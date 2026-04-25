@@ -74,6 +74,7 @@ export function LoginForm() {
                         id={field.name}
                         name={field.name}
                         value={field.state.value}
+                        autoFocus={true}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}

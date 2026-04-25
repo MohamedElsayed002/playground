@@ -291,10 +291,11 @@ export default function CareercastAI() {
         </h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
           The UI design for CareerCastAI was done in Stitch, and I implemented it pixel-perfect in
-          code. Here are the original designs for the CV Reviewer and Job Application Tailor services.
+          code. Here are the original designs for the CV Reviewer and Job Application Tailor
+          services.
         </p>
 
-                <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
           <figure className="rounded-2xl border bg-white p-4 shadow-sm dark:bg-zinc-950">
             <div className="overflow-hidden rounded-xl border bg-zinc-50 dark:bg-zinc-900">
               <Image
@@ -307,7 +308,13 @@ export default function CareercastAI() {
             </div>
             <figcaption className="mt-3 text-xs text-zinc-600 dark:text-zinc-400">
               CV Reviewer: match scoring, strengths, missing skills, and improvement
-              recommendations. <Link href="https://stitch.withgoogle.com/projects/7388728357419463460" className="text-blue-500 underline font-bold">CV Reviewer Design</Link>
+              recommendations.{" "}
+              <Link
+                href="https://stitch.withgoogle.com/projects/7388728357419463460"
+                className="text-blue-500 underline font-bold"
+              >
+                CV Reviewer Design
+              </Link>
             </figcaption>
           </figure>
 
@@ -323,11 +330,16 @@ export default function CareercastAI() {
             </div>
             <figcaption className="mt-3 text-xs text-zinc-600 dark:text-zinc-400">
               Job Application Tailor: rewrite + reorder content for the target role (no fabricated
-              experience). <Link href="https://stitch.withgoogle.com/projects/17775380935157635669" className="text-blue-500 underline font-bold">Application Tailor Design</Link>
+              experience).{" "}
+              <Link
+                href="https://stitch.withgoogle.com/projects/17775380935157635669"
+                className="text-blue-500 underline font-bold"
+              >
+                Application Tailor Design
+              </Link>
             </figcaption>
           </figure>
         </div>
-
       </section>
       {/* Services preview (visual) */}
       <section className="mt-12">

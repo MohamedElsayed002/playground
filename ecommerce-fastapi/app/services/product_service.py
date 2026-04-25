@@ -180,6 +180,17 @@ async def get_product(db: AsyncSession, product_id: int) -> Product:
     return product
 
 
+async def get_category_by_slug(db:AsyncSession, category_slug: str) -> Category:
+    result = await db.execute(
+        select(Category)
+        .options(selectinload(Category.children))
+        .where(Category.slug == category_slug)
+    )
+    category = result.scalar_one_or_none()
+    if not category:
+        raise NotFoundException("Category",category_slug)
+    return category
+
 async def get_product_by_slug(db: AsyncSession, slug: str) -> Product:
     result = await db.execute(
         select(Product).where(Product.slug == slug, Product.is_deleted == False)  # noqa: E712

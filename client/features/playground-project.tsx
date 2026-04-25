@@ -108,14 +108,16 @@ export default function PlaygroundProject() {
             10k users performance: the difference between the 3 approaches
           </h2>
           <p className="mt-3 max-w-4xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-            The section in <span className="font-medium">client/features/performance.tsx</span> compares
-            the same data volume with three rendering strategies so the impact is easy to see in
-            practice.
+            The section in <span className="font-medium">client/features/performance.tsx</span>{" "}
+            compares the same data volume with three rendering strategies so the impact is easy to
+            see in practice.
           </p>
 
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
-              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Bad performance</p>
+              <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                Bad performance
+              </p>
               <p className="mt-2 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
                 Fetches and renders all 10k users immediately. This increases initial render time,
                 mounts too many DOM nodes, and hurts responsiveness.
@@ -124,8 +126,8 @@ export default function PlaygroundProject() {
             <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
               <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">react-window</p>
               <p className="mt-2 text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
-                Virtualizes rows so only visible items are mounted. It reduces work and memory usage,
-                improving scroll and interaction.
+                Virtualizes rows so only visible items are mounted. It reduces work and memory
+                usage, improving scroll and interaction.
               </p>
             </div>
             <div className="rounded-xl border bg-zinc-50 p-4 dark:bg-zinc-900">
@@ -275,8 +277,8 @@ LangGraph/   → Python notebooks + agents (graphs, tools, RAG)`}
             AI section approach
           </h2>
           <p className="mt-3 max-w-4xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-            The AI card in <span className="font-medium">client/features/live-stream.tsx</span> links to
-            three focused routes so each capability can be tested independently.
+            The AI card in <span className="font-medium">client/features/live-stream.tsx</span>{" "}
+            links to three focused routes so each capability can be tested independently.
           </p>
 
           <div className="mt-5 grid gap-4 md:grid-cols-3">
@@ -386,7 +388,7 @@ LangGraph/   → Python notebooks + agents (graphs, tools, RAG)`}
               "Tailwind CSS",
               "Docker",
               "Python",
-              "FastAPI"
+              "FastAPI",
             ].map((tool) => (
               <span
                 key={tool}

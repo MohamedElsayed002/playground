@@ -181,7 +181,10 @@ export function Performance() {
                 <p className="text-[10px] lg:text-sm opacity-80">performance optimized</p>
               </div>
 
-              <Link href="/10k-users/tanstack-virtualized" aria-label="Open TanStack Virtualized demo">
+              <Link
+                href="/10k-users/tanstack-virtualized"
+                aria-label="Open TanStack Virtualized demo"
+              >
                 <LinkButton href="/10k-users/tanstack-virtualized" />
               </Link>
             </div>

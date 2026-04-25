@@ -10,7 +10,12 @@ type HoverPrefetchLinkProps = {
   ariaLabel?: string;
 };
 
-export function HoverPrefetchLink({ href, children, className, ariaLabel }: HoverPrefetchLinkProps) {
+export function HoverPrefetchLink({
+  href,
+  children,
+  className,
+  ariaLabel,
+}: HoverPrefetchLinkProps) {
   const [active, setActive] = useState(false);
 
   return (

@@ -35,7 +35,10 @@ export function ChategyForm({
       <div className="space-y-2">
         <Label>Backend Service</Label>
         <Select value={mode} onValueChange={(value) => onModeChange(value as ChategyMode)}>
-          <SelectTrigger aria-label="Choose what do you want (Code Execution/File analysis)" className="w-full">
+          <SelectTrigger
+            aria-label="Choose what do you want (Code Execution/File analysis)"
+            className="w-full"
+          >
             <SelectValue placeholder="Choose" />
           </SelectTrigger>
           <SelectContent>

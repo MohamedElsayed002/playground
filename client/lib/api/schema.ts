@@ -4,2102 +4,2225 @@
  */
 
 export interface paths {
-    "/api/v1/auth/register": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Register a new user account
-         * @description Register a new user. Returns the created user profile (no password).
-         */
-        post: operations["register_api_v1_auth_register_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  "/api/v1/auth/register": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Login and get JWT tokens
-         * @description Login using email/password
-         *     Returns JWT access + refresh tokens on success
-         */
-        post: operations["login_api_v1_auth_login_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Register a new user account
+     * @description Register a new user. Returns the created user profile (no password).
+     */
+    post: operations["register_api_v1_auth_register_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get current authenticated user
-         * @description Returns the logged-in user's profile.
-         *     Depends(get_current_user) acts as the auth guard — returns 401 if no valid token.
-         */
-        get: operations["get_me_api_v1_auth_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Login and get JWT tokens
+     * @description Login using email/password
+     *     Returns JWT access + refresh tokens on success
+     */
+    post: operations["login_api_v1_auth_login_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/auth/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/users/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get My Profile
-         * @description Get the logged-in user's own profile.
-         */
-        get: operations["get_my_profile_api_v1_users_me_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update My Profile
-         * @description Update own profile (partial update — only send fields you want to change).
-         *
-         *     NestJS equivalent:
-         *         @Patch('me')
-         *         @UseGuards(JwtAuthGuard)
-         *         async updateProfile(@Body() dto: UpdateUserDto, @CurrentUser() user: User) { ... }
-         */
-        patch: operations["update_my_profile_api_v1_users_me_patch"];
-        trace?: never;
+    /**
+     * Get current authenticated user
+     * @description Returns the logged-in user's profile.
+     *     Depends(get_current_user) acts as the auth guard — returns 401 if no valid token.
+     */
+    get: operations["get_me_api_v1_auth_me_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/users/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/users/me/change-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Change Password
-         * @description Change own password. Requires the current password for verification.
-         */
-        post: operations["change_password_api_v1_users_me_change_password_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get My Profile
+     * @description Get the logged-in user's own profile.
+     */
+    get: operations["get_my_profile_api_v1_users_me_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update My Profile
+     * @description Update own profile (partial update — only send fields you want to change).
+     *
+     *     NestJS equivalent:
+     *         @Patch('me')
+     *         @UseGuards(JwtAuthGuard)
+     *         async updateProfile(@Body() dto: UpdateUserDto, @CurrentUser() user: User) { ... }
+     */
+    patch: operations["update_my_profile_api_v1_users_me_patch"];
+    trace?: never;
+  };
+  "/api/v1/users/me/change-password": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/users/me/avatar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Upload Avatar
-         * @description Upload a profile avatar image.
-         *
-         *     FastAPI UploadFile = NestJS's FileInterceptor('file').
-         *     We validate type and size in the service.
-         */
-        post: operations["upload_avatar_api_v1_users_me_avatar_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Change Password
+     * @description Change own password. Requires the current password for verification.
+     */
+    post: operations["change_password_api_v1_users_me_change_password_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/users/me/avatar": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/users/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Users
-         * @description [Admin] List all users with pagination.
-         */
-        get: operations["list_users_api_v1_users__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Upload Avatar
+     * @description Upload a profile avatar image.
+     *
+     *     FastAPI UploadFile = NestJS's FileInterceptor('file').
+     *     We validate type and size in the service.
+     */
+    post: operations["upload_avatar_api_v1_users_me_avatar_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/users/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/users/{user_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get User
-         * @description [Admin] Get any user's full profile by ID.
-         */
-        get: operations["get_user_api_v1_users__user_id__get"];
-        put?: never;
-        post?: never;
-        /**
-         * Deactivate User
-         * @description [Admin] Soft-deactivate a user account.
-         */
-        delete: operations["deactivate_user_api_v1_users__user_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List Users
+     * @description [Admin] List all users with pagination.
+     */
+    get: operations["list_users_api_v1_users__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/users/{user_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/categories": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Categoires
-         * @description Get all categories (flat list). Public
-         */
-        get: operations["list_categoires_api_v1_categories_get"];
-        put?: never;
-        /**
-         * Create Category
-         * @description [Admin] Create a new category.
-         */
-        post: operations["create_category_api_v1_categories_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get User
+     * @description [Admin] Get any user's full profile by ID.
+     */
+    get: operations["get_user_api_v1_users__user_id__get"];
+    put?: never;
+    post?: never;
+    /**
+     * Deactivate User
+     * @description [Admin] Soft-deactivate a user account.
+     */
+    delete: operations["deactivate_user_api_v1_users__user_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/categories": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/categoires/{category_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Category
-         * @description Get a category with its sub-categories. Public
-         */
-        get: operations["get_category_api_v1_categoires__category_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List Categoires
+     * @description Get all categories (flat list). Public
+     */
+    get: operations["list_categoires_api_v1_categories_get"];
+    put?: never;
+    /**
+     * Create Category
+     * @description [Admin] Create a new category.
+     *     Send as multipart/form-data when uploading an image.
+     */
+    post: operations["create_category_api_v1_categories_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/categories/{category_slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/categories/{category_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete Category
-         * @description [Admin] Deelte a category
-         */
-        delete: operations["delete_category_api_v1_categories__category_id__delete"];
-        options?: never;
-        head?: never;
-        /**
-         * Update Category
-         * @description Admin Update a category
-         */
-        patch: operations["update_category_api_v1_categories__category_id__patch"];
-        trace?: never;
+    /**
+     * Category Slug
+     * @description Get Category by Slug
+     */
+    get: operations["category_slug_api_v1_categories__category_slug__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/categories/{category_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/products": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Products
-         * @description Get Paginated products with optional filters
-         *
-         *     Query params: ?page=1&page_size=20&category_id=3&search=phone&featured=true
-         */
-        get: operations["list_products_api_v1_products_get"];
-        put?: never;
-        /**
-         * Create Product
-         * @description [Admin] Create a new product.
-         */
-        post: operations["create_product_api_v1_products_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Category
+     * @description Get a category with its sub-categories. Public
+     */
+    get: operations["get_category_api_v1_categories__category_id__get"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete Category
+     * @description [Admin] Deelte a category
+     */
+    delete: operations["delete_category_api_v1_categories__category_id__delete"];
+    options?: never;
+    head?: never;
+    /**
+     * Update Category
+     * @description Admin Update a category.
+     *     Send as multipart/form-data when updating fields or uploading an image.
+     */
+    patch: operations["update_category_api_v1_categories__category_id__patch"];
+    trace?: never;
+  };
+  "/api/v1/products": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/products/slug/{slug}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Product By Slug
-         * @description Get a product by its URL slug. Public.
-         */
-        get: operations["get_product_by_slug_api_v1_products_slug__slug__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List Products
+     * @description Get Paginated products with optional filters
+     *
+     *     Query params: ?page=1&page_size=20&category_id=3&search=phone&featured=true
+     */
+    get: operations["list_products_api_v1_products_get"];
+    put?: never;
+    /**
+     * Create Product
+     * @description [Admin] Create a new product.
+     */
+    post: operations["create_product_api_v1_products_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/products/slug/{slug}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/products/{product_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Product
-         * @description Get a product by ID. Public.
-         */
-        get: operations["get_product_api_v1_products__product_id__get"];
-        put?: never;
-        post?: never;
-        /**
-         * Delete Product
-         * @description [Admin] Soft-delete a product (it stays in DB for order history).
-         */
-        delete: operations["delete_product_api_v1_products__product_id__delete"];
-        options?: never;
-        head?: never;
-        /**
-         * Update Product
-         * @description [Admin] Partially update a product (PATCH — only send changed fields).
-         */
-        patch: operations["update_product_api_v1_products__product_id__patch"];
-        trace?: never;
+    /**
+     * Get Product By Slug
+     * @description Get a product by its URL slug. Public.
+     */
+    get: operations["get_product_by_slug_api_v1_products_slug__slug__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/products/{product_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/products/{product_id}/images": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Upload Product Image
-         * @description [Admin] Upload an image for a product.
-         *
-         *     Flow:
-         *     1. Validate and save the image file (file_service)
-         *     2. Create a ProductImage DB record linking the URL to the product (product_service)
-         */
-        post: operations["upload_product_image_api_v1_products__product_id__images_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get Product
+     * @description Get a product by ID. Public.
+     */
+    get: operations["get_product_api_v1_products__product_id__get"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete Product
+     * @description [Admin] Soft-delete a product (it stays in DB for order history).
+     */
+    delete: operations["delete_product_api_v1_products__product_id__delete"];
+    options?: never;
+    head?: never;
+    /**
+     * Update Product
+     * @description [Admin] Partially update a product (PATCH — only send changed fields).
+     */
+    patch: operations["update_product_api_v1_products__product_id__patch"];
+    trace?: never;
+  };
+  "/api/v1/products/{product_id}/images": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/orders/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get My Orders
-         * @description Get the current user's own orders, paginated.
-         */
-        get: operations["get_my_orders_api_v1_orders__get"];
-        put?: never;
-        /**
-         * Place Order
-         * @description Place a new order. Automatically:
-         *     - Validates product availability and stock
-         *     - Snapshots prices at purchase time
-         *     - Deducts stock
-         *     - Calculates tax and totals
-         */
-        post: operations["place_order_api_v1_orders__post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Upload Product Image
+     * @description [Admin] Upload an image for a product.
+     *
+     *     Flow:
+     *     1. Validate and save the image file (file_service)
+     *     2. Create a ProductImage DB record linking the URL to the product (product_service)
+     */
+    post: operations["upload_product_image_api_v1_products__product_id__images_post"];
+    /**
+     * Delete Product Image Compat
+     * @description [Admin] Backward-compatible delete endpoint using a query param.
+     *     Preferred route: DELETE /products/{product_id}/images/{image_id}
+     */
+    delete: operations["delete_product_image_compat_api_v1_products__product_id__images_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/products/{product_id}/images/{image_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/orders/{order_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Order
-         * @description Get a specific order. Users can only see their own orders.
-         *     Admins can see any order via the admin endpoint below.
-         */
-        get: operations["get_order_api_v1_orders__order_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete Product Image
+     * @description [Admin] Delete a specific image for a product.
+     */
+    delete: operations["delete_product_image_api_v1_products__product_id__images__image_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/orders/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/orders/{order_id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Cancel Order
-         * @description Cancel an order (only if still pending or confirmed). Also restores stock.
-         */
-        post: operations["cancel_order_api_v1_orders__order_id__cancel_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Get My Orders
+     * @description Get the current user's own orders, paginated.
+     */
+    get: operations["get_my_orders_api_v1_orders__get"];
+    put?: never;
+    /**
+     * Place Order
+     * @description Place a new order. Automatically:
+     *     - Validates product availability and stock
+     *     - Snapshots prices at purchase time
+     *     - Deducts stock
+     *     - Calculates tax and totals
+     */
+    post: operations["place_order_api_v1_orders__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/orders/{order_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/orders/{order_id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Update Order Status
-         * @description [Admin] Update an order's status (e.g., mark as shipped, delivered).
-         */
-        patch: operations["update_order_status_api_v1_orders__order_id__status_patch"];
-        trace?: never;
+    /**
+     * Get Order
+     * @description Get a specific order. Users can only see their own orders.
+     *     Admins can see any order via the admin endpoint below.
+     */
+    get: operations["get_order_api_v1_orders__order_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/orders/{order_id}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/files/images": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Upload Image
-         * @description Upload a general image. Returns the URL to access it
-         *
-         *     The file is:
-         *     1. Validated for allowed MIME types
-         *     2. Checked against max file size
-         *     3. Verified as a real image (magic bytes via Pillow)
-         *     4. Saved with a randomized filename
-         */
-        post: operations["upload_image_api_v1_files_images_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Cancel Order
+     * @description Cancel an order (only if still pending or confirmed). Also restores stock.
+     */
+    post: operations["cancel_order_api_v1_orders__order_id__cancel_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/orders/{order_id}/status": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/files/documents": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Upload Document
-         * @description Upload a document file. Returns the storage URL
-         */
-        post: operations["upload_document_api_v1_files_documents_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update Order Status
+     * @description [Admin] Update an order's status (e.g., mark as shipped, delivered).
+     */
+    patch: operations["update_order_status_api_v1_orders__order_id__status_patch"];
+    trace?: never;
+  };
+  "/api/v1/files/images": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/api/v1/files/pdf/extract": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Extract Pdf
-         * @description Upload a PDF and extract all text and tables from every page.
-         *
-         *         Returns:
-         *         - Full concatenated text (useful for search indexing or LLM input)
-         *         - Per-page breakdown with text and detected tables
-         *
-         *         Use cases:
-         *     - Product spec sheets → extract specs as structured data
-         *     - Invoices → extract line items
-         *     - Reports → index for search
-         *     - Any document → feed to an AI for summarization
-         */
-        post: operations["extract_pdf_api_v1_files_pdf_extract_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Upload Image
+     * @description Upload a general image. Returns the URL to access it
+     *
+     *     The file is:
+     *     1. Validated for allowed MIME types
+     *     2. Checked against max file size
+     *     3. Verified as a real image (magic bytes via Pillow)
+     *     4. Saved with a randomized filename
+     */
+    post: operations["upload_image_api_v1_files_images_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/files/documents": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Health Check
-         * @description Simple health check endpoint.
-         *     Used by load balancers / container orchestrators (Docker, k8s) to check app status.
-         */
-        get: operations["health_check_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /**
+     * Upload Document
+     * @description Upload a document file. Returns the storage URL
+     */
+    post: operations["upload_document_api_v1_files_documents_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/files/pdf/extract": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    get?: never;
+    put?: never;
+    /**
+     * Extract Pdf
+     * @description Upload a PDF and extract all text and tables from every page.
+     *
+     *         Returns:
+     *         - Full concatenated text (useful for search indexing or LLM input)
+     *         - Per-page breakdown with text and detected tables
+     *
+     *         Use cases:
+     *     - Product spec sheets → extract specs as structured data
+     *     - Invoices → extract line items
+     *     - Reports → index for search
+     *     - Any document → feed to an AI for summarization
+     */
+    post: operations["extract_pdf_api_v1_files_pdf_extract_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/health": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Health Check
+     * @description Simple health check endpoint.
+     *     Used by load balancers / container orchestrators (Docker, k8s) to check app status.
+     */
+    get: operations["health_check_health_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        /** Body_extract_pdf_api_v1_files_pdf_extract_post */
-        Body_extract_pdf_api_v1_files_pdf_extract_post: {
-            /**
-             * File
-             * Format: binary
-             * @description PDF file to extract text from
-             */
-            file: string;
-        };
-        /** Body_login_api_v1_auth_login_post */
-        Body_login_api_v1_auth_login_post: {
-            /** Grant Type */
-            grant_type?: string | null;
-            /** Username */
-            username: string;
-            /**
-             * Password
-             * Format: password
-             */
-            password: string;
-            /**
-             * Scope
-             * @default
-             */
-            scope: string;
-            /** Client Id */
-            client_id?: string | null;
-            /**
-             * Client Secret
-             * Format: password
-             */
-            client_secret?: string | null;
-        };
-        /** Body_upload_avatar_api_v1_users_me_avatar_post */
-        Body_upload_avatar_api_v1_users_me_avatar_post: {
-            /**
-             * File
-             * Format: binary
-             * @description Profile image (JPEG, PNG, WebP)
-             */
-            file: string;
-        };
-        /** Body_upload_document_api_v1_files_documents_post */
-        Body_upload_document_api_v1_files_documents_post: {
-            /**
-             * File
-             * Format: binary
-             * @description Document file (PDF, DOC, DOCX)
-             */
-            file: string;
-        };
-        /** Body_upload_image_api_v1_files_images_post */
-        Body_upload_image_api_v1_files_images_post: {
-            /**
-             * File
-             * Format: binary
-             * @description Image file (JPEG, PNG, WebP, GIF)
-             */
-            file: string;
-        };
-        /** Body_upload_product_image_api_v1_products__product_id__images_post */
-        Body_upload_product_image_api_v1_products__product_id__images_post: {
-            /**
-             * File
-             * Format: binary
-             */
-            file: string;
-        };
-        /** CategoryCreate */
-        CategoryCreate: {
-            /** Name */
-            name: string;
-            /** Description */
-            description?: string | null;
-            /** Image Url */
-            image_url?: string | null;
-            /** Parent Id */
-            parent_id?: number | null;
-        };
-        /** CategoryResponse */
-        CategoryResponse: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /** Slug */
-            slug: string;
-            /** Description */
-            description: string | null;
-            /** Image Url */
-            image_url: string | null;
-            /** Parent Id */
-            parent_id: number | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /** CategoryUpdate */
-        CategoryUpdate: {
-            /** Name */
-            name?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Image Url */
-            image_url?: string | null;
-            /** Parent Id */
-            parent_id?: number | null;
-        };
-        /**
-         * CategoryWithChildren
-         * @description Includes nested children categories (for tree view)
-         */
-        CategoryWithChildren: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /** Slug */
-            slug: string;
-            /** Description */
-            description: string | null;
-            /** Image Url */
-            image_url: string | null;
-            /** Parent Id */
-            parent_id: number | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Children
-             * @default []
-             */
-            children: components["schemas"]["CategoryResponse"][];
-        };
-        /** FileUploadResponse */
-        FileUploadResponse: {
-            /** Filename */
-            filename: string;
-            /** Original Name */
-            original_name: string;
-            /** Url */
-            url: string;
-            /** Size Bytes */
-            size_bytes: number;
-            /** Content Type */
-            content_type: string;
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /** OrderCreate */
-        OrderCreate: {
-            /** Items */
-            items: components["schemas"]["OrderItemCreate"][];
-            /** Shipping Address Line1 */
-            shipping_address_line1?: string | null;
-            /** Shipping Address Line2 */
-            shipping_address_line2?: string | null;
-            /** Shipping City */
-            shipping_city?: string | null;
-            /** Shipping Country */
-            shipping_country?: string | null;
-            /** Shipping Postal Code */
-            shipping_postal_code?: string | null;
-            /** Notes */
-            notes?: string | null;
-        };
-        /**
-         * OrderItemCreate
-         * @description A single line item when placing an order
-         */
-        OrderItemCreate: {
-            /** Product Id */
-            product_id: number;
-            /** Quantity */
-            quantity: number;
-        };
-        /** OrderItemResponse */
-        OrderItemResponse: {
-            /** Id */
-            id: number;
-            /** Product Id */
-            product_id: number | null;
-            /** Product Name */
-            product_name: string;
-            /** Quantity */
-            quantity: number;
-            /** Unit Price */
-            unit_price: string;
-            /** Total Price */
-            total_price: string;
-        };
-        /** OrderResponse */
-        OrderResponse: {
-            /** Id */
-            id: number;
-            /** Order Number */
-            order_number: string;
-            status: components["schemas"]["OrderStatus"];
-            payment_status: components["schemas"]["PaymentStatus"];
-            /** Subtotal */
-            subtotal: string;
-            /** Shipping Cost */
-            shipping_cost: string;
-            /** Tax */
-            tax: string;
-            /** Total */
-            total: string;
-            /** Shipping Address Line1 */
-            shipping_address_line1: string | null;
-            /** Shipping Address Line2 */
-            shipping_address_line2: string | null;
-            /** Shipping City */
-            shipping_city: string | null;
-            /** Shipping Country */
-            shipping_country: string | null;
-            /** Shipping Postal Code */
-            shipping_postal_code: string | null;
-            /** Notes */
-            notes: string | null;
-            /** User Id */
-            user_id: number;
-            /**
-             * Items
-             * @default []
-             */
-            items: components["schemas"]["OrderItemResponse"][];
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-        };
-        /**
-         * OrderStatus
-         * @description Order lifecycle states.
-         * @enum {string}
-         */
-        OrderStatus: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
-        /** OrderStatusUpdate */
-        OrderStatusUpdate: {
-            status: components["schemas"]["OrderStatus"];
-            payment_status?: components["schemas"]["PaymentStatus"] | null;
-        };
-        /** PDFExtractResponse */
-        PDFExtractResponse: {
-            /** Filename */
-            filename: string;
-            /** Total Pages */
-            total_pages: number;
-            /** Pages */
-            pages: components["schemas"]["PDFPageContent"][];
-            /** Full Text */
-            full_text: string;
-        };
-        /** PDFPageContent */
-        PDFPageContent: {
-            /** Page Number */
-            page_number: number;
-            /** Text */
-            text: string;
-            /**
-             * Tables
-             * @default []
-             */
-            tables: (string | null)[][][];
-        };
-        /** PaginatedResponse[OrderResponse] */
-        PaginatedResponse_OrderResponse_: {
-            /** Items */
-            items: components["schemas"]["OrderResponse"][];
-            /** Total */
-            total: number;
-            /** Page */
-            page: number;
-            /** Page Size */
-            page_size: number;
-            /** Pages */
-            pages: number;
-        };
-        /** PaginatedResponse[ProductListResponse] */
-        PaginatedResponse_ProductListResponse_: {
-            /** Items */
-            items: components["schemas"]["ProductListResponse"][];
-            /** Total */
-            total: number;
-            /** Page */
-            page: number;
-            /** Page Size */
-            page_size: number;
-            /** Pages */
-            pages: number;
-        };
-        /** PaginatedResponse[UserAdminResponse] */
-        PaginatedResponse_UserAdminResponse_: {
-            /** Items */
-            items: components["schemas"]["UserAdminResponse"][];
-            /** Total */
-            total: number;
-            /** Page */
-            page: number;
-            /** Page Size */
-            page_size: number;
-            /** Pages */
-            pages: number;
-        };
-        /**
-         * PasswordChange
-         * @description POST /user/me/change-password
-         */
-        PasswordChange: {
-            /** Current Password */
-            current_password: string;
-            /** New Password */
-            new_password: string;
-        };
-        /**
-         * PaymentStatus
-         * @enum {string}
-         */
-        PaymentStatus: "pending" | "paid" | "failed" | "refunded";
-        /** ProductCreate */
-        ProductCreate: {
-            /** Name */
-            name: string;
-            /** Description */
-            description?: string | null;
-            /** Short Description */
-            short_description?: string | null;
-            /** Price */
-            price: number | string;
-            /** Compare At Price */
-            compare_at_price?: number | string | null;
-            /**
-             * Stock Quantity
-             * @default 0
-             */
-            stock_quantity: number;
-            /** Sku */
-            sku?: string | null;
-            /** Category Id */
-            category_id?: number | null;
-            /**
-             * Is Active
-             * @default true
-             */
-            is_active: boolean;
-            /**
-             * Is Featured
-             * @default false
-             */
-            is_featured: boolean;
-        };
-        /** ProductImageResponse */
-        ProductImageResponse: {
-            /** Id */
-            id: number;
-            /** Url */
-            url: string;
-            /** Alt Text */
-            alt_text: string | null;
-            /** Is Primary */
-            is_primary: boolean;
-            /** Sort Order */
-            sort_order: number;
-        };
-        /**
-         * ProductListResponse
-         * @description Lightweight product card for listing pages.
-         */
-        ProductListResponse: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /** Slug */
-            slug: string;
-            /** Price */
-            price: string;
-            /** Compare At Price */
-            compare_at_price: string | null;
-            /** Stock Quantity */
-            stock_quantity: number;
-            /** Is Featured */
-            is_featured: boolean;
-            /**
-             * Images
-             * @default []
-             */
-            images: components["schemas"]["ProductImageResponse"][];
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /** ProductResponse */
-        ProductResponse: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /** Slug */
-            slug: string;
-            /** Description */
-            description: string | null;
-            /** Short Description */
-            short_description: string | null;
-            /** Price */
-            price: string;
-            /** Compare At Price */
-            compare_at_price: string | null;
-            /** Stock Quantity */
-            stock_quantity: number;
-            /** Sku */
-            sku: string | null;
-            /** Is Active */
-            is_active: boolean;
-            /** Is Featured */
-            is_featured: boolean;
-            /** Category Id */
-            category_id: number | null;
-            /**
-             * Images
-             * @default []
-             */
-            images: components["schemas"]["ProductImageResponse"][];
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /**
-         * ProductUpdate
-         * @description All fields optional for PATCH semantics.
-         */
-        ProductUpdate: {
-            /** Name */
-            name?: string | null;
-            /** Description */
-            description?: string | null;
-            /** Short Description */
-            short_description?: string | null;
-            /** Price */
-            price?: number | string | null;
-            /** Compare At Price */
-            compare_at_price?: number | string | null;
-            /** Stock Quantity */
-            stock_quantity?: number | null;
-            /** Sku */
-            sku?: string | null;
-            /** Category Id */
-            category_id?: number | null;
-            /** Is Active */
-            is_active?: boolean | null;
-            /** Is Featured */
-            is_featured?: boolean | null;
-        };
-        /**
-         * TokenResponse
-         * @description Response after successful login
-         */
-        TokenResponse: {
-            /** Access Token */
-            access_token: string;
-            /** Refresh Token */
-            refresh_token: string;
-            /**
-             * Token Type
-             * @default bearer
-             */
-            token_type: string;
-        };
-        /**
-         * UserAdminResponse
-         * @description Extended user info from admin endpoints - includes all fields
-         */
-        UserAdminResponse: {
-            /** Id */
-            id: number;
-            /** Email */
-            email: string;
-            /** Username */
-            username: string;
-            /** First Name */
-            first_name: string | null;
-            /** Last Name */
-            last_name: string | null;
-            /** Phone */
-            phone: string | null;
-            /** Avatar Url */
-            avatar_url: string | null;
-            /** Role */
-            role: string;
-            /** Is Active */
-            is_active: boolean;
-            /** Is Verified */
-            is_verified: boolean;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-        };
-        /**
-         * UserCreate
-         * @description Registration request body.
-         *     Pydantic validates types and constraints automatically
-         *     NestJS equivalent -> CreateUserDto with class-validator decorators
-         */
-        UserCreate: {
-            /**
-             * Email
-             * Format: email
-             */
-            email: string;
-            /** Username */
-            username: string;
-            /** Password */
-            password: string;
-            /** First Name */
-            first_name?: string | null;
-            /** Last Name */
-            last_name?: string | null;
-            /** Phone */
-            phone?: string | null;
-        };
-        /**
-         * UserResponse
-         * @description What we return to the client no password
-         *
-         *     model_config with from_attributes=True allows Pydantic to read from
-         *     SQLAlchemy model instances directly (like @Exclude() in NestJS serialization)
-         */
-        UserResponse: {
-            /** Id */
-            id: number;
-            /** Email */
-            email: string;
-            /** Username */
-            username: string;
-            /** First Name */
-            first_name: string | null;
-            /** Last Name */
-            last_name: string | null;
-            /** Phone */
-            phone: string | null;
-            /** Avatar Url */
-            avatar_url: string | null;
-            /** Role */
-            role: string;
-            /** Is Active */
-            is_active: boolean;
-            /** Is Verified */
-            is_verified: boolean;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /**
-         * UserUpdate
-         * @description PATCH /user/me - partial update (all fields optional)
-         */
-        UserUpdate: {
-            /** First Name */
-            first_name?: string | null;
-            /** Last Name */
-            last_name?: string | null;
-            /** Phone */
-            phone?: string | null;
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-        };
+  schemas: {
+    /** Body_create_category_api_v1_categories_post */
+    Body_create_category_api_v1_categories_post: {
+      /** Name */
+      name: string;
+      /** Description */
+      description?: string | null;
+      /** Parent Id */
+      parent_id?: number | null;
+      /** File */
+      file?: string | null;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    /** Body_extract_pdf_api_v1_files_pdf_extract_post */
+    Body_extract_pdf_api_v1_files_pdf_extract_post: {
+      /**
+       * File
+       * Format: binary
+       * @description PDF file to extract text from
+       */
+      file: string;
+    };
+    /** Body_login_api_v1_auth_login_post */
+    Body_login_api_v1_auth_login_post: {
+      /** Grant Type */
+      grant_type?: string | null;
+      /** Username */
+      username: string;
+      /** Password */
+      password: string;
+      /**
+       * Scope
+       * @default
+       */
+      scope: string;
+      /** Client Id */
+      client_id?: string | null;
+      /** Client Secret */
+      client_secret?: string | null;
+    };
+    /** Body_update_category_api_v1_categories__category_id__patch */
+    Body_update_category_api_v1_categories__category_id__patch: {
+      /** Name */
+      name?: string | null;
+      /** Description */
+      description?: string | null;
+      /** Parent Id */
+      parent_id?: number | null;
+      /** Image Url */
+      image_url?: string | null;
+      /** File */
+      file?: string | null;
+    };
+    /** Body_upload_avatar_api_v1_users_me_avatar_post */
+    Body_upload_avatar_api_v1_users_me_avatar_post: {
+      /**
+       * File
+       * Format: binary
+       * @description Profile image (JPEG, PNG, WebP)
+       */
+      file: string;
+    };
+    /** Body_upload_document_api_v1_files_documents_post */
+    Body_upload_document_api_v1_files_documents_post: {
+      /**
+       * File
+       * Format: binary
+       * @description Document file (PDF, DOC, DOCX)
+       */
+      file: string;
+    };
+    /** Body_upload_image_api_v1_files_images_post */
+    Body_upload_image_api_v1_files_images_post: {
+      /**
+       * File
+       * Format: binary
+       * @description Image file (JPEG, PNG, WebP, GIF)
+       */
+      file: string;
+    };
+    /** Body_upload_product_image_api_v1_products__product_id__images_post */
+    Body_upload_product_image_api_v1_products__product_id__images_post: {
+      /**
+       * File
+       * Format: binary
+       */
+      file: string;
+    };
+    /** CategoryResponse */
+    CategoryResponse: {
+      /** Id */
+      id: number;
+      /** Name */
+      name: string;
+      /** Slug */
+      slug: string;
+      /** Description */
+      description: string | null;
+      /** Image Url */
+      image_url: string | null;
+      /** Parent Id */
+      parent_id: number | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
+     * CategoryWithChildren
+     * @description Includes nested children categories (for tree view)
+     */
+    CategoryWithChildren: {
+      /** Id */
+      id: number;
+      /** Name */
+      name: string;
+      /** Slug */
+      slug: string;
+      /** Description */
+      description: string | null;
+      /** Image Url */
+      image_url: string | null;
+      /** Parent Id */
+      parent_id: number | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Children */
+      children?: components["schemas"]["CategoryResponse"][];
+    };
+    /** FileUploadResponse */
+    FileUploadResponse: {
+      /** Filename */
+      filename: string;
+      /** Original Name */
+      original_name: string;
+      /** Url */
+      url: string;
+      /** Size Bytes */
+      size_bytes: number;
+      /** Content Type */
+      content_type: string;
+    };
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components["schemas"]["ValidationError"][];
+    };
+    /** OrderCreate */
+    OrderCreate: {
+      /** Items */
+      items: components["schemas"]["OrderItemCreate"][];
+      /** Shipping Address Line1 */
+      shipping_address_line1?: string | null;
+      /** Shipping Address Line2 */
+      shipping_address_line2?: string | null;
+      /** Shipping City */
+      shipping_city?: string | null;
+      /** Shipping Country */
+      shipping_country?: string | null;
+      /** Shipping Postal Code */
+      shipping_postal_code?: string | null;
+      /** Notes */
+      notes?: string | null;
+    };
+    /**
+     * OrderItemCreate
+     * @description A single line item when placing an order
+     */
+    OrderItemCreate: {
+      /** Product Id */
+      product_id: number;
+      /** Quantity */
+      quantity: number;
+    };
+    /** OrderItemResponse */
+    OrderItemResponse: {
+      /** Id */
+      id: number;
+      /** Product Id */
+      product_id: number | null;
+      /** Product Name */
+      product_name: string;
+      /** Quantity */
+      quantity: number;
+      /** Unit Price */
+      unit_price: string;
+      /** Total Price */
+      total_price: string;
+    };
+    /** OrderResponse */
+    OrderResponse: {
+      /** Id */
+      id: number;
+      /** Order Number */
+      order_number: string;
+      status: components["schemas"]["OrderStatus"];
+      payment_status: components["schemas"]["PaymentStatus"];
+      /** Subtotal */
+      subtotal: string;
+      /** Shipping Cost */
+      shipping_cost: string;
+      /** Tax */
+      tax: string;
+      /** Total */
+      total: string;
+      /** Shipping Address Line1 */
+      shipping_address_line1: string | null;
+      /** Shipping Address Line2 */
+      shipping_address_line2: string | null;
+      /** Shipping City */
+      shipping_city: string | null;
+      /** Shipping Country */
+      shipping_country: string | null;
+      /** Shipping Postal Code */
+      shipping_postal_code: string | null;
+      /** Notes */
+      notes: string | null;
+      /** User Id */
+      user_id: number;
+      /**
+       * Items
+       * @default []
+       */
+      items: components["schemas"]["OrderItemResponse"][];
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * OrderStatus
+     * @description Order lifecycle states.
+     * @enum {string}
+     */
+    OrderStatus:
+      | "pending"
+      | "confirmed"
+      | "processing"
+      | "shipped"
+      | "delivered"
+      | "cancelled"
+      | "refunded";
+    /** OrderStatusUpdate */
+    OrderStatusUpdate: {
+      status: components["schemas"]["OrderStatus"];
+      payment_status?: components["schemas"]["PaymentStatus"] | null;
+    };
+    /** PDFExtractResponse */
+    PDFExtractResponse: {
+      /** Filename */
+      filename: string;
+      /** Total Pages */
+      total_pages: number;
+      /** Pages */
+      pages: components["schemas"]["PDFPageContent"][];
+      /** Full Text */
+      full_text: string;
+    };
+    /** PDFPageContent */
+    PDFPageContent: {
+      /** Page Number */
+      page_number: number;
+      /** Text */
+      text: string;
+      /**
+       * Tables
+       * @default []
+       */
+      tables: (string | null)[][][];
+    };
+    /** PaginatedResponse[OrderResponse] */
+    PaginatedResponse_OrderResponse_: {
+      /** Items */
+      items: components["schemas"]["OrderResponse"][];
+      /** Total */
+      total: number;
+      /** Page */
+      page: number;
+      /** Page Size */
+      page_size: number;
+      /** Pages */
+      pages: number;
+    };
+    /** PaginatedResponse[ProductListResponse] */
+    PaginatedResponse_ProductListResponse_: {
+      /** Items */
+      items: components["schemas"]["ProductListResponse"][];
+      /** Total */
+      total: number;
+      /** Page */
+      page: number;
+      /** Page Size */
+      page_size: number;
+      /** Pages */
+      pages: number;
+    };
+    /** PaginatedResponse[UserAdminResponse] */
+    PaginatedResponse_UserAdminResponse_: {
+      /** Items */
+      items: components["schemas"]["UserAdminResponse"][];
+      /** Total */
+      total: number;
+      /** Page */
+      page: number;
+      /** Page Size */
+      page_size: number;
+      /** Pages */
+      pages: number;
+    };
+    /**
+     * PasswordChange
+     * @description POST /user/me/change-password
+     */
+    PasswordChange: {
+      /** Current Password */
+      current_password: string;
+      /** New Password */
+      new_password: string;
+    };
+    /**
+     * PaymentStatus
+     * @enum {string}
+     */
+    PaymentStatus: "pending" | "paid" | "failed" | "refunded";
+    /** ProductCreate */
+    ProductCreate: {
+      /** Name */
+      name: string;
+      /** Description */
+      description?: string | null;
+      /** Short Description */
+      short_description?: string | null;
+      /** Price */
+      price: number | string;
+      /** Compare At Price */
+      compare_at_price?: number | string | null;
+      /**
+       * Stock Quantity
+       * @default 0
+       */
+      stock_quantity: number;
+      /** Sku */
+      sku?: string | null;
+      /** Category Id */
+      category_id?: number | null;
+      /**
+       * Is Active
+       * @default true
+       */
+      is_active: boolean;
+      /**
+       * Is Featured
+       * @default false
+       */
+      is_featured: boolean;
+    };
+    /** ProductImageResponse */
+    ProductImageResponse: {
+      /** Id */
+      id: number;
+      /** Url */
+      url: string;
+      /** Alt Text */
+      alt_text: string | null;
+      /** Is Primary */
+      is_primary: boolean;
+      /** Sort Order */
+      sort_order: number;
+    };
+    /**
+     * ProductListResponse
+     * @description Lightweight product card for listing pages.
+     */
+    ProductListResponse: {
+      /** Id */
+      id: number;
+      /** Name */
+      name: string;
+      /** Slug */
+      slug: string;
+      /** Price */
+      price: string;
+      /** Compare At Price */
+      compare_at_price: string | null;
+      /** Stock Quantity */
+      stock_quantity: number;
+      /** Is Featured */
+      is_featured: boolean;
+      /**
+       * Images
+       * @default []
+       */
+      images: components["schemas"]["ProductImageResponse"][];
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /** ProductResponse */
+    ProductResponse: {
+      /** Id */
+      id: number;
+      /** Name */
+      name: string;
+      /** Slug */
+      slug: string;
+      /** Description */
+      description: string | null;
+      /** Short Description */
+      short_description: string | null;
+      /** Price */
+      price: string;
+      /** Compare At Price */
+      compare_at_price: string | null;
+      /** Stock Quantity */
+      stock_quantity: number;
+      /** Sku */
+      sku: string | null;
+      /** Is Active */
+      is_active: boolean;
+      /** Is Featured */
+      is_featured: boolean;
+      /** Category Id */
+      category_id: number | null;
+      /**
+       * Images
+       * @default []
+       */
+      images: components["schemas"]["ProductImageResponse"][];
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
+     * ProductUpdate
+     * @description All fields optional for PATCH semantics.
+     */
+    ProductUpdate: {
+      /** Name */
+      name?: string | null;
+      /** Description */
+      description?: string | null;
+      /** Short Description */
+      short_description?: string | null;
+      /** Price */
+      price?: number | string | null;
+      /** Compare At Price */
+      compare_at_price?: number | string | null;
+      /** Stock Quantity */
+      stock_quantity?: number | null;
+      /** Sku */
+      sku?: string | null;
+      /** Category Id */
+      category_id?: number | null;
+      /** Is Active */
+      is_active?: boolean | null;
+      /** Is Featured */
+      is_featured?: boolean | null;
+    };
+    /**
+     * TokenResponse
+     * @description Response after successful login
+     */
+    TokenResponse: {
+      /** Access Token */
+      access_token: string;
+      /** Refresh Token */
+      refresh_token: string;
+      /**
+       * Token Type
+       * @default bearer
+       */
+      token_type: string;
+    };
+    /**
+     * UserAdminResponse
+     * @description Extended user info from admin endpoints - includes all fields
+     */
+    UserAdminResponse: {
+      /** Id */
+      id: number;
+      /** Email */
+      email: string;
+      /** Username */
+      username: string;
+      /** First Name */
+      first_name: string | null;
+      /** Last Name */
+      last_name: string | null;
+      /** Phone */
+      phone: string | null;
+      /** Avatar Url */
+      avatar_url: string | null;
+      /** Role */
+      role: string;
+      /** Is Active */
+      is_active: boolean;
+      /** Is Verified */
+      is_verified: boolean;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * UserCreate
+     * @description Registration request body.
+     *     Pydantic validates types and constraints automatically
+     *     NestJS equivalent -> CreateUserDto with class-validator decorators
+     */
+    UserCreate: {
+      /**
+       * Email
+       * Format: email
+       */
+      email: string;
+      /** Username */
+      username: string;
+      /** Password */
+      password: string;
+      /** First Name */
+      first_name?: string | null;
+      /** Last Name */
+      last_name?: string | null;
+      /** Phone */
+      phone?: string | null;
+    };
+    /**
+     * UserResponse
+     * @description What we return to the client no password
+     *
+     *     model_config with from_attributes=True allows Pydantic to read from
+     *     SQLAlchemy model instances directly (like @Exclude() in NestJS serialization)
+     */
+    UserResponse: {
+      /** Id */
+      id: number;
+      /** Email */
+      email: string;
+      /** Username */
+      username: string;
+      /** First Name */
+      first_name: string | null;
+      /** Last Name */
+      last_name: string | null;
+      /** Phone */
+      phone: string | null;
+      /** Avatar Url */
+      avatar_url: string | null;
+      /** Role */
+      role: string;
+      /** Is Active */
+      is_active: boolean;
+      /** Is Verified */
+      is_verified: boolean;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
+     * UserUpdate
+     * @description PATCH /user/me - partial update (all fields optional)
+     */
+    UserUpdate: {
+      /** First Name */
+      first_name?: string | null;
+      /** Last Name */
+      last_name?: string | null;
+      /** Phone */
+      phone?: string | null;
+    };
+    /** ValidationError */
+    ValidationError: {
+      /** Location */
+      loc: (string | number)[];
+      /** Message */
+      msg: string;
+      /** Error Type */
+      type: string;
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    register_api_v1_auth_register_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  register_api_v1_auth_register_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    login_api_v1_auth_login_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/x-www-form-urlencoded": components["schemas"]["Body_login_api_v1_auth_login_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TokenResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserCreate"];
+      };
     };
-    get_me_api_v1_auth_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["UserResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    get_my_profile_api_v1_users_me_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-        };
+  };
+  login_api_v1_auth_login_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    update_my_profile_api_v1_users_me_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "application/x-www-form-urlencoded": components["schemas"]["Body_login_api_v1_auth_login_post"];
+      };
     };
-    change_password_api_v1_users_me_change_password_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PasswordChange"];
-            };
+        content: {
+          "application/json": components["schemas"]["TokenResponse"];
         };
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    upload_avatar_api_v1_users_me_avatar_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_upload_avatar_api_v1_users_me_avatar_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FileUploadResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  get_me_api_v1_auth_me_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    list_users_api_v1_users__get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_UserAdminResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["UserResponse"];
         };
+      };
     };
-    get_user_api_v1_users__user_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserAdminResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  get_my_profile_api_v1_users_me_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    deactivate_user_api_v1_users__user_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: number;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["UserResponse"];
         };
+      };
     };
-    list_categoires_api_v1_categories_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CategoryResponse"][];
-                };
-            };
-        };
+  };
+  update_my_profile_api_v1_users_me_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    create_category_api_v1_categories_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CategoryCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CategoryResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserUpdate"];
+      };
     };
-    get_category_api_v1_categoires__category_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                category_id: number;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CategoryWithChildren"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["UserResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    delete_category_api_v1_categories__category_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                category_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  change_password_api_v1_users_me_change_password_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    update_category_api_v1_categories__category_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                category_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CategoryUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CategoryResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["PasswordChange"];
+      };
     };
-    list_products_api_v1_products_get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-                category_id?: number | null;
-                search?: string | null;
-                featured?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_ProductListResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    create_product_api_v1_products_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProductCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProductResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  upload_avatar_api_v1_users_me_avatar_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    get_product_by_slug_api_v1_products_slug__slug__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                slug: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProductResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_upload_avatar_api_v1_users_me_avatar_post"];
+      };
     };
-    get_product_api_v1_products__product_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                product_id: number;
-            };
-            cookie?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProductResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["FileUploadResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    delete_product_api_v1_products__product_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                product_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  list_users_api_v1_users__get: {
+    parameters: {
+      query?: {
+        page?: number;
+        page_size?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    update_product_api_v1_products__product_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                product_id: number;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProductUpdate"];
-            };
+        content: {
+          "application/json": components["schemas"]["PaginatedResponse_UserAdminResponse_"];
         };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProductResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    upload_product_image_api_v1_products__product_id__images_post: {
-        parameters: {
-            query?: {
-                is_primary?: boolean;
-                alt_text?: string | null;
-            };
-            header?: never;
-            path: {
-                product_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_upload_product_image_api_v1_products__product_id__images_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProductImageResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  get_user_api_v1_users__user_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: number;
+      };
+      cookie?: never;
     };
-    get_my_orders_api_v1_orders__get: {
-        parameters: {
-            query?: {
-                page?: number;
-                page_size?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginatedResponse_OrderResponse_"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content: {
+          "application/json": components["schemas"]["UserAdminResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    place_order_api_v1_orders__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OrderCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrderResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  deactivate_user_api_v1_users__user_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: number;
+      };
+      cookie?: never;
     };
-    get_order_api_v1_orders__order_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                order_id: number;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrderResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    cancel_order_api_v1_orders__order_id__cancel_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                order_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrderResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  list_categoires_api_v1_categories_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    update_order_status_api_v1_orders__order_id__status_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                order_id: number;
-            };
-            cookie?: never;
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OrderStatusUpdate"];
-            };
+        content: {
+          "application/json": components["schemas"]["CategoryResponse"][];
         };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrderResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+      };
     };
-    upload_image_api_v1_files_images_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_upload_image_api_v1_files_images_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FileUploadResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+  };
+  create_category_api_v1_categories_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    upload_document_api_v1_files_documents_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_upload_document_api_v1_files_documents_post"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FileUploadResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_create_category_api_v1_categories_post"];
+      };
     };
-    extract_pdf_api_v1_files_pdf_extract_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
         };
-        requestBody: {
-            content: {
-                "multipart/form-data": components["schemas"]["Body_extract_pdf_api_v1_files_pdf_extract_post"];
-            };
+        content: {
+          "application/json": components["schemas"]["CategoryResponse"];
         };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PDFExtractResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
         };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
     };
-    health_check_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
+  };
+  category_slug_api_v1_categories__category_slug__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        category_slug: string;
+      };
+      cookie?: never;
     };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CategoryWithChildren"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_category_api_v1_categories__category_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        category_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CategoryWithChildren"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_category_api_v1_categories__category_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        category_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_category_api_v1_categories__category_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        category_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_update_category_api_v1_categories__category_id__patch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CategoryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_products_api_v1_products_get: {
+    parameters: {
+      query?: {
+        page?: number;
+        page_size?: number;
+        category_id?: number | null;
+        search?: string | null;
+        featured?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaginatedResponse_ProductListResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_product_api_v1_products_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProductCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_product_by_slug_api_v1_products_slug__slug__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_product_api_v1_products__product_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        product_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_product_api_v1_products__product_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        product_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_product_api_v1_products__product_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        product_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProductUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  upload_product_image_api_v1_products__product_id__images_post: {
+    parameters: {
+      query?: {
+        is_primary?: boolean;
+        alt_text?: string | null;
+      };
+      header?: never;
+      path: {
+        product_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_upload_product_image_api_v1_products__product_id__images_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductImageResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_product_image_compat_api_v1_products__product_id__images_delete: {
+    parameters: {
+      query: {
+        image_id: number;
+      };
+      header?: never;
+      path: {
+        product_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_product_image_api_v1_products__product_id__images__image_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        product_id: number;
+        image_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_my_orders_api_v1_orders__get: {
+    parameters: {
+      query?: {
+        page?: number;
+        page_size?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PaginatedResponse_OrderResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  place_order_api_v1_orders__post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OrderCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_order_api_v1_orders__order_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        order_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  cancel_order_api_v1_orders__order_id__cancel_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        order_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_order_status_api_v1_orders__order_id__status_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        order_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OrderStatusUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  upload_image_api_v1_files_images_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_upload_image_api_v1_files_images_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FileUploadResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  upload_document_api_v1_files_documents_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_upload_document_api_v1_files_documents_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FileUploadResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  extract_pdf_api_v1_files_pdf_extract_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_extract_pdf_api_v1_files_pdf_extract_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PDFExtractResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  health_check_health_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
 }

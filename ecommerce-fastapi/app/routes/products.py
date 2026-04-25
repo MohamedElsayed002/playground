@@ -20,6 +20,17 @@ async def list_categoires(db: AsyncSession= Depends(get_db)):
     categories = await product_service.list_categories(db)
     return [CategoryResponse.model_validate(category) for category in categories]
 
+
+@router.get('/categories/{category_slug}', response_model=CategoryWithChildren)
+async def category_slug(category_slug: str,db: AsyncSession= Depends(get_db)):
+    """
+        Get Category by Slug
+    """
+    category = await product_service.get_category_by_slug(db,category_slug)
+    return CategoryWithChildren.model_validate(category)
+
+
+
 @router.get("/categories/{category_id}",response_model=CategoryWithChildren)
 async def get_category(
     category_id: int, 

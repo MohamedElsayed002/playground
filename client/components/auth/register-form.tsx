@@ -74,6 +74,7 @@ export function RegisterForm() {
                       <Input
                         id={field.name}
                         name={field.name}
+                        autoFocus={true}
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}

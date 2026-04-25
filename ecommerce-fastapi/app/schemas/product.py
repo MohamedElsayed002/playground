@@ -40,7 +40,7 @@ class CategoryWithChildren(CategoryResponse):
     """
         Includes nested children categories (for tree view)
     """
-    children: list["CategoryResponse"] = []
+    children: list["CategoryResponse"] = Field(default_factory=list)
 
 # Product Image Schema
 
