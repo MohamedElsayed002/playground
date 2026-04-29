@@ -1,5 +1,7 @@
 import logging 
 from contextlib import asynccontextmanager
+# python -m compileall .
+# alembic revision --autogenerate -m "add candidate tables"
 
 from fastapi import FastAPI 
 from fastapi.middleware.cors import CORSMiddleware
@@ -17,7 +19,9 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
-
+logging.getLogger("pdfminer").setLevel(logging.ERROR)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("openai").setLevel(logging.INFO)
 
 
 @asynccontextmanager

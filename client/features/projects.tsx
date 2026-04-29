@@ -1,10 +1,49 @@
 "use client";
+
 import { ArrowRight } from "lucide-react";
 import { HoverPrefetchLink } from "@/components/nextjs-docs/hover-prefetch-link";
+import { useRef, useEffect } from "react";
+
 
 export function Projects() {
+
+  const divElement = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const section = divElement.current
+    if(!section) return 
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if(entry.isIntersecting) {
+            window.history.replaceState(null,"","#projects")
+          }
+        })
+      },
+      {
+        rootMargin:"0px",
+        scrollMargin: "0px",
+        threshold: 0.5
+      }
+    )
+
+    observer.observe(section)
+
+    const hash = window.location.hash.substring(1)
+    if(hash === "projects") {
+      requestAnimationFrame(() => {
+        section.scrollIntoView({behavior: "smooth"})
+      })
+    }
+
+    return () => {
+      observer.unobserve(section)
+    }
+  },[])
+
   return (
-    <div>
+    <div ref={divElement} id="projects">
       <h2 className="text-3xl font-semibold mb-4 md:text-left text-center">Projects</h2>
       <p className="text-gray-400 -mt-2 mb-5">My Projects & my stack used in them</p>
       <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 lg:gap-38">

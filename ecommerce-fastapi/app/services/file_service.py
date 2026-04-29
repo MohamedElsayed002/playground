@@ -14,7 +14,21 @@ from app.core.config import settings
 from app.exceptions.handlers import UnprocessableFileException
 from app.schemas.file import FileUploadResponse, PDFExtractResponse, PDFPageContent
 import boto3
+from app.services.llm_service import  extract_structured_cv_data, safe_int
+from app.schemas.analysis import CVStructuredData
+import subprocess
+import json
+import os
+import tempfile
+import shutil
 
+import pyclamd
+
+
+# VERAPDF_JAR = r"C:\Users\moham\verapdf\bin\cli-1.30.1.jar"
+VERAPDF_JAR = r"C:\Users\moham\verapdf\bin\cli-1.30.1.jar"
+JAVA_PATH = r"C:\Program Files\Eclipse Adoptium\jdk-17.0.18.8-hotspot\bin\java.exe"
+cd = pyclamd.ClamdUnixSocket()
 
 s3 = boto3.client(
     "s3",
@@ -24,6 +38,14 @@ s3 = boto3.client(
     )
 BUCKET_NAME = settings.BUCKET_NAME
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+
+async def _save_upload_to_temp(upload: UploadFile) -> str:
+    temp = tempfile.NamedTemporaryFile(delete=False,suffix=".pdf")
+    content = await upload.read()
+    temp.write(content)
+    temp.close()
+    return temp.name
 
 def _safe_filename(original: str) -> str:
     """
@@ -174,67 +196,179 @@ async def upload_document(upload: UploadFile) -> FileUploadResponse:
     )
 
 
-# ── PDF Extraction ─────────────────────────────────────────────────────────────
+# PDF Extraction 
 
-async def extract_pdf_content(upload: UploadFile) -> PDFExtractResponse:
-    """
-    Extract text and tables from every page of a PDF.
-    
-    Uses pdfplumber which handles:
-    - Text extraction with layout awareness
-    - Table detection and extraction
-    - Multi-column PDFs
-    
-    The extracted data can be used for:
-    - Full-text search indexing
-    - AI/LLM processing
-    - Data pipeline ingestion
-    """
-    if upload.content_type != "application/pdf":
-        raise UnprocessableFileException("Only PDF files are supported for text extraction")
+# PDF/A = Archival PDF
 
-    file_bytes = await _read_upload_chunks(upload, settings.max_file_size_bytes)
+"""
+It's a strict version of PDF designed for long-term storage
 
-    # pdfplumber works with file-like objects — we use BytesIO to avoid writing to disk
-    pages_content: list[PDFPageContent] = []
-    all_text_parts: list[str] = []
+Unlike normal PDFs, it must:
+
+- Embed all fonts 
+- Avoid external dependencies (no remote images, no JS)
+- Use standardized color profiles
+- Be self-contained and reproducible forever
+
+Normal PDF Looks fine today/ PDF/A will still look identical in 20 years
+
+PDF/A is used in Banks, Governmental systems, Legal archives, Healthcare records
+These systems require: Compliance, Long-term storage, Legal reliability. Regular users? Almost never
+
+{
+  "filename": "cv.pdf",
+  "total_pages": 2,
+  "pages": [...],
+  "full_text": "...",
+  "pdfa_compliant": false,
+  "warning": "PDF is not PDF/A compliant"
+}
+
+## Recommended architecture 
+
+1. Strict route (PDF/A only)
+2. Flexible route (default) Accept any pdf, if not pdf/a return warning, still process
+
+## Help non technical users to convert there pdf to be pdf/a
+
+1- Auto fix: Convert PDF-> PDF/A internally lib `ghostscript`, `ocrmypdf`, `pikepdf`
+2- Soft warning
+3- Offer download upgrade "Download PDF/A version" / "Convert on demand"
+
+---
+
+PDF/A is not random. It belongs to this category 
+
+"Strict standards that guarantee consistency, security, and auditability
+"""
+
+
+class PDFValidationError(Exception):
+    pass
+
+
+def validate_pdf(path):
+    result = subprocess.run(
+        [JAVA_PATH, "-jar", VERAPDF_JAR, "--format", "json", path],
+        capture_output=True,
+        text=True,
+        timeout=30
+    )
+
+    if result.returncode not in (0, 1):
+        raise PDFValidationError(f"veraPDF crashed: {result.stderr}")
 
     try:
-        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-            total_pages = len(pdf.pages)
+        data = json.loads(result.stdout)
 
-            for page_num, page in enumerate(pdf.pages, start=1):
-                # Extract text — pdfplumber preserves layout better than PyPDF2
-                text = page.extract_text() or ""
+        report = data.get("report")
+        if not report:
+            raise ValueError("Missing report")
 
-                # Extract tables — returns list of tables, each table = list of rows
-                # Each row = list of cell values (strings or None for empty cells)
-                raw_tables = page.extract_tables() or []
+        jobs = report.get("jobs", [])
+        if not jobs:
+            raise ValueError("No jobs found")
 
-                # Clean up None values in cells
-                tables = [
-                    [
-                        [cell if cell is not None else "" for cell in row]
-                        for row in table
-                    ]
-                    for table in raw_tables
-                ]
+        validation_list = jobs[0].get("validationResult", [])
+        if not validation_list:
+            raise ValueError("No validation result")
 
-                pages_content.append(PDFPageContent(
-                    page_number=page_num,
-                    text=text,
-                    tables=tables,
-                ))
-                all_text_parts.append(f"--- Page {page_num} ---\n{text}")
+        validation = validation_list[0]
+
+        return {
+            "is_compliant": validation.get("compliant"),
+            "statement": validation.get("statement"),
+            "details": validation.get("details", {}),
+        }
 
     except Exception as e:
-        raise UnprocessableFileException(f"Failed to parse PDF: {str(e)}")
+        raise PDFValidationError(f"Invalid veraPDF output: {e}")
+    
 
-    full_text = "\n\n".join(all_text_parts)
+def scan_file(file_bytes: bytes):
+    result = cd.scan_stream(file_bytes)
 
-    return PDFExtractResponse(
-        filename=upload.filename or "document.pdf",
-        total_pages=total_pages,
-        pages=pages_content,
-        full_text=full_text,
-    )
+    if result is not None:
+        raise Exception("Virus detected")
+
+async def extract_pdf_content(upload: UploadFile) -> PDFExtractResponse:
+
+    if upload.content_type != "application/pdf":
+        raise UnprocessableFileException("Only PDF files are supported")
+
+    # ✅ STEP 1: Save file to disk (needed for veraPDF)
+    temp_path = await _save_upload_to_temp(upload)
+
+    try:
+        # ✅ STEP 2: Validate BEFORE parsing
+        # validation = validate_pdf(temp_path)
+
+        # if not validation["is_compliant"]:
+            # 🔴 Strict mode (reject)
+            # raise UnprocessableFileException(
+            #     # "PDF is not PDF/A compliant (may contain unsafe content)"
+            # )
+            # return {
+            #     "warning": "PDF is not PDF/A compliant",
+            #     "allow": True
+            # }
+
+        with open(temp_path, "rb") as f:
+            file_bytes = f.read()
+
+            scan_file(file_bytes)
+
+        pages_content: list[PDFPageContent] = []
+        all_text_parts: list[str] = []
+
+        try:
+            with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+                total_pages = len(pdf.pages)
+
+                for page_num, page in enumerate(pdf.pages, start=1):
+                    text = page.extract_text() or ""
+                    raw_tables = page.extract_tables() or []
+
+                    tables = [
+                        [
+                            [cell if cell is not None else "" for cell in row]
+                            for row in table
+                        ]
+                        for table in raw_tables
+                    ]
+
+                    pages_content.append(PDFPageContent(
+                        page_number=page_num,
+                        text=text,
+                        tables=tables,
+                    ))
+
+                    all_text_parts.append(f"--- Page {page_num} ---\n{text}")
+
+        except Exception as e:
+            raise UnprocessableFileException(f"Failed to parse PDF: {str(e)}")
+
+        full_text = "\n\n".join(all_text_parts)
+
+        structured_data = None
+
+        try:
+            raw_structured = await extract_structured_cv_data(full_text)
+            structured_data = CVStructuredData(**raw_structured)
+            structured_data.years_of_experience = safe_int(
+                structured_data.years_of_experience
+            )
+        except Exception as e:
+            print("LLM extraction failed", e)
+
+        return PDFExtractResponse(
+            filename=upload.filename or "document.pdf",
+            total_pages=total_pages,
+            pages=pages_content,
+            full_text=full_text,
+            structured_data=structured_data
+        )
+
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)

@@ -1,5 +1,8 @@
+"use client"
+
 import Link from "next/link";
 import { ArrowUpRight, Braces, Database, GitBranchPlus, ShieldCheck } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 const comparisonRows = [
   {
@@ -71,8 +74,45 @@ JOIN users ON users.id = posts.user_id;`,
 ];
 
 export function NoSQLVSSQL() {
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    // Create Intersection Observer to detect when section is in view
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // When section enters viewport, update URL hash
+          if (entry.isIntersecting) {
+            window.history.replaceState(null, "", "#nosql-vs-sql");
+          }
+        });
+      },
+      {
+        threshold: 0.3, // Trigger when 30% of section is visible
+      }
+    );
+
+    observer.observe(section);
+
+    // Scroll to section if hash is present on page load
+    const hash = window.location.hash.substring(1); // Remove # prefix
+    if (hash === "nosql-vs-sql") {
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        section.scrollIntoView({ behavior: "smooth" });
+      });
+    }
+
+    return () => {
+      observer.unobserve(section);
+    };
+  }, []);
+
   return (
-    <section className="space-y-6">
+    <section ref={sectionRef} id="nosql-vs-sql" className="space-y-6">
       <div className="flex flex-col gap-3 md:max-w-3xl">
         <h2 className="text-center text-3xl font-semibold md:text-left">NoSQL vs SQL</h2>
         <p className="text-center text-sm text-gray-300 md:text-left md:text-base">

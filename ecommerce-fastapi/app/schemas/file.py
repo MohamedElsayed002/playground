@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from typing import Optional
+from app.schemas.analysis import CVStructuredData
 
 class FileUploadResponse(BaseModel):
     filename: str 
@@ -17,3 +19,4 @@ class PDFExtractResponse(BaseModel):
     total_pages: int 
     pages: list[PDFPageContent]
     full_text: str
+    structured_data: Optional[CVStructuredData] = None

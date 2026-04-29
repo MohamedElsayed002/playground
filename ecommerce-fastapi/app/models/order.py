@@ -1,14 +1,3 @@
-"""
-app/models/order.py
-───────────────────
-Order and OrderItem models.
-
-Demonstrates a many-to-many-like relationship between Order and Product
-via the OrderItem join table — this is the standard e-commerce pattern.
-
-Order (1) ──< OrderItem (N) >── Product (1)
-"""
-
 from decimal import Decimal
 import enum
 

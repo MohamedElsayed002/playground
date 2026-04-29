@@ -1,5 +1,11 @@
+"use client"
+
 import Link from "next/link";
 import { ArrowUpRight, Cable, GitPullRequestArrow, Radio, Waves } from "lucide-react";
+import { useEffect, useRef } from "react";
+
+// Intersection Observer Docs
+// https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
 
 const comparisonRows = [
   {
@@ -98,8 +104,45 @@ const examples = [
 ];
 
 export function APIsAndRealtime() {
+
+  const sectionRef = useRef<HTMLElement>(null)
+  // const { showTags } = useScrollState()
+
+  useEffect(() => {
+    const section = sectionRef.current
+    if (!section) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            window.history.replaceState(null, "", "#api-realtime");
+          }
+        });
+      },
+      {
+        threshold: 0.3,
+      }
+    );
+
+    observer.observe(section)
+
+    // Handle hash on page load
+    const hash = window.location.hash.substring(1); // Remove # prefix
+    if (hash === "api-realtime") {
+      // Use requestAnimationFrame to ensure DOM is ready
+      requestAnimationFrame(() => {
+        section.scrollIntoView({ behavior: "smooth" })
+      })
+    }
+
+    return () => {
+      observer.unobserve(section)
+    }
+  }, []);
+
   return (
-    <section className="space-y-6">
+    <section ref={sectionRef} id="api-realtime" className="space-y-6">
       <div className="flex flex-col gap-3 md:max-w-4xl">
         <h2 className="text-center text-3xl font-semibold md:text-left">
           REST API vs GraphQL vs Socket.IO

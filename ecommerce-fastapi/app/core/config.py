@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY: str 
     AWS_ACCESS_KEY_ID: str
 
+    OPENAI_API_KEY: str
+
 
     # Pydantic-settings config: reads from .env file
     model_config = SettingsConfigDict(env_file=".env",case_sensitive=True)

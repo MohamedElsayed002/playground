@@ -39,7 +39,7 @@ async def upload_document(
 )
 async def extract_pdf(
     file: UploadFile = File(...,description="PDF file to extract text from"),
-    current_user=Depends(get_current_user)
+    # current_user=Depends(get_current_user)
 ):
     """
         Upload a PDF and extract all text and tables from every page.
