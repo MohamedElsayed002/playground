@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 from app.schemas.analysis import CVStructuredData
+from enum import Enum
 
 class FileUploadResponse(BaseModel):
     filename: str 
@@ -8,6 +9,12 @@ class FileUploadResponse(BaseModel):
     url: str 
     size_bytes: int
     content_type: str
+    
+class FileStatus(str,Enum):
+    UPLOADING = "uploading"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
 
 class PDFPageContent(BaseModel):
     page_number: int

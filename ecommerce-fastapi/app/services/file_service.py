@@ -3,6 +3,7 @@ import uuid
 import hashlib
 import mimetypes
 from pathlib import Path
+import logging
 
 import aiofiles
 import pdfplumber
@@ -21,14 +22,30 @@ import json
 import os
 import tempfile
 import shutil
+from sqlalchemy import select
 
 import pyclamd
+from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.idempotency import IdempotencyKey
+from app.models.file import File
+from app.schemas.file import FileStatus
+
+logger = logging.getLogger(__name__)
 
 
 # VERAPDF_JAR = r"C:\Users\moham\verapdf\bin\cli-1.30.1.jar"
 VERAPDF_JAR = r"C:\Users\moham\verapdf\bin\cli-1.30.1.jar"
 JAVA_PATH = r"C:\Program Files\Eclipse Adoptium\jdk-17.0.18.8-hotspot\bin\java.exe"
-cd = pyclamd.ClamdUnixSocket()
+
+# ✅ Try to connect to ClamAV, but allow app to start if unavailable
+# (ClamAV is Unix-only and may not be available on Windows dev machines)
+cd = None
+try:
+    cd = pyclamd.ClamdUnixSocket()
+    logger.info("✅ ClamAV connected successfully")
+except Exception as e:
+    logger.warning(f"⚠️  ClamAV not available: {e} (virus scanning will be skipped)")
 
 s3 = boto3.client(
     "s3",
@@ -286,10 +303,21 @@ def validate_pdf(path):
     
 
 def scan_file(file_bytes: bytes):
-    result = cd.scan_stream(file_bytes)
-
-    if result is not None:
-        raise Exception("Virus detected")
+    """
+    Scan file for malware using ClamAV.
+    If ClamAV is not available, skip scanning (development only).
+    """
+    if cd is None:
+        logger.debug("⚠️  ClamAV not available - skipping virus scan")
+        return
+    
+    try:
+        result = cd.scan_stream(file_bytes)
+        if result is not None:
+            raise Exception("Virus detected")
+    except Exception as e:
+        logger.error(f"Virus scan failed: {e}")
+        raise
 
 async def extract_pdf_content(upload: UploadFile) -> PDFExtractResponse:
 
@@ -371,4 +399,194 @@ async def extract_pdf_content(upload: UploadFile) -> PDFExtractResponse:
 
     finally:
         if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+
+# ── Authenticated PDF Upload with Idempotency ──────────────────────────────────
+
+"""
+🎯 IDEMPOTENCY PATTERN:
+
+The idempotency pattern ensures that identical requests produce the same result,
+even if called multiple times. This is crucial for:
+
+- Network failures: Client retries → Server should return same response
+- User double-clicks: Same upload request twice → Same file, not duplicates  
+- UI bugs: Form submitted multiple times → Only one file created
+
+FLOW:
+1. Client sends: idempotency_key (usually UUID in headers)
+2. Server checks: Does this key exist in IdempotencyKey table?
+   ✅ YES  → Return cached response (no processing)
+   ❌ NO   → Process request, cache result, return response
+3. Future identical requests: Get cached response instantly
+
+KEY BENEFITS:
+- Prevents duplicate file entries
+- Saves processing time on retries
+- Safe for user errors (accidental double-submit)
+- Database constraint: (filename, user_id) prevents actual duplicates too
+"""
+
+"""
+1. Request comes in 
+2. Check idempotency 
+3. Start transaction 
+4. Save DB record
+5. Upload file
+6. Commit or rollback 
+7. Return consistent response
+"""
+async def upload_pdf_authenticated(
+    upload: UploadFile,
+    user_id: int,
+    idempotency_key: str,
+    db: AsyncSession,
+) -> PDFExtractResponse:
+
+    # ✅ STEP 1: Idempotency check
+    result = await db.execute(
+        select(IdempotencyKey).filter(IdempotencyKey.key == idempotency_key)
+    )
+    existing_key = result.scalars().first()
+
+    if existing_key and existing_key.response:
+        return PDFExtractResponse(**json.loads(existing_key.response))
+
+    # ✅ STEP 2: Validate file
+    if upload.content_type != "application/pdf":
+        raise UnprocessableFileException("Only PDF files are supported")
+
+    safe_filename = _safe_filename(upload.filename or "document.pdf")
+
+    # ✅ STEP 3: Check if file already exists (IMPORTANT FIX)
+    existing_file = await db.execute(
+        select(File).filter(
+            File.filename == safe_filename,
+            File.user_id == user_id
+        )
+    )
+    existing_file = existing_file.scalars().first()
+
+    if existing_file:
+        # 👉 Optional: allow retry if FAILED
+        if existing_file.status == FileStatus.FAILED:
+            # reuse same record instead of failing
+            file_record = existing_file
+            file_record.status = FileStatus.UPLOADING
+            file_record.error_message = None
+        else:
+            raise UnprocessableFileException(
+                f"You already uploaded a file named '{upload.filename}'"
+            )
+    else:
+        file_record = File(
+            filename=safe_filename,
+            user_id=user_id,
+            status=FileStatus.UPLOADING
+        )
+        db.add(file_record)
+        await db.flush()
+
+    temp_path = None
+
+    try:
+        temp_path = await _save_upload_to_temp(upload)
+
+        file_record.status = FileStatus.PROCESSING
+        await db.flush()
+
+        with open(temp_path, "rb") as f:
+            file_bytes = f.read()
+
+            scan_file(file_bytes)
+
+        pages_content = []
+        all_text_parts = []
+
+        try:
+            with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+                total_pages = len(pdf.pages)
+
+                for page_num, page in enumerate(pdf.pages, start=1):
+                    text = page.extract_text() or ""
+                    raw_tables = page.extract_tables() or []
+
+                    tables = [
+                        [
+                            [cell if cell is not None else "" for cell in row]
+                            for row in table
+                        ]
+                        for table in raw_tables
+                    ]
+
+                    pages_content.append(PDFPageContent(
+                        page_number=page_num,
+                        text=text,
+                        tables=tables
+                    ))
+
+                    all_text_parts.append(f"--- Page {page_num} ---\n{text}")
+
+        except Exception as e:
+            raise UnprocessableFileException(f"Failed to parse PDF: {str(e)}")
+
+        full_text = "\n\n".join(all_text_parts)
+
+        structured_data = None
+        try:
+            raw_structured = await extract_structured_cv_data(full_text)
+            structured_data = CVStructuredData(**raw_structured)
+            structured_data.years_of_experience = safe_int(
+                structured_data.years_of_experience
+            )
+        except Exception as e:
+            print(f"⚠️ LLM extraction failed: {e}")
+
+        response = PDFExtractResponse(
+            filename=upload.filename or "document.pdf",
+            total_pages=total_pages,
+            pages=pages_content,
+            full_text=full_text,
+            structured_data=structured_data
+        )
+
+        file_record.status = FileStatus.COMPLETED
+
+        response_json = json.dumps({
+            "filename": response.filename,
+            "total_pages": response.total_pages,
+            "pages": [
+                {
+                    "page_number": p.page_number,
+                    "text": p.text,
+                    "tables": p.tables
+                } for p in response.pages
+            ],
+            "full_text": response.full_text,
+            "structured_data": response.structured_data.dict()
+            if response.structured_data else None
+        })
+
+        db.add(IdempotencyKey(
+            key=idempotency_key,
+            response=response_json
+        ))
+
+        await db.commit()
+        return response
+
+    except Exception as e:
+        await db.rollback()
+
+        file_record.status = FileStatus.FAILED
+        file_record.error_message = str(e)
+
+        db.add(file_record)
+        await db.commit()
+
+        raise UnprocessableFileException(str(e))
+
+    finally:
+        if temp_path and os.path.exists(temp_path):
             os.remove(temp_path)
