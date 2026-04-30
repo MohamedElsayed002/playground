@@ -11,6 +11,7 @@ class File(Base):
 
     status = Column(SQLEnum(FileStatus), default=FileStatus.UPLOADING, nullable=False)
     error_message = Column(String, nullable=True)
+    idempotency_key = Column(String, nullable=True)
 
     __table_args__ = (
         UniqueConstraint("filename", "user_id", name="unique_user_file"),

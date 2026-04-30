@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Header
+from fastapi import APIRouter, Depends, UploadFile, File, Header, HTTPException
 from app.core.dependencies import get_current_user, require_admin, get_db
-from app.schemas.file import FileUploadResponse, PDFExtractResponse 
+from app.schemas.file import FileUploadResponse, PDFExtractResponse, FileStatus
 from app.services import file_service
+from app.models.file import File as FileModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+import json
 import uuid
 
 router = APIRouter(prefix="/files",tags=["Files & Upload"])
@@ -61,8 +64,8 @@ async def extract_pdf(
 
 @router.post(
     "/pdf/extract-authenticated",
-    response_model=PDFExtractResponse,
-    summary="Upload PDF with Idempotency Protection"
+    status_code=202,
+    summary="Upload PDF – Background Processing via Inngest"
 )
 async def extract_pdf_authenticated(
     file: UploadFile = File(..., description="PDF file to extract text from"),
@@ -70,47 +73,78 @@ async def extract_pdf_authenticated(
     db: AsyncSession = Depends(get_db),
     idempotency_key: str | None = Header(
         None,
-        description="Unique identifier for request idempotency (UUID v4 recommended). "
+        description="Unique identifier for request idempotency."
                     "Same key = cached response, prevents duplicate processing. Optional - if not provided, UUID will be auto-generated"
     ),
 ):
     """
-        Upload a PDF and extract all text and tables with **IDEMPOTENCY protection**.
-        
-        🔐 **Authenticated endpoint** - Requires user login
-        
+        Upload a PDF for **background processing** via Inngest.
+
+        🔐 **Authenticated endpoint** – Requires user login
+
+        ### How it works
+        1. Validates file type & idempotency key
+        2. Uploads raw PDF to S3
+        3. Creates a DB record (status = `processing`)
+        4. Fires an Inngest event → background worker runs:
+           - Virus scan
+           - PDF text/table extraction
+           - LLM structured data extraction
+           - DB update (status → `completed`)
+
         ### Idempotency Protection
         - Send unique `Idempotency-Key` header with each request
         - Duplicate requests with same key return cached result instantly
         - Prevents double-uploads from network retries or accidental double-clicks
-        
-        ### Database Integration
-        - Saves file metadata with unique constraint per user per filename
-        - Caches response in IdempotencyKey table
-        - Returns same result for retries without reprocessing
-        
+
         ### Returns
-        - Full concatenated PDF text
-        - Per-page breakdown with text and tables
-        - Structured data (if extraction available)
-        
+        - `202 Accepted` with `file_id` and `status: "processing"`
+        - Or cached full response if idempotency key was already processed
+
         ### Example Request Header
         ```
         Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
         ```
-        
-        ### Use Cases
-        - Resume uploads (with duplicate prevention)
-        - Invoice processing (audit trail)
-        - Document archive (immutable history)
-        - LLM pipeline (deduplicated input)
     """
     # Auto-generate idempotency key if not provided
     key = idempotency_key or str(uuid.uuid4())
-    
+
     return await file_service.upload_pdf_authenticated(
         upload=file,
         user_id=current_user.id,
         idempotency_key=key,
         db=db,
     )
+
+
+@router.get(
+    "/pdf/status/{file_id}",
+    summary="Poll PDF processing status",
+)
+async def get_pdf_status(
+    file_id: int,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+        Poll the processing status of an uploaded PDF.
+
+        ### Response by status
+        - `processing` → Still working, poll again in a few seconds
+        - `completed`  → Done! Full extraction result included in `result`
+        - `failed`     → Error occurred, `error` field has details
+
+        ### Example usage (client-side)
+        ```js
+        const poll = async (fileId) => {
+            const res = await fetch(`/api/v1/files/pdf/status/${fileId}`);
+            const data = await res.json();
+            if (data.status === "processing") {
+                setTimeout(() => poll(fileId), 3000); // retry in 3s
+            } else {
+                console.log(data.result); // full extraction
+            }
+        }
+        ```
+    """
+    return await file_service.llm_response_status_result(file_id, current_user.id, db)

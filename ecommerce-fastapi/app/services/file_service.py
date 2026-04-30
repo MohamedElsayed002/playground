@@ -7,7 +7,7 @@ import logging
 
 import aiofiles
 import pdfplumber
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException
 from PIL import Image, UnidentifiedImageError
 import io
 
@@ -30,6 +30,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.idempotency import IdempotencyKey
 from app.models.file import File
 from app.schemas.file import FileStatus
+import inngest
 
 logger = logging.getLogger(__name__)
 
@@ -38,12 +39,12 @@ logger = logging.getLogger(__name__)
 VERAPDF_JAR = r"C:\Users\moham\verapdf\bin\cli-1.30.1.jar"
 JAVA_PATH = r"C:\Program Files\Eclipse Adoptium\jdk-17.0.18.8-hotspot\bin\java.exe"
 
-# ✅ Try to connect to ClamAV, but allow app to start if unavailable
+# Try to connect to ClamAV, but allow app to start if unavailable
 # (ClamAV is Unix-only and may not be available on Windows dev machines)
 cd = None
 try:
     cd = pyclamd.ClamdUnixSocket()
-    logger.info("✅ ClamAV connected successfully")
+    logger.info("ClamAV connected successfully")
 except Exception as e:
     logger.warning(f"⚠️  ClamAV not available: {e} (virus scanning will be skipped)")
 
@@ -324,15 +325,15 @@ async def extract_pdf_content(upload: UploadFile) -> PDFExtractResponse:
     if upload.content_type != "application/pdf":
         raise UnprocessableFileException("Only PDF files are supported")
 
-    # ✅ STEP 1: Save file to disk (needed for veraPDF)
+    #  STEP 1: Save file to disk (needed for veraPDF)
     temp_path = await _save_upload_to_temp(upload)
 
     try:
-        # ✅ STEP 2: Validate BEFORE parsing
+        #  STEP 2: Validate BEFORE parsing
         # validation = validate_pdf(temp_path)
 
         # if not validation["is_compliant"]:
-            # 🔴 Strict mode (reject)
+            #  Strict mode (reject)
             # raise UnprocessableFileException(
             #     # "PDF is not PDF/A compliant (may contain unsafe content)"
             # )
@@ -405,7 +406,7 @@ async def extract_pdf_content(upload: UploadFile) -> PDFExtractResponse:
 # ── Authenticated PDF Upload with Idempotency ──────────────────────────────────
 
 """
-🎯 IDEMPOTENCY PATTERN:
+ IDEMPOTENCY PATTERN:
 
 The idempotency pattern ensures that identical requests produce the same result,
 even if called multiple times. This is crucial for:
@@ -417,8 +418,8 @@ even if called multiple times. This is crucial for:
 FLOW:
 1. Client sends: idempotency_key (usually UUID in headers)
 2. Server checks: Does this key exist in IdempotencyKey table?
-   ✅ YES  → Return cached response (no processing)
-   ❌ NO   → Process request, cache result, return response
+    YES  → Return cached response (no processing)
+    NO   → Process request, cache result, return response
 3. Future identical requests: Get cached response instantly
 
 KEY BENEFITS:
@@ -437,156 +438,209 @@ KEY BENEFITS:
 6. Commit or rollback 
 7. Return consistent response
 """
+
+
+"""
+1. User uploads file
+2. API Saves record (status = Uploading)
+3. API pushes job to queue (Inngest)
+4. API return immediately
+
+5. Worker processes pDF
+6. Updates DB (Processing -> Completed / Failed)
+"""
+
+"""
+Client -> FastAPI -> Save file -> Send event -> response (fast)
+                                        |
+                                 Inngest Worker
+                                        |
+                                 process PDF + LLM + DB
+"""
+
 async def upload_pdf_authenticated(
     upload: UploadFile,
     user_id: int,
     idempotency_key: str,
     db: AsyncSession,
-) -> PDFExtractResponse:
+) -> dict:
+    """
+    Thin handler: validate → save to S3 → create DB record → fire Inngest event.
+    Returns immediately. Heavy processing happens in the Inngest background worker.
+    """
+    from app.services.inngest import inngest_client
 
-    # ✅ STEP 1: Idempotency check
+    #  STEP 1: Idempotency check 
     result = await db.execute(
         select(IdempotencyKey).filter(IdempotencyKey.key == idempotency_key)
     )
     existing_key = result.scalars().first()
 
     if existing_key and existing_key.response:
-        return PDFExtractResponse(**json.loads(existing_key.response))
+        return json.loads(existing_key.response)
 
-    # ✅ STEP 2: Validate file
+    #  STEP 2: Validate file type 
     if upload.content_type != "application/pdf":
         raise UnprocessableFileException("Only PDF files are supported")
 
-    safe_filename = _safe_filename(upload.filename or "document.pdf")
+    safe_name = _safe_filename(upload.filename or "document.pdf")
 
-    # ✅ STEP 3: Check if file already exists (IMPORTANT FIX)
+    #  STEP 3: Duplicate check 
     existing_file = await db.execute(
         select(File).filter(
-            File.filename == safe_filename,
+            File.filename == safe_name,
             File.user_id == user_id
         )
     )
     existing_file = existing_file.scalars().first()
 
     if existing_file:
-        # 👉 Optional: allow retry if FAILED
         if existing_file.status == FileStatus.FAILED:
-            # reuse same record instead of failing
             file_record = existing_file
             file_record.status = FileStatus.UPLOADING
             file_record.error_message = None
+            file_record.idempotency_key = idempotency_key
         else:
             raise UnprocessableFileException(
                 f"You already uploaded a file named '{upload.filename}'"
             )
     else:
         file_record = File(
-            filename=safe_filename,
+            filename=safe_name,
             user_id=user_id,
-            status=FileStatus.UPLOADING
+            status=FileStatus.UPLOADING,
+            idempotency_key=idempotency_key,
         )
         db.add(file_record)
         await db.flush()
 
-    temp_path = None
-
+    #  STEP 4: Read file & upload to S3 
     try:
-        temp_path = await _save_upload_to_temp(upload)
+        file_bytes = await _read_upload_chunks(upload, settings.max_file_size_bytes)
 
-        file_record.status = FileStatus.PROCESSING
-        await db.flush()
-
-        with open(temp_path, "rb") as f:
-            file_bytes = f.read()
-
-            scan_file(file_bytes)
-
-        pages_content = []
-        all_text_parts = []
-
-        try:
-            with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-                total_pages = len(pdf.pages)
-
-                for page_num, page in enumerate(pdf.pages, start=1):
-                    text = page.extract_text() or ""
-                    raw_tables = page.extract_tables() or []
-
-                    tables = [
-                        [
-                            [cell if cell is not None else "" for cell in row]
-                            for row in table
-                        ]
-                        for table in raw_tables
-                    ]
-
-                    pages_content.append(PDFPageContent(
-                        page_number=page_num,
-                        text=text,
-                        tables=tables
-                    ))
-
-                    all_text_parts.append(f"--- Page {page_num} ---\n{text}")
-
-        except Exception as e:
-            raise UnprocessableFileException(f"Failed to parse PDF: {str(e)}")
-
-        full_text = "\n\n".join(all_text_parts)
-
-        structured_data = None
-        try:
-            raw_structured = await extract_structured_cv_data(full_text)
-            structured_data = CVStructuredData(**raw_structured)
-            structured_data.years_of_experience = safe_int(
-                structured_data.years_of_experience
-            )
-        except Exception as e:
-            print(f"⚠️ LLM extraction failed: {e}")
-
-        response = PDFExtractResponse(
-            filename=upload.filename or "document.pdf",
-            total_pages=total_pages,
-            pages=pages_content,
-            full_text=full_text,
-            structured_data=structured_data
+        s3_key = f"uploads/pdf/{user_id}/{safe_name}"
+        s3.put_object(
+            Bucket=BUCKET_NAME,
+            Key=s3_key,
+            Body=file_bytes,
+            ContentType="application/pdf",
         )
 
-        file_record.status = FileStatus.COMPLETED
-
-        response_json = json.dumps({
-            "filename": response.filename,
-            "total_pages": response.total_pages,
-            "pages": [
-                {
-                    "page_number": p.page_number,
-                    "text": p.text,
-                    "tables": p.tables
-                } for p in response.pages
-            ],
-            "full_text": response.full_text,
-            "structured_data": response.structured_data.dict()
-            if response.structured_data else None
-        })
-
-        db.add(IdempotencyKey(
-            key=idempotency_key,
-            response=response_json
-        ))
-
+        file_record.status = FileStatus.PROCESSING
         await db.commit()
-        return response
 
     except Exception as e:
         await db.rollback()
-
         file_record.status = FileStatus.FAILED
         file_record.error_message = str(e)
-
         db.add(file_record)
         await db.commit()
-
         raise UnprocessableFileException(str(e))
 
-    finally:
-        if temp_path and os.path.exists(temp_path):
-            os.remove(temp_path)
+    #  STEP 5: Fire Inngest event (returns immediately) 
+    await inngest_client.send(
+        inngest.Event(
+            name="pdf/upload.requested",
+            data={
+                "file_id": file_record.id,
+                "user_id": user_id,
+                "s3_key": s3_key,
+                "filename": upload.filename or "document.pdf",
+                "idempotency_key": idempotency_key,
+            },
+        )
+    )
+
+    logger.info(f"Inngest event sent for file {file_record.id}")
+
+    #  Return immediately (client will poll for status) 
+    return {
+        "file_id": file_record.id,
+        "filename": safe_name,
+        "status": FileStatus.PROCESSING.value,
+        "message": "PDF uploaded. Processing in background.",
+    }
+
+
+async def llm_response_status_result(file_id: int, user_id: int, db: AsyncSession):
+    """
+    Poll the processing status of an uploaded PDF and return the result if completed.
+    """
+    # Find the file record (must belong to current user)
+    result = await db.execute(
+        select(File).filter(
+            File.id == file_id,
+            File.user_id == user_id,
+        )
+    )
+    file_record = result.scalars().first()
+
+    if not file_record:
+        raise HTTPException(status_code=404, detail="File not found")
+
+    # Still processing
+    if file_record.status == FileStatus.PROCESSING:
+        return {
+            "file_id": file_id,
+            "status": FileStatus.PROCESSING.value,
+            "message": "Still processing. Poll again in a few seconds.",
+        }
+
+    # Failed
+    if file_record.status == FileStatus.FAILED:
+        return {
+            "file_id": file_id,
+            "status": FileStatus.FAILED.value,
+            "error": file_record.error_message,
+        }
+
+    # Completed — return the cached full result
+    if file_record.status == FileStatus.COMPLETED:
+        # Direct lookup (new records have idempotency_key stored)
+        if file_record.idempotency_key:
+            idem_result = await db.execute(
+                select(IdempotencyKey).filter(
+                    IdempotencyKey.key == file_record.idempotency_key
+                )
+            )
+            idem_record = idem_result.scalars().first()
+
+            if idem_record and idem_record.response:
+                return {
+                    "file_id": file_id,
+                    "status": FileStatus.COMPLETED.value,
+                    "result": json.loads(idem_record.response),
+                }
+
+        # Fallback for legacy records: search by file_id in cached responses
+        all_keys_result = await db.execute(select(IdempotencyKey))
+        for key in all_keys_result.scalars().all():
+            if key.response:
+                try:
+                    cached = json.loads(key.response)
+                    if cached.get("file_id") == file_id:
+                        return {
+                            "file_id": file_id,
+                            "status": FileStatus.COMPLETED.value,
+                            "result": cached,
+                        }
+                except json.JSONDecodeError:
+                    continue
+
+        # Truly missing
+        return {
+            "file_id": file_id,
+            "status": FileStatus.COMPLETED.value,
+            "message": "Processing completed but cached result not found.",
+        }
+
+    # Unknown / uploading
+    return {
+        "file_id": file_id,
+        "status": file_record.status.value,
+    }
+
+
+
+
+

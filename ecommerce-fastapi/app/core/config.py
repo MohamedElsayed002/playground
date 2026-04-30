@@ -13,6 +13,7 @@ FastAPI approach -> pydantic-settings BaseSeetings
 from functools import lru_cache 
 from pydantic import AnyUrl, field_validator 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
 
 class Settings(BaseSettings):
 
@@ -45,6 +46,9 @@ class Settings(BaseSettings):
     AWS_ACCESS_KEY_ID: str
 
     OPENAI_API_KEY: str
+    INNGEST_SIGNING_KEY: Optional[str] = None
+    INNGEST_EVENT_KEY: Optional[str] = None
+
 
 
     # Pydantic-settings config: reads from .env file
