@@ -15,14 +15,17 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError 
 from sqlalchemy.ext.asyncio import AsyncSession 
 from sqlalchemy import select 
+from fastapi import Request
 
 from app.core.security import decode_token 
 from app.db.session import AsyncSessionLocal
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
+
+async def get_db(request: Request) -> AsyncGenerator[AsyncSession, None]:
 
     async with AsyncSessionLocal() as session:
         try:
+            request.state.db = session
             yield session
             await session.commit()
         except Exception:
@@ -33,6 +36,7 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 oauth2_schema = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 async def get_current_user(
+    request: Request,
     token: str = Depends(oauth2_schema),
     db: AsyncSession = Depends(get_db),):
 
@@ -79,7 +83,8 @@ async def get_current_user(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is deactived"
         )
-    
+
+    request.state.user_id = user.id
     return user 
     
 

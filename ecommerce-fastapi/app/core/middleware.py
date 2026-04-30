@@ -17,6 +17,7 @@ import logging
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.services.audit_service import create_audit_log
 logger = logging.getLogger(__name__)
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
@@ -81,4 +82,35 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         # Enable XSS protection in older browsers
         response.headers["X-XSS-Protection"] = "1; mode=block"
 
+        return response
+
+
+class AuditMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        start = time.perf_counter()
+
+        response = await call_next(request)
+
+        duration = (time.perf_counter() - start) * 1000
+
+        db = request.state.db if hasattr(request.state, "db") else None
+
+        if db:
+            try:
+                await create_audit_log(
+                    db=db,
+                    event="HTTP_REQUEST",
+                    status="SUCCESS" if response.status_code < 400 else "FAILED",
+                    user_id=getattr(request.state, "user_id", None),
+                    request=request,
+                    metadata={
+                        "method": request.method,
+                        "path": request.url.path,
+                        "status_code": response.status_code,
+                        "duration_ms": duration,
+                        "request_id": getattr(request.state, "request_id", None),
+                    }
+                )
+            except:
+                pass 
         return response

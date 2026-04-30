@@ -7,12 +7,12 @@ import logging
 
 import aiofiles
 import pdfplumber
-from fastapi import UploadFile, HTTPException
+from fastapi import UploadFile, HTTPException, Request
 from PIL import Image, UnidentifiedImageError
 import io
 
 from app.core.config import settings
-from app.exceptions.handlers import UnprocessableFileException
+from app.exceptions.handlers import UnprocessableFileException, ServiceUnavailableException
 from app.schemas.file import FileUploadResponse, PDFExtractResponse, PDFPageContent
 import boto3
 from app.services.llm_service import  extract_structured_cv_data, safe_int
@@ -31,6 +31,7 @@ from app.models.idempotency import IdempotencyKey
 from app.models.file import File
 from app.schemas.file import FileStatus
 import inngest
+from app.services.audit_service import create_audit_log
 
 logger = logging.getLogger(__name__)
 
@@ -463,12 +464,34 @@ async def upload_pdf_authenticated(
     user_id: int,
     idempotency_key: str,
     db: AsyncSession,
+    request: Request | None = None,
 ) -> dict:
     """
     Thin handler: validate → save to S3 → create DB record → fire Inngest event.
     Returns immediately. Heavy processing happens in the Inngest background worker.
     """
     from app.services.inngest import inngest_client
+
+    async def audit_upload_step(event: str, status: str, **metadata) -> None:
+        await create_audit_log(
+            db=None,
+            event=event,
+            status=status,
+            user_id=user_id,
+            request=request,
+            metadata={
+                "request_id": getattr(request.state, "request_id", None) if request else None,
+                "idempotency_key": idempotency_key,
+                "original_filename": upload.filename,
+                "content_type": upload.content_type,
+                **metadata,
+            },
+        )
+
+    await audit_upload_step(
+        event="PDF_UPLOAD_RECEIVED",
+        status="SUCCESS",
+    )
 
     #  STEP 1: Idempotency check 
     result = await db.execute(
@@ -477,10 +500,19 @@ async def upload_pdf_authenticated(
     existing_key = result.scalars().first()
 
     if existing_key and existing_key.response:
+        await audit_upload_step(
+            event="PDF_UPLOAD_IDEMPOTENCY_HIT",
+            status="SUCCESS",
+        )
         return json.loads(existing_key.response)
 
     #  STEP 2: Validate file type 
     if upload.content_type != "application/pdf":
+        await audit_upload_step(
+            event="PDF_UPLOAD_VALIDATION_FAILED",
+            status="FAILED",
+            reason="invalid_content_type",
+        )
         raise UnprocessableFileException("Only PDF files are supported")
 
     safe_name = _safe_filename(upload.filename or "document.pdf")
@@ -500,7 +532,20 @@ async def upload_pdf_authenticated(
             file_record.status = FileStatus.UPLOADING
             file_record.error_message = None
             file_record.idempotency_key = idempotency_key
+            await audit_upload_step(
+                event="PDF_UPLOAD_RETRYING_FAILED_RECORD",
+                status="SUCCESS",
+                file_id=file_record.id,
+                safe_filename=safe_name,
+            )
         else:
+            await audit_upload_step(
+                event="PDF_UPLOAD_DUPLICATE_REJECTED",
+                status="FAILED",
+                file_id=existing_file.id,
+                safe_filename=safe_name,
+                current_status=existing_file.status.value,
+            )
             raise UnprocessableFileException(
                 f"You already uploaded a file named '{upload.filename}'"
             )
@@ -513,10 +558,23 @@ async def upload_pdf_authenticated(
         )
         db.add(file_record)
         await db.flush()
+        await audit_upload_step(
+            event="PDF_UPLOAD_DB_RECORD_CREATED",
+            status="SUCCESS",
+            file_id=file_record.id,
+            safe_filename=safe_name,
+        )
 
     #  STEP 4: Read file & upload to S3 
     try:
         file_bytes = await _read_upload_chunks(upload, settings.max_file_size_bytes)
+        await audit_upload_step(
+            event="PDF_UPLOAD_FILE_READ",
+            status="SUCCESS",
+            file_id=file_record.id,
+            safe_filename=safe_name,
+            size_bytes=len(file_bytes),
+        )
 
         s3_key = f"uploads/pdf/{user_id}/{safe_name}"
         s3.put_object(
@@ -525,9 +583,23 @@ async def upload_pdf_authenticated(
             Body=file_bytes,
             ContentType="application/pdf",
         )
+        await audit_upload_step(
+            event="PDF_UPLOAD_S3_STORED",
+            status="SUCCESS",
+            file_id=file_record.id,
+            safe_filename=safe_name,
+            s3_key=s3_key,
+        )
 
         file_record.status = FileStatus.PROCESSING
         await db.commit()
+        await audit_upload_step(
+            event="PDF_UPLOAD_PROCESSING_STARTED",
+            status="SUCCESS",
+            file_id=file_record.id,
+            safe_filename=safe_name,
+            s3_key=s3_key,
+        )
 
     except Exception as e:
         await db.rollback()
@@ -535,21 +607,54 @@ async def upload_pdf_authenticated(
         file_record.error_message = str(e)
         db.add(file_record)
         await db.commit()
+        await audit_upload_step(
+            event="PDF_UPLOAD_FAILED",
+            status="FAILED",
+            file_id=getattr(file_record, "id", None),
+            safe_filename=safe_name,
+            error=str(e),
+        )
         raise UnprocessableFileException(str(e))
 
     #  STEP 5: Fire Inngest event (returns immediately) 
-    await inngest_client.send(
-        inngest.Event(
-            name="pdf/upload.requested",
-            data={
-                "file_id": file_record.id,
-                "user_id": user_id,
-                "s3_key": s3_key,
-                "filename": upload.filename or "document.pdf",
-                "idempotency_key": idempotency_key,
-            },
+    event_payload = {
+        "file_id": file_record.id,
+        "user_id": user_id,
+        "s3_key": s3_key,
+        "filename": upload.filename or "document.pdf",
+        "idempotency_key": idempotency_key,
+    }
+
+    try:
+        await inngest_client.send(
+            inngest.Event(
+                name="pdf/upload.requested",
+                data=event_payload,
+            )
         )
-    )
+        await audit_upload_step(
+            event="PDF_UPLOAD_INNGEST_EVENT_SENT",
+            status="SUCCESS",
+            file_id=file_record.id,
+            safe_filename=safe_name,
+            s3_key=s3_key,
+        )
+    except Exception as e:
+        file_record.status = FileStatus.FAILED
+        file_record.error_message = f"Inngest dispatch failed: {str(e)}"
+        db.add(file_record)
+        await db.commit()
+        await audit_upload_step(
+            event="PDF_UPLOAD_INNGEST_EVENT_FAILED",
+            status="FAILED",
+            file_id=file_record.id,
+            safe_filename=safe_name,
+            s3_key=s3_key,
+            error=str(e),
+        )
+        raise ServiceUnavailableException(
+            "PDF uploaded, but background processing could not be queued. Please try again."
+        )
 
     logger.info(f"Inngest event sent for file {file_record.id}")
 

@@ -85,6 +85,18 @@ class UnprocessableFileException(AppException):
         super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,detail=detail,error_code="INVALID_FILE")
 
 
+class ServiceUnavailableException(AppException):
+    """
+        503 - A required internal/external service is temporarily unavailable
+    """
+    def __init__(self, detail: str = "Service temporarily unavailable"):
+        super().__init__(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=detail,
+            error_code="SERVICE_UNAVAILABLE",
+        )
+
+
 
 # ── Exception Response Builder ────────────────────────────────────────────────
 

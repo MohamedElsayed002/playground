@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,18 +16,20 @@ router = APIRouter(prefix="/auth",tags=["Authentication"])
     summary="Register a new user account"
 )
 async def register(
+    request: Request,
     data: UserCreate,
     db: AsyncSession = Depends(get_db)
 ):
     """
         Register a new user. Returns the created user profile (no password).        
     """
-    user = await auth_service.register_user(db,data)
+    user = await auth_service.register_user(db, data, request=request)
     return user
 
 
 @router.post('/login', response_model=TokenResponse, summary="Login and get JWT tokens")
 async def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
 ):
@@ -35,7 +37,12 @@ async def login(
         Login using email/password
         Returns JWT access + refresh tokens on success
     """
-    token = await auth_service.login_user(db, form_data.username, form_data.password)
+    token = await auth_service.login_user(
+        db,
+        form_data.username,
+        form_data.password,
+        request=request,
+    )
     return token
 
 

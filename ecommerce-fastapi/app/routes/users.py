@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, Depends, UploadFile, File, Query, status
+from fastapi import APIRouter, Depends, UploadFile, File, Query, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db, get_current_user, require_admin
@@ -21,6 +21,7 @@ async def get_my_profile(current_user=Depends(get_current_user)):
 
 @router.patch("/me", response_model=UserResponse)
 async def update_my_profile(
+    request: Request,
     data: UserUpdate,
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -33,21 +34,28 @@ async def update_my_profile(
         @UseGuards(JwtAuthGuard)
         async updateProfile(@Body() dto: UpdateUserDto, @CurrentUser() user: User) { ... }
     """
-    return await user_service.update_user_profile(db, current_user, data)
+    return await user_service.update_user_profile(
+        db,
+        current_user,
+        data,
+        request=request,
+    )
 
 
 @router.post("/me/change-password", status_code=status.HTTP_204_NO_CONTENT)
 async def change_password(
+    request: Request,
     data: PasswordChange,
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Change own password. Requires the current password for verification."""
-    await user_service.change_password(db, current_user, data)
+    await user_service.change_password(db, current_user, data, request=request)
 
 
 @router.post("/me/avatar", response_model=FileUploadResponse)
 async def upload_avatar(
+    request: Request,
     file: UploadFile = File(..., description="Profile image (JPEG, PNG, WebP)"),
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -60,7 +68,7 @@ async def upload_avatar(
     """
     result = await file_service.upload_image(file, subfolder="avatars")
     # Save the URL to the user's profile
-    await user_service.update_avatar(db, current_user, result.url)
+    await user_service.update_avatar(db, current_user, result.url, request=request)
     return result
 
 
@@ -95,6 +103,16 @@ async def get_user(user_id: int, db: AsyncSession = Depends(get_db)):
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(require_admin)],
 )
-async def deactivate_user(user_id: int, db: AsyncSession = Depends(get_db)):
+async def deactivate_user(
+    request: Request,
+    user_id: int,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     """[Admin] Soft-deactivate a user account."""
-    await user_service.deactivate_user(db, user_id)
+    await user_service.deactivate_user(
+        db,
+        user_id,
+        actor_user_id=current_user.id,
+        request=request,
+    )
