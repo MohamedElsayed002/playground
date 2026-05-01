@@ -14,7 +14,16 @@ services:
             - dist/
             - .git/
             - .next/
-
+  backend-fastapi:
+    build: ./playground-fastapi
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./playground-fastapi/.env
+    develop:
+      watch:
+        - action: rebuild
+          path: ./playground-fastapi
   client:
     build:
       context: ./client

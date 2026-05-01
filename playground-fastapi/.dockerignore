@@ -1,0 +1,12 @@
+__pycache__
+*.pyc
+.git
+.env
+venv
+.venv
+uploads
+.vercel
+alembic/__pycache__
+app/**/__pycache__
+*.ipynb
+!requirements.txt
