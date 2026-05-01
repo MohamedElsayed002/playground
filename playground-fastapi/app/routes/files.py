@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Header, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, Header, HTTPException, Request
 from app.core.dependencies import get_current_user, require_admin, get_db
 from app.schemas.file import FileUploadResponse, PDFExtractResponse, FileStatus
 from app.services import file_service
@@ -68,6 +68,7 @@ async def extract_pdf(
     summary="Upload PDF – Background Processing via Inngest"
 )
 async def extract_pdf_authenticated(
+    request: Request,
     file: UploadFile = File(..., description="PDF file to extract text from"),
     current_user = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -114,6 +115,7 @@ async def extract_pdf_authenticated(
         user_id=current_user.id,
         idempotency_key=key,
         db=db,
+        request=request,
     )
 
 
