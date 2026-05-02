@@ -12,13 +12,14 @@ import {
 @ApiTags('Gemini')
 @Controller('gemini')
 export class GeminiController {
-  constructor(private readonly geminiService: GeminiService) { }
+  constructor(private readonly geminiService: GeminiService) {}
 
   @Post()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Generate text content',
-    description: 'Generate text content using Google Gemini AI with customizable options',
+    description:
+      'Generate text content using Google Gemini AI with customizable options',
   })
   @ApiBody({ type: GenerateTextRequestDto })
   @ApiResponse({
@@ -34,7 +35,9 @@ export class GeminiController {
     status: 500,
     description: 'Internal server error',
   })
-  async generateText(@Body() body: GenerateTextRequestDto): Promise<GenerateTextResponseDto> {
+  async generateText(
+    @Body() body: GenerateTextRequestDto,
+  ): Promise<GenerateTextResponseDto> {
     const { prompt, options } = body;
     return this.geminiService.generateContent(prompt, options);
   }
@@ -43,7 +46,8 @@ export class GeminiController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Stream text content',
-    description: 'Generate and stream text content incrementally using Google Gemini AI',
+    description:
+      'Generate and stream text content incrementally using Google Gemini AI',
   })
   @ApiBody({ type: StreamTextRequestDto })
   @ApiResponse({
@@ -67,7 +71,8 @@ export class GeminiController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Generate structured object',
-    description: 'Generate a structured JSON object based on a schema using Google Gemini AI',
+    description:
+      'Generate a structured JSON object based on a schema using Google Gemini AI',
   })
   @ApiBody({ type: GenerateObjectRequestDto })
   @ApiResponse({
@@ -83,7 +88,7 @@ export class GeminiController {
     status: 500,
     description: 'Internal server error',
   })
-  async generatingObject(@Body() body: GenerateObjectRequestDto){
+  async generatingObject(@Body() body: GenerateObjectRequestDto) {
     const { prompt, options } = body;
     return this.geminiService.generateStructuredObject(prompt, options);
   }

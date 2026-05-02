@@ -9,7 +9,7 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginDto, RegisterDto } from './dto/register.dto';
-import * as Sentry from "@sentry/nestjs"
+import * as Sentry from '@sentry/nestjs';
 
 export interface JwtPayload {
   sub: string;
@@ -55,10 +55,7 @@ export class AuthService {
       throw new BadRequestException('This username is already taken');
     }
 
-
     const passwordHash = await bcrypt.hash(dto.password, 10);
-
-
     const user = await this.prisma.userData.create({
       data: {
         email: dto.email.toLowerCase(),
@@ -141,7 +138,10 @@ export class AuthService {
         });
       }
 
-      if (!user.googleId || (avatarUrl && user.profile && !user.profile.avatarUrl)) {
+      if (
+        !user.googleId ||
+        (avatarUrl && user.profile && !user.profile.avatarUrl)
+      ) {
         user = await this.prisma.userData.update({
           where: { id: user.id },
           data: {
@@ -183,13 +183,16 @@ export class AuthService {
     return this.issueTokens(created, created.profile!);
   }
 
-
   // Helper function
-  private async generateUniqueUsernameFromEmail(email: string): Promise<string> {
+  private async generateUniqueUsernameFromEmail(
+    email: string,
+  ): Promise<string> {
     const local = email.split('@')[0] ?? 'user';
     const base =
-      local.replace(/[^a-zA-Z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '') ||
-      'user';
+      local
+        .replace(/[^a-zA-Z0-9_]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_|_$/g, '') || 'user';
     const trimmed = base.slice(0, 24);
     let candidate = trimmed;
     let n = 0;
@@ -272,7 +275,6 @@ export class AuthService {
       email: user.email,
     };
     const accessToken = this.jwt.sign(payload);
-
 
     const rawRefreshToken = `${user.id}.${crypto.randomBytes(64).toString('hex')}`;
     const tokenHash = await bcrypt.hash(rawRefreshToken, 10);

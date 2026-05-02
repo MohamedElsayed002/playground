@@ -8,7 +8,6 @@ import { UpdateUserInput } from './dto/update-user.input';
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
 
-
   @Query(() => UserData, { name: 'allUsers' })
   allUsersFake() {
     return this.userService.findAllFakeUsers();

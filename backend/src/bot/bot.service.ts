@@ -12,7 +12,7 @@ import { generateText } from 'ai';
 import { Bot, BotDocument } from './schema/bot.schema';
 
 // I finished my google quota. I'm using openai now
-// this code only works with google not with openai 
+// this code only works with google not with openai
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY!,
 });
@@ -178,7 +178,7 @@ export class BotService {
       return cachedChats;
     }
 
-    const chats = []
+    const chats = [];
     // const chats = await this.botModel.find().exec();
 
     await this.cacheManager.set(this.CACHE_KEY, chats, this.CACHE_TTL);

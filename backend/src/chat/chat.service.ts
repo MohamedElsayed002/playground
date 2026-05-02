@@ -6,7 +6,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma } from '#generated-prisma';
 import { Observable } from 'rxjs';
 import { MessageEvent } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -66,8 +66,8 @@ export class ChatService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly geminiService: GeminiService
-  ) { }
+    private readonly geminiService: GeminiService,
+  ) {}
 
   async getProfile(userId: string): Promise<Profile> {
     const row = await this.prisma.profile.findUnique({ where: { id: userId } });
@@ -442,9 +442,10 @@ export class ChatService {
     };
   }
 
-
   async chat(request: ChatRequestDto): Promise<ChatResponseDto> {
-    this.logger.log(`Processing chat request: ${request.message.substring(0, 50)}`)
+    this.logger.log(
+      `Processing chat request: ${request.message.substring(0, 50)}`,
+    );
 
     try {
       const response = await this.geminiService.generateContent(
@@ -455,39 +456,45 @@ export class ChatService {
           thinkingBudget: this.getThinkingBudget(request.complexity),
           includeThoughts: true,
           temperature: request.temperature ?? 0.7,
-          maxTokens: request.maxTokens ?? 8192
-        }
-      )
+          maxTokens: request.maxTokens ?? 8192,
+        },
+      );
 
       // Calculate cache savings if applicable
-      const cacheSavings = response.usage.cachedTokens > 0
-      ? {
-          cached: response.usage.cachedTokens,
-          total: response.usage.totalTokens,
-          savingsPercentage: ((response.usage.cachedTokens / response.usage.totalTokens) * 75).toFixed(1),
-        }
-      : null;
+      const cacheSavings =
+        response.usage.cachedTokens > 0
+          ? {
+              cached: response.usage.cachedTokens,
+              total: response.usage.totalTokens,
+              savingsPercentage: (
+                (response.usage.cachedTokens / response.usage.totalTokens) *
+                75
+              ).toFixed(1),
+            }
+          : null;
 
       return {
         response: response.text,
         sources: response.sources,
         usage: response.usage,
         cacheSavings: cacheSavings ?? undefined,
-        cost: this.geminiService.calculateCost(response.usage,request.model),
+        cost: this.geminiService.calculateCost(response.usage, request.model),
         toolCalls: response.toolCalls,
         toolResults: response.toolResults,
-        timestamp: new Date()
-      }
+        timestamp: new Date(),
+      };
     } catch (error) {
-      return error
+      return error;
     }
   }
 
   async streamChat(request: ChatRequestDto): Promise<Observable<MessageEvent>> {
-    this.logger.log(`Streaming chat request ${request.message.substring(0,50)}`)
+    this.logger.log(
+      `Streaming chat request ${request.message.substring(0, 50)}`,
+    );
 
     return new Observable((subscriber) => {
-      (async () => {
+      async () => {
         try {
           const stream = await this.geminiService.streamContent(
             request.message,
@@ -495,25 +502,27 @@ export class ChatService {
               model: request.model || GeminiConfig.models.chat,
               useWebSearch: request.enableWebSearch ?? true,
               temperature: request.temperature ?? 0.7,
-              maxTokens: request.maxTokens ?? 8192
-            }
-          )
+              maxTokens: request.maxTokens ?? 8192,
+            },
+          );
 
-          for await(const chunk of stream) {
+          for await (const chunk of stream) {
             subscriber.next({
-              data: {text: chunk},
-            } as MessageEvent)
+              data: { text: chunk },
+            } as MessageEvent);
           }
-          subscriber.complete()
-        }catch(error) {
-          subscriber.error(error)
-          return error
+          subscriber.complete();
+        } catch (error) {
+          subscriber.error(error);
+          return error;
         }
-      })
-    })
+      };
+    });
   }
 
-  private getThinkingBudget(complexity?: 'simple' | 'medium' | 'complex' | 'advanced'): number {
-    return GeminiConfig.thinkingBudgets[complexity || 'medium']
+  private getThinkingBudget(
+    complexity?: 'simple' | 'medium' | 'complex' | 'advanced',
+  ): number {
+    return GeminiConfig.thinkingBudgets[complexity || 'medium'];
   }
 }

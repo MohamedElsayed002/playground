@@ -7,6 +7,6 @@ import { ConfigModule } from '@nestjs/config';
   imports: [ConfigModule],
   controllers: [GeminiController],
   providers: [GeminiService],
-  exports: [GeminiService]
+  exports: [GeminiService],
 })
 export class GeminiModule {}

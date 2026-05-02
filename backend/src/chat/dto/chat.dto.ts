@@ -109,45 +109,43 @@ export class MarkReadInput {
   message_id: string;
 }
 
-
-
 export class ChatRequestDto {
   @ApiProperty({
     description: 'The message to send to the AI',
-    example: "What are the latest developments in AI?"
+    example: 'What are the latest developments in AI?',
   })
   @IsString()
   @IsNotEmpty()
-  message: string
+  message: string;
 
   @ApiProperty({
     description: 'Model to use',
     example: 'gemini-2.5-flash',
-    required: false
+    required: false,
   })
   @IsOptional()
   @IsString()
-  model?: string
+  model?: string;
 
   @ApiProperty({
     description: 'Enable web search grounding',
     example: true,
     required: false,
-    default: true
+    default: true,
   })
   @IsOptional()
   @IsBoolean()
-  enableWebSearch?: boolean
+  enableWebSearch?: boolean;
 
   @ApiProperty({
     description: 'Complexity level for thinking budget',
     enum: ['simple', 'medium', 'complex', 'advacned'],
     required: false,
-    default: 'medium'
+    default: 'medium',
   })
   @IsOptional()
   @IsEnum(['simple', 'medium', 'complex', 'advanced'])
-  complexity?: 'simple' | 'medium' | 'complex' | 'advanced'
+  complexity?: 'simple' | 'medium' | 'complex' | 'advanced';
 
   @ApiProperty({
     description: 'Temperature for response randomness (0-1)',

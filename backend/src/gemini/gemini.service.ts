@@ -1,248 +1,251 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as fs from "fs"
+import * as fs from 'fs';
 
 import {
-    GeminiResponse,
-    GeminiOptions,
-    UsageMetadata
-} from "./interfaces/gemini-response.interface"
+  GeminiResponse,
+  GeminiOptions,
+  UsageMetadata,
+} from './interfaces/gemini-response.interface';
 import { GeminiConfig } from 'config/gemini-config';
 import { google } from '@ai-sdk/google';
-import {
-    generateObject,
-    generateText,
-    streamText
-} from 'ai';
-import { z } from "zod"
-import * as Sentry from '@sentry/nestjs'
-
+import { generateObject, generateText, streamText } from 'ai';
+import { z } from 'zod';
+import * as Sentry from '@sentry/nestjs';
 
 @Injectable()
 export class GeminiService {
-    private readonly logger = new Logger(GeminiService.name)
+  private readonly logger = new Logger(GeminiService.name);
 
-    constructor(private configService: ConfigService) {
-        const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
+  constructor(private configService: ConfigService) {
+    const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
 
-        if (!apiKey) {
-            throw new Error("API Key is required")
+    if (!apiKey) {
+      throw new Error('API Key is required');
+    }
+  }
+
+  async generateContent(
+    prompt: string,
+    options: GeminiOptions = {},
+  ): Promise<GeminiResponse> {
+    const {
+      model = GeminiConfig.models.chat,
+      useWebSearch = false,
+      useCodeExecution = false,
+      fileData = null,
+      thinkingBudget = null,
+      includeThoughts = false,
+      temperature = 0.7,
+      maxTokens = 8192,
+    } = options;
+
+    try {
+      this.logger.log(`Generating content with model ${model}`);
+
+      const tools: any = {};
+
+      if (useWebSearch) {
+        tools.google_search = google.tools.googleSearch({});
+      }
+
+      if (useCodeExecution) {
+        tools.code_execution = google.tools.codeExecution({});
+      }
+
+      let content: any[] | string;
+
+      if (fileData) {
+        let fileBuffer: Buffer;
+
+        if (fileData.isPath) {
+          fileBuffer = fs.readFileSync(fileData.data as string);
+        } else if (Buffer.isBuffer(fileData.data)) {
+          fileBuffer = fileData.data;
+        } else {
+          throw new Error('Invalid file data supplied');
         }
-    }
 
-    async generateContent(
-        prompt: string,
-        options: GeminiOptions = {}
-    ): Promise<GeminiResponse> {
+        content = [
+          {
+            type: 'text',
+            text: 'Summarize for me this pdf',
+          },
+          {
+            type: 'file',
+            data: fileBuffer,
+            mediaType: fileData.mimeType,
+          },
+        ];
+      } else {
+        content = prompt;
+      }
 
-        const {
-            model = GeminiConfig.models.chat,
-            useWebSearch = false,
-            useCodeExecution = false,
-            fileData = null,
-            thinkingBudget = null,
-            includeThoughts = false,
-            temperature = 0.7,
-            maxTokens = 8192
-        } = options
+      const messages = [
+        {
+          role: 'user',
+          content,
+        },
+      ];
 
-        try {
-            this.logger.log(`Generating content with model ${model}`)
+      // Provider options
+      const providerOptions: any = { google: {} };
 
-            const tools: any = {}
+      if (thinkingBudget !== null || includeThoughts) {
+        providerOptions.google.thinkingConfig = {};
 
-            if (useWebSearch) {
-                tools.google_search = google.tools.googleSearch({})
-            }
-
-            if (useCodeExecution) {
-                tools.code_execution = google.tools.codeExecution({})
-            }
-
-            let content: any[] | string
-
-            if (fileData) {
-                let fileBuffer: Buffer
-
-                if (fileData.isPath) {
-                    fileBuffer = fs.readFileSync(fileData.data as string)
-                } else if (Buffer.isBuffer(fileData.data)) {
-                    fileBuffer = fileData.data
-                } else {
-                    throw new Error("Invalid file data supplied")
-                }
-
-                content = [
-                    {
-                        type: "text",
-                        text: "Summarize for me this pdf",
-                    },
-                    {
-                        type: "file",
-                        data: fileBuffer,
-                        mediaType: fileData.mimeType
-                    },
-                ]
-            } else {
-                content = prompt
-            }
-
-            const messages = [
-                {
-                    role: "user",
-                    content
-                }
-            ]
-
-            // Provider options
-            const providerOptions: any = { google: {} };
-
-            if (thinkingBudget !== null || includeThoughts) {
-                providerOptions.google.thinkingConfig = {}
-
-                if (thinkingBudget !== null) {
-                    providerOptions.google.thinkingConfig.thinkingBudget = thinkingBudget;
-                }
-
-                if (includeThoughts) {
-                    providerOptions.google.thinkingConfig.includeThoughts = true;
-                }
-            }
-
-            const result = await generateText({
-                model: google(model),
-                messages: messages as any,
-                tools: Object.keys(tools).length ? tools : undefined,
-                providerOptions,
-                temperature,
-                maxOutputTokens: maxTokens,
-                experimental_telemetry: {
-                    isEnabled:true,
-                    functionId: 'generateContent',
-                    recordInputs: true,
-                    recordOutputs: true
-                }
-            })
-
-            // Parse response
-            const googleMetadata = result.providerMetadata?.google as any;
-
-            const usage: UsageMetadata = {
-                // @ts-expect-error
-                promptTokens: result.usage?.promptTokens || 0,
-                // @ts-expect-error
-                completionTokens: result.usage?.completionTokens || 0,
-                totalTokens: result.usage?.totalTokens || 0,
-                cachedTokens: googleMetadata?.usageMetadata?.cachedContentTokenCount || 0,
-            };
-
-            Sentry.logger.info('Generating Content', {
-                allOptions: options,
-                result,
-            })
-
-            return {
-                text: result.text,
-                sources: googleMetadata?.groundingMetadata?.groundingChunks || [],
-                codeExecution: googleMetadata?.codeExecutionResults || [],
-                usage,
-                reasoning: result.reasoning || null,
-                toolCalls: result.toolCalls || [],
-                toolResults: result.toolResults || [],
-                rawResponse: result,
-            };
-        } catch (error) {
-            Sentry.logger.error('Error Generating Content', {
-                error: error.message
-            })
-            this.logger.error(`Gemini API Error: ${error.message}`)
-            throw error
+        if (thinkingBudget !== null) {
+          providerOptions.google.thinkingConfig.thinkingBudget = thinkingBudget;
         }
-    }
 
-    async streamContent(prompt: string, options: GeminiOptions = {}) {
-        const {
-            model = GeminiConfig.models.chat,
-            useWebSearch = false,
-            useCodeExecution = false,
-            temperature = 0.7,
-            maxTokens = 8192
-        } = options
-
-        try {
-
-            this.logger.log(`Streaming content with model: ${model}`)
-
-            const tools: any = {}
-
-            if (useWebSearch) {
-                tools.google_search = google.tools.googleSearch({})
-            }
-
-            if (useCodeExecution) {
-                tools.code_execution = google.tools.codeExecution({});
-            }
-
-            const result = await streamText({
-                model: google(model),
-                prompt,
-                tools: Object.keys(tools).length > 0 ? tools : undefined,
-                temperature,
-                maxOutputTokens: maxTokens,
-                experimental_telemetry: {
-                    isEnabled: true,
-                    functionId: 'streaming content',
-                    recordInputs: true,
-                    recordOutputs: true
-                }
-            })
-
-            return result.textStream
-        } catch (error) {
-            Sentry.logger.error('Error Streaming content', {
-                error
-            })
-            this.logger.error(`Streaming Error: ${error.message}`)
-            throw error
+        if (includeThoughts) {
+          providerOptions.google.thinkingConfig.includeThoughts = true;
         }
+      }
+
+      const result = await generateText({
+        model: google(model),
+        messages: messages as any,
+        tools: Object.keys(tools).length ? tools : undefined,
+        providerOptions,
+        temperature,
+        maxOutputTokens: maxTokens,
+        experimental_telemetry: {
+          isEnabled: true,
+          functionId: 'generateContent',
+          recordInputs: true,
+          recordOutputs: true,
+        },
+      });
+
+      // Parse response
+      const googleMetadata = result.providerMetadata?.google as any;
+
+      const usage: UsageMetadata = {
+        // @ts-expect-error
+        promptTokens: result.usage?.promptTokens || 0,
+        // @ts-expect-error
+        completionTokens: result.usage?.completionTokens || 0,
+        totalTokens: result.usage?.totalTokens || 0,
+        cachedTokens:
+          googleMetadata?.usageMetadata?.cachedContentTokenCount || 0,
+      };
+
+      Sentry.logger.info('Generating Content', {
+        allOptions: options,
+        result,
+      });
+
+      return {
+        text: result.text,
+        sources: googleMetadata?.groundingMetadata?.groundingChunks || [],
+        codeExecution: googleMetadata?.codeExecutionResults || [],
+        usage,
+        reasoning: result.reasoning || null,
+        toolCalls: result.toolCalls || [],
+        toolResults: result.toolResults || [],
+        rawResponse: result,
+      };
+    } catch (error) {
+      Sentry.logger.error('Error Generating Content', {
+        error: error.message,
+      });
+      this.logger.error(`Gemini API Error: ${error.message}`);
+      throw error;
     }
+  }
 
-    async generateStructuredObject(prompt: string, options: GeminiOptions = {}) {
-        const {
-            model = GeminiConfig.models.chat,
-            temperature = 0.7,
-            maxTokens = 8192
-        } = options
+  async streamContent(prompt: string, options: GeminiOptions = {}) {
+    const {
+      model = GeminiConfig.models.chat,
+      useWebSearch = false,
+      useCodeExecution = false,
+      temperature = 0.7,
+      maxTokens = 8192,
+    } = options;
 
-        const schema = z.object({
-            title: z.string().describe("I want to generate a good title for the movie"),
-            summary: z.string().describe("I want to generate a good summary for this movie")
-        })
+    try {
+      this.logger.log(`Streaming content with model: ${model}`);
 
-        const result = await generateObject({
-            model: google(model),
-            prompt,
-            schema,
-            temperature,
-            maxOutputTokens: maxTokens
-        })
+      const tools: any = {};
 
-        return {
-            title: result.object.title,
-            summary: result.object.summary,
-            result: result.object
-        }
+      if (useWebSearch) {
+        tools.google_search = google.tools.googleSearch({});
+      }
+
+      if (useCodeExecution) {
+        tools.code_execution = google.tools.codeExecution({});
+      }
+
+      const result = await streamText({
+        model: google(model),
+        prompt,
+        tools: Object.keys(tools).length > 0 ? tools : undefined,
+        temperature,
+        maxOutputTokens: maxTokens,
+        experimental_telemetry: {
+          isEnabled: true,
+          functionId: 'streaming content',
+          recordInputs: true,
+          recordOutputs: true,
+        },
+      });
+
+      return result.textStream;
+    } catch (error) {
+      Sentry.logger.error('Error Streaming content', {
+        error,
+      });
+      this.logger.error(`Streaming Error: ${error.message}`);
+      throw error;
     }
+  }
 
-    calculateCost(usage: UsageMetadata, model: string = 'gemini-2.5-flash'): number {
-        const pricing = GeminiConfig.pricing[model];
-        if (!pricing) return 0;
+  async generateStructuredObject(prompt: string, options: GeminiOptions = {}) {
+    const {
+      model = GeminiConfig.models.chat,
+      temperature = 0.7,
+      maxTokens = 8192,
+    } = options;
 
-        const inputCost = (usage.promptTokens / 1000000) * pricing.inputPer1M;
-        const outputCost = (usage.completionTokens / 1000000) * pricing.outputPer1M;
-        const cachedSavings = (usage.cachedTokens / 1000000) * pricing.inputPer1M * pricing.cachedDiscount;
+    const schema = z.object({
+      title: z
+        .string()
+        .describe('I want to generate a good title for the movie'),
+      summary: z
+        .string()
+        .describe('I want to generate a good summary for this movie'),
+    });
 
-        return inputCost + outputCost - cachedSavings;
-    }
+    const result = await generateObject({
+      model: google(model),
+      prompt,
+      schema,
+      temperature,
+      maxOutputTokens: maxTokens,
+    });
+
+    return {
+      title: result.object.title,
+      summary: result.object.summary,
+      result: result.object,
+    };
+  }
+
+  calculateCost(
+    usage: UsageMetadata,
+    model: string = 'gemini-2.5-flash',
+  ): number {
+    const pricing = GeminiConfig.pricing[model];
+    if (!pricing) return 0;
+
+    const inputCost = (usage.promptTokens / 1000000) * pricing.inputPer1M;
+    const outputCost = (usage.completionTokens / 1000000) * pricing.outputPer1M;
+    const cachedSavings =
+      (usage.cachedTokens / 1000000) *
+      pricing.inputPer1M *
+      pricing.cachedDiscount;
+
+    return inputCost + outputCost - cachedSavings;
+  }
 }
-

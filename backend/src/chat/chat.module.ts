@@ -7,8 +7,8 @@ import { GeminiModule } from 'src/gemini/gemini.module';
 import { ChatController } from './chat.controller';
 
 @Module({
-  imports: [AuthModule,GeminiModule],
+  imports: [AuthModule, GeminiModule],
   providers: [ChatGateway, ChatService, ChatResolver],
-  controllers: [ChatController]
+  controllers: [ChatController],
 })
 export class ChatModule {}

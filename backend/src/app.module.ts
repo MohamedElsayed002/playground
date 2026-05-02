@@ -1,4 +1,9 @@
-import { Module } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
@@ -15,9 +20,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { GeminiModule } from './gemini/gemini.module';
 import { CodeExecutionModule } from './code-execution/code-execution.module';
 import { FileAnalysisModule } from './file-analysis/file-analysis.module';
-import { SentryModule } from "@sentry/nestjs/setup"
+import { SentryModule } from '@sentry/nestjs/setup';
 import { APP_FILTER } from '@nestjs/core';
 import { SentryGlobalFilter } from '@sentry/nestjs/setup';
+import { AuditMiddleware } from './audit/audit.middleware';
 
 @Module({
   imports: [
@@ -51,9 +57,27 @@ import { SentryGlobalFilter } from '@sentry/nestjs/setup';
   providers: [
     {
       provide: APP_FILTER,
-      useClass: SentryGlobalFilter
+      useClass: SentryGlobalFilter,
     },
-    PrismaService
+    PrismaService,
+    AuditMiddleware,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(AuditMiddleware)
+      .forRoutes(
+        // Apply audit middleware to all routes 
+        { path: 'auth/*path', method: RequestMethod.ALL },
+        { path: 'chat', method: RequestMethod.POST },
+        { path: 'ai-agent', method: RequestMethod.POST },
+        { path: 'bot/create', method: RequestMethod.POST },
+        { path: 'gemini', method: RequestMethod.POST },
+        { path: 'gemini/stream-text', method: RequestMethod.POST },
+        { path: 'gemini/generate-object', method: RequestMethod.POST },
+        { path: 'code-execution', method: RequestMethod.POST },
+        { path: 'file-analysis', method: RequestMethod.POST },
+      );
+  }
+}

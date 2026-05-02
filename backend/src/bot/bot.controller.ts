@@ -90,12 +90,12 @@ export class BotController {
     return this.botService.generateFood();
   }
 
-
   @Get('code-execution')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Execute code using AI',
-    description: 'Demonstrates code execution capabilities by calculating the 20th Fibonacci number using Python',
+    description:
+      'Demonstrates code execution capabilities by calculating the 20th Fibonacci number using Python',
   })
   @ApiResponse({
     status: 200,
@@ -114,7 +114,8 @@ export class BotController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Perform Google search using AI',
-    description: 'Uses Google Search tool to find latest news from Egypt and USA with article dates',
+    description:
+      'Uses Google Search tool to find latest news from Egypt and USA with article dates',
   })
   @ApiResponse({
     status: 200,

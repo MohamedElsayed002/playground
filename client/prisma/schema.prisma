@@ -125,3 +125,21 @@ model users {
   profiles       profiles?
   refresh_tokens refresh_tokens[]
 }
+
+
+model audit_logs {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid 
+
+  event String @map("event")
+  user_id String? @map("user_id")
+
+  status String @map("status")
+
+  ip_address String? @map("ip_address")
+  user_agent String? @map("user_agent")
+
+  extra String @map("extra")
+  created_at     DateTime      @default(now())
+  updated_at     DateTime
+
+}

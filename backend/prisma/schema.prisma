@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -23,9 +24,9 @@ model UserData {
   id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email         String         @unique
   passwordHash  String?        @map("password_hash")
-  googleId      String?        @unique @map("google_id")
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
+  googleId      String?        @unique @map("google_id")
   profile       Profile?
   refreshTokens RefreshToken[]
 
@@ -135,4 +136,16 @@ model MessageRead {
 
   @@id([roomId, userId])
   @@map("message_reads")
+}
+
+model audit_logs {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  event      String
+  user_id    String?
+  status     String
+  ip_address String?
+  user_agent String?
+  extra      String
+  created_at DateTime @default(now())
+  updated_at DateTime
 }

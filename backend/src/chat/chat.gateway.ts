@@ -21,7 +21,7 @@ const socketUserMap = new Map<string, string>();
 
 @WebSocketGateway({
   cors: { origin: '*', credentials: true },
-  namespace: '/chat', 
+  namespace: '/chat',
 })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
