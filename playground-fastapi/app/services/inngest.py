@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import json
 import io
@@ -14,6 +15,47 @@ from app.services.file_service import scan_file, s3, BUCKET_NAME
 # npx --yes inngest-cli@latest dev -u http://127.0.0.1:8000/api/inngest
 
 logger = logging.getLogger("uvicorn")
+
+
+def _parse_pdf_bytes(raw_bytes: bytes) -> dict:
+    """Parse a PDF using pdfplumber on a worker thread.
+
+    This helper keeps the async Inngest step from blocking the main event loop
+    while reading pages and extracting tables from a PDF.
+    """
+    pages = []
+    all_text_parts = []
+
+    with pdfplumber.open(io.BytesIO(raw_bytes)) as pdf:
+        total_pages = len(pdf.pages)
+
+        for page_num, page in enumerate(pdf.pages, start=1):
+            text = page.extract_text() or ""
+            raw_tables = page.extract_tables() or []
+
+            tables = [
+                [
+                    [cell if cell is not None else "" for cell in row]
+                    for row in table
+                ]
+                for table in raw_tables
+            ]
+
+            pages.append({
+                "page_number": page_num,
+                "text": text,
+                "tables": tables,
+            })
+
+            all_text_parts.append(f"--- Page {page_num} ---\n{text}")
+
+    full_text = "\n\n".join(all_text_parts)
+
+    return {
+        "total_pages": total_pages,
+        "pages": pages,
+        "full_text": full_text,
+    }
 
 _is_production = settings.INNGEST_SIGNING_KEY not in (None, "", "local-dev-key")
 
@@ -55,16 +97,16 @@ async def process_pdf_upload(
 
     # STEP 1 — Download file from S3 & virus scan
     async def download_and_scan():
-        logger.info(f"[inngest] step 1: downloading {s3_key} from S3")
+        logger.info(f"[inngest] step 1: download {s3_key} from s3")
 
-        response = s3.get_object(Bucket=BUCKET_NAME, Key=s3_key)
-        file_bytes = response["Body"].read()
+        def blocking_work():
+            response = s3.get_object(Bucket=BUCKET_NAME,Key=s3_key)
+            file_bytes = response["Body"].read()
+            scan_file(file_bytes)
+            return file_bytes
 
-        # Virus scan (no-op if ClamAV is unavailable)
-        scan_file(file_bytes)
-
+        file_bytes = await asyncio.to_thread(blocking_work)
         logger.info(f"[inngest] step 1 done: {len(file_bytes)} bytes, scan passed")
-        # Return bytes as hex string so it's JSON-serialisable between steps
         return file_bytes.hex()
 
     file_hex: str = await step.run("download-and-scan", download_and_scan)
@@ -74,40 +116,10 @@ async def process_pdf_upload(
         logger.info("[inngest] step 2: parsing PDF")
         raw_bytes = bytes.fromhex(file_hex)
 
-        pages = []
-        all_text_parts = []
+        pdf_data = await asyncio.to_thread(_parse_pdf_bytes, raw_bytes)
 
-        with pdfplumber.open(io.BytesIO(raw_bytes)) as pdf:
-            total_pages = len(pdf.pages)
-
-            for page_num, page in enumerate(pdf.pages, start=1):
-                text = page.extract_text() or ""
-                raw_tables = page.extract_tables() or []
-
-                tables = [
-                    [
-                        [cell if cell is not None else "" for cell in row]
-                        for row in table
-                    ]
-                    for table in raw_tables
-                ]
-
-                pages.append({
-                    "page_number": page_num,
-                    "text": text,
-                    "tables": tables,
-                })
-
-                all_text_parts.append(f"--- Page {page_num} ---\n{text}")
-
-        full_text = "\n\n".join(all_text_parts)
-
-        logger.info(f"[inngest] step 2 done: {total_pages} pages extracted")
-        return {
-            "total_pages": total_pages,
-            "pages": pages,
-            "full_text": full_text,
-        }
+        logger.info(f"[inngest] step 2 done: {pdf_data['total_pages']} pages extracted")
+        return pdf_data
 
     pdf_data: dict = await step.run("parse-pdf", parse_pdf)
 
