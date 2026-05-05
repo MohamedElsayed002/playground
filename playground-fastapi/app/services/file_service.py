@@ -57,7 +57,6 @@ s3 = boto3.client(
     aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
     )
 BUCKET_NAME = settings.BUCKET_NAME
-# ── Helpers ───────────────────────────────────────────────────────────────────
 
 
 async def _save_upload_to_temp(upload: UploadFile) -> str:

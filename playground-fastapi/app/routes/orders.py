@@ -7,7 +7,7 @@ User routes:  POST /orders, GET /orders, GET /orders/{id}, POST /orders/{id}/can
 Admin routes: PATCH /orders/{id}/status, GET /orders (all users)
 """
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db, get_current_user, require_admin
@@ -16,7 +16,8 @@ from app.schemas.common import PaginatedResponse
 from app.services import order_service
 from app.services.order_service_2 import OrderService
 from app.models.user import User
-from app.services.checkout_service_2 import CheckoutService
+from app.services.checkout.create_checkout import CheckoutService
+import uuid
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
 
@@ -58,11 +59,15 @@ async def testing_route(
     request: OrderCreate,
     current_user= Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    idempotency_key: str | None = Header(
+        None,
+        description="Unique identifier for request idempotency."
+                    "Same key = cached response, prevents duplicate processing. Optional - if not provided, UUID will be auto-generated"
+    ),
 ):  
-    idempotency_key = "454323322"
-    print("current_user",current_user)
+    key = idempotency_key or str(uuid.uuid4())
     checkout_service = CheckoutService(db)
-    return await checkout_service.checkout_2(idempotency_key, current_user.id, request)
+    return await checkout_service.checkout_2(key, current_user.id, request)
 
 @router.get("/{order_id}", response_model=OrderResponse)
 async def get_order(

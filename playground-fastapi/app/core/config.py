@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     INNGEST_SIGNING_KEY: Optional[str] = None
     INNGEST_EVENT_KEY: Optional[str] = None
 
+    RESEND_API_KEY: str
+
 
 
     # Pydantic-settings config: reads from .env file
