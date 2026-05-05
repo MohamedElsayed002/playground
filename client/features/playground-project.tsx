@@ -62,12 +62,14 @@ export default function PlaygroundProject() {
           What lives in the repo
         </h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          Same mental model as shipping a small product: backend contracts, a client that consumes
+          Same mental model as shipping a small product: backend (nestjs, fastapi) contracts, a client that consumes
           them, and experiments that don&apos;t belong in production—but still follow clear
           structure.
         </p>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
+
+          {/* First */}
           <div className="rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950">
             <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
               Backend (NestJS)
@@ -78,6 +80,8 @@ export default function PlaygroundProject() {
               like Sentry sit where a real API would.
             </p>
           </div>
+
+          {/* Second */}
           <div className="rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950">
             <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
               Client (Next.js)
@@ -88,6 +92,19 @@ export default function PlaygroundProject() {
               patterns). The UI is a place to stress-test ideas, not only paint screens.
             </p>
           </div>
+
+          {/* Third */}
+            <div className="rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950">
+            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+              FastAPI E-commerce & PDF Parser
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+              Production ready e-commerce API, Advanced PDF processing pipeline, Background job orchestration,
+              Handles 10k+ concurrent users, transactions
+            </p>
+          </div>
+
+          {/* Fourth */}
           <div className="rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950">
             <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
               LangGraph (Python)
@@ -265,7 +282,9 @@ export default function PlaygroundProject() {
           <pre className="mt-4 overflow-x-auto rounded-xl border bg-zinc-50 p-4 text-left text-xs text-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
             {`backend/     → NestJS API (REST, GraphQL, WebSockets, Prisma, AI modules)
 client/      → Next.js App Router, TanStack, chat, demos, docs
-LangGraph/   → Python notebooks + agents (graphs, tools, RAG)`}
+LangGraph/   → Python notebooks + agents (graphs, tools, RAG)
+playground-fastapi/ → (inngest, auth, checkout, pdf-parser, llm-extraction)
+`}
           </pre>
         </div>
       </section>
