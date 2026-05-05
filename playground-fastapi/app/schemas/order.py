@@ -27,7 +27,7 @@ class OrderItemResponse(BaseModel):
 
 # Order Schemas
 class OrderCreate(BaseModel):
-    items: list[OrderItemCreate] = Field(min_length=1)
+    items: list[OrderItemCreate] = Field(min_length=1,max_length=50)
     shipping_address_line1: str | None = None
     shipping_address_line2: str | None = None
     shipping_city: str | None = None

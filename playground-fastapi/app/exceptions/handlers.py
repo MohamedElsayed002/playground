@@ -52,6 +52,27 @@ class NotFoundException(AppException):
             detail = f"{resource} with id '{id} not found'"
         super().__init__(status_code=status.HTTP_404_NOT_FOUND,detail=detail,error_code="NOT_FOUND")
 
+class OrderCancellationError(AppException):
+    """
+        422 - Order Cancellation Error
+    """
+    def __init__(self,detail:str):
+        super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,detail=detail,error_code="CANNOT_CANCEL_ORDER")
+
+
+class OutOfStockError(AppException):
+    """
+        422 - Out of Stock Error
+    """
+    def __init__(self,detail:str):
+        super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,detail=detail,error_code="OUT_OF_STOCK")
+
+class InactiveProductError(AppException):
+    """
+        422 - Inactive Product
+    """
+    def __init__(self,detail:str):
+        super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,detail=detail,error_code="PRODUCT_INACTIVE")
 
 class ConflictException(AppException):
     """

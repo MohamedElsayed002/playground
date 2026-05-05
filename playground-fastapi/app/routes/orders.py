@@ -14,7 +14,9 @@ from app.core.dependencies import get_db, get_current_user, require_admin
 from app.schemas.order import OrderCreate, OrderResponse, OrderStatusUpdate
 from app.schemas.common import PaginatedResponse
 from app.services import order_service
-
+from app.services.order_service_2 import OrderService
+from app.models.user import User
+from app.services.checkout_service_2 import CheckoutService
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
 
@@ -50,6 +52,17 @@ async def get_my_orders(
         db, user_id=current_user.id, page=page, page_size=page_size
     )
 
+
+@router.post('/testing-route')
+async def testing_route(
+    request: OrderCreate,
+    current_user= Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):  
+    idempotency_key = "454323322"
+    print("current_user",current_user)
+    checkout_service = CheckoutService(db)
+    return await checkout_service.checkout_2(idempotency_key, current_user.id, request)
 
 @router.get("/{order_id}", response_model=OrderResponse)
 async def get_order(
@@ -88,3 +101,23 @@ async def update_order_status(
 ):
     """[Admin] Update an order's status (e.g., mark as shipped, delivered)."""
     return await order_service.update_order_status(db, order_id, data)
+
+
+
+@router.get(
+    "/my",
+    # response_model
+    summary="List the current user's orders"
+)
+async def my_orders(
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db)
+) -> dict:
+    service = OrderService(session)
+    orders = await service.list_user_orders(current_user.id,limit=limit, offset=offset)
+    return {
+        "success": True,
+        "data": [OrderResponse.model_validate(o) for o in orders]
+    }

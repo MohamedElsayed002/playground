@@ -59,6 +59,7 @@ class ProductImageResponse(BaseModel):
 class ProductCreate(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     description: str | None = None
+    slug: str | None = Field(max_length=280)
     short_description: str | None = Field(None, max_length=500)
     price: Decimal = Field(gt=0, decimal_places=2)            # Must be positive
     compare_at_price: Decimal | None = Field(None, gt=0)

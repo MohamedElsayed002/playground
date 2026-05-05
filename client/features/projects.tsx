@@ -23,7 +23,7 @@ export function Projects() {
       },
       {
         rootMargin:"0px",
-        scrollMargin: "0px",
+        // scrollMargin: "0px",
         threshold: 0.5
       }
     )

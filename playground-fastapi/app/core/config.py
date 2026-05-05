@@ -45,6 +45,8 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY: str 
     AWS_ACCESS_KEY_ID: str
 
+    IDEMPOTENCY_KEY_TTL_HOURS: int = 24
+
     OPENAI_API_KEY: str
     INNGEST_SIGNING_KEY: Optional[str] = None
     INNGEST_EVENT_KEY: Optional[str] = None

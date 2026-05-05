@@ -34,13 +34,15 @@ async def create_order(db:AsyncSession, user_id: int, data: OrderCreate):
     order_items_data = []
     subtotal = Decimal("0")
 
+    # Now only one request can modify that inventory row at once
     for item_data in data.items:
         # Load Product 
         result = await db.execute(select(Product).where(
             Product.id == item_data.product_id,
             Product.is_deleted == False,
             Product.is_active == True
-        ))
+        ).with_for_update()
+    )
 
         product = result.scalar_one_or_none()
 
