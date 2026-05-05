@@ -49,4 +49,3 @@ anthropic==0.42.0
 google-generativeai==0.8.3
 inngest==0.4.21
 numpy==2.2.1
-resend

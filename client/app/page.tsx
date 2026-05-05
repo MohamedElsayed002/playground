@@ -3,6 +3,7 @@ import { DotPattern } from "@/components/layouts/dot-pattern";
 import { APIsAndRealtime, Chat, LiveStream, NoSQLVSSQL, Performance, Tables } from "@/features";
 import { UserBadge } from "@/components/users/user-badge";
 import { Projects } from "@/features/projects";
+import { Audit } from "@/features/audit";
 
 export const metadata: Metadata = {
   title: "Playground",
@@ -56,6 +57,9 @@ export default async function RootPage() {
             <div className="my-8 h-px w-full bg-white/40" />
 
             <Projects />
+            <div className="my-8 h-px w-full bg-white/40" />
+
+            <Audit/>
             <div className="my-8 h-px w-full bg-white/40" />
 
             <NoSQLVSSQL />

@@ -24,6 +24,7 @@ import { SentryModule } from '@sentry/nestjs/setup';
 import { APP_FILTER } from '@nestjs/core';
 import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { AuditMiddleware } from './audit/audit.middleware';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { AuditMiddleware } from './audit/audit.middleware';
     GeminiModule,
     CodeExecutionModule,
     FileAnalysisModule,
+    AuditModule,
   ],
   controllers: [],
   providers: [

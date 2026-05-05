@@ -8,13 +8,16 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.core.middleware import RequestLoggingMiddleware, SecurityHeadersMiddleware
 from app.exceptions.handlers import register_exception_handlers
-from app.routes import auth, users, products, orders, files
+from app.routes import auth, users, products, orders, files, audit_logs
 from app.db.session import create_all_tables
 
 import inngest.fast_api
 
 # ✅ import from service (IMPORTANT)
 from app.services.inngest import inngest_client, inngest_functions
+
+origins = ["https://playground-lilac-nine.vercel.app"]
+
 
 logging.basicConfig(
     level=logging.DEBUG if settings.APP_DEBUG else logging.INFO,
@@ -41,6 +44,14 @@ app = FastAPI(
     title=settings.APP_NAME,
     version="1.0.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ✅ Mount Inngest endpoint
@@ -80,6 +91,7 @@ app.include_router(users.router, prefix=API_PREFIX)
 app.include_router(products.router, prefix=API_PREFIX)
 app.include_router(orders.router, prefix=API_PREFIX)
 app.include_router(files.router, prefix=API_PREFIX)
+app.include_router(audit_logs.router, prefix=API_PREFIX)
 
 
 @app.get("/health")

@@ -1,10 +1,8 @@
 from decimal import Decimal
 
 import inngest
-import resend
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
-from resend.exceptions import ResendError
 
 from app.core.config import settings
 from app.db.session import AsyncSessionLocal
@@ -75,6 +73,22 @@ async def checkout_background_jobs(ctx: inngest.Context):
     invoice_context = await step.run("checkout-build-invoice-context", build_invoice_context)
 
     async def send_invoice_email():
+        try:
+            import resend
+            from resend.exceptions import ResendError
+        except ModuleNotFoundError as exc:
+            logger.warning(
+                "[inngest] resend package not installed, skipping invoice email order=%s: %s",
+                order_id,
+                exc,
+            )
+            return {
+                "email_sent": False,
+                "reason": "resend_not_installed",
+                "mode": "development",
+                "error": str(exc),
+            }
+
         logger.info("[inngest] checkout step 2: send invoice email order=%s", order_id)
         if payment_status != "paid":
             logger.info("[inngest] skip invoice email: payment not paid order=%s", order_id)
