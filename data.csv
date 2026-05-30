@@ -1,0 +1,6 @@
+product_id,product_name,category,price,quantity,last_restock_date
+P001,MacBook Pro,Laptops,2499.99,15,2026-05-01
+P002,Mechanical Keyboard,Accessories,129.99,50,2026-04-28
+P003,Gaming Mouse,Accessories,79.99,120,2026-04-20
+P004,Dell XPS 15,Laptops,1899.99,8,2026-05-03
+P005,Samsung Monitor,Monitors,399.99,25,2026-04-15

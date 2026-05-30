@@ -45,9 +45,12 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-
     orders: Mapped[list["Order"]] = relationship(
         "Order", back_populates="user", lazy="selectin"
+    )
+
+    report_jobs: Mapped[list["ReportJob"]] = relationship(
+        "ReportJob", back_populates="user", lazy="selectin"
     )
 
     def __repr__(self) -> str:

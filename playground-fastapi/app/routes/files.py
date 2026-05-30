@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Header, HTTPException, Request
 from app.core.dependencies import get_current_user, require_admin, get_db
 from app.schemas.file import FileUploadResponse, PDFExtractResponse, FileStatus
-from app.services import file_service
+from app.services import file_service, csv_extract
 from app.models.file import File as FileModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import json
 import uuid
+
 
 router = APIRouter(prefix="/files",tags=["Files & Upload"])
 
@@ -61,6 +62,17 @@ async def extract_pdf(
     """
     return await file_service.extract_pdf_content(file)
 
+@router.post(
+        "/extract-csv/pipeline",
+        # response_model=PDFExtractResponse,
+    )
+async def extract_pdf_pipeline(
+    request: Request,
+    file: UploadFile = File(...),
+    current_user = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    return await csv_extract.extract_csv_pipeline(current_user,file,db)
 
 @router.post(
     "/pdf/extract-authenticated",

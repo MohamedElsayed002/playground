@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
     # FILE UPLOADS
     UPLOAD_DIR: str = "uploads"
-    MAX_FILE_SIZE_MB: int = 10
+    MAX_FILE_SIZE_MB: int = 10 * 1024 * 1024
     ALLOWED_IMAGE_TYPES: str = "image/jpeg,image/png,image/webp,image/gif"
 
     # CORS 
