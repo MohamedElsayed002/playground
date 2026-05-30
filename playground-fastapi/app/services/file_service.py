@@ -101,7 +101,76 @@ async def _read_upload_chunks(upload: UploadFile, max_bytes: int) -> bytes:
     return b"".join(chunks)
 
 
-# ── Image Upload ──────────────────────────────────────────────────────────────
+
+# Flow
+# 1. Request comes in 
+# 2. Check idempotency
+# 3. Start Transaction
+# 4. Save DB record
+# 5. Upload file
+# 6. Commit or Rollback
+# 7. Return consistent response
+
+# error leave broken data? rollback? mark status as failed?
+
+# Better approach "Controlled failure"
+
+"""
+Instead of deleting the record 
+Keep it + mark it as failed
+
+Correct flow
+
+1. Save file metadata -> status = "pending"
+2. Upload File
+3. Start parsing 
+4. If success -> status = "processed"
+5. If fail -> status = "failed"
+
+When should you rollback?
+Rollback is correct only when
+
+The operation must be atomic
+
+Example
+
+    - payment + order creation
+    Either both succeeded or none
+
+Rule of thumb 
+
+- User-triggered workflows (files, jobs) -> use status tracking
+- Critical financial operations -> use transactions (rollback)
+
+A failed record is actually valuable data
+"""
+
+
+"""
+Now let me push you one level deeper:
+
+👉 What would you do if:
+
+parsing fails 3 times in a row?
+
+Do you:
+
+keep retrying forever
+stop and mark permanently failed
+escalate (log, alert, notify)
+
+POST /files/{id}/retry
+"""
+
+# async def upload_file(db: AsyncSession, file, user_id: int):
+#     async with db.begin():
+#         file_record = File(
+#             filename=file.Filename,
+#             user_id=user_id
+#         )
+
+#         db.add(file_record)
+
 
 async def upload_image(
     upload: UploadFile,

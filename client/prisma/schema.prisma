@@ -143,3 +143,48 @@ model audit_logs {
   updated_at     DateTime
 
 }
+
+
+enum MessageRole {
+  user 
+  assistant
+  system 
+  tool
+}
+
+enum ChatMode {
+  chat 
+  build 
+  research
+  agent
+}
+
+model Chat {
+  id String @id @default(cuid())
+  title String @default("New Chat")
+  mode ChatMode @default(chat)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages Message[]
+
+  @@index([createdAt])
+}
+
+model Message {
+  id String @id @default(cuid())
+  role MessageRole
+  content String 
+  model String? 
+  mode ChatMode
+  promptTokens Int? 
+  completionTokens Int? 
+  durationMs Int? 
+  createdAt DateTime @default(now())
+
+  chatId String 
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId,createdAt])
+}
+

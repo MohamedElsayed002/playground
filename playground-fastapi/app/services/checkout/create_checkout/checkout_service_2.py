@@ -30,6 +30,19 @@ def _generate_order_number() -> str:
     return f"ORD-{ts}-{suffix}"
 
 
+"""
+1. Receive checkout request
+2. Start DB transaction
+3. Lock inventory row 
+4. Verify stock > 0
+5. Reserve/decrement stock
+6. Create order 
+7. Commit 
+8. return success
+9. Background jobs afterward
+"""
+
+
 class CheckoutService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session

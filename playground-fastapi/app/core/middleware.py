@@ -1,15 +1,3 @@
-"""
-app/core/middleware.py
-
-Custom middleware for the FastAPI application 
-
-NestJS equivalent -> Middleware / Inerceptors
-FastAPI approach -> Starletter BaseHTTPMiddleware
-
-Middleware runs on EVERY request before it hits your route hamdler,
-and on EVERY response before it goes back to the client
-"""
-
 import time 
 import uuid 
 import logging 
@@ -42,27 +30,36 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         start_time = time.perf_counter()
 
         # Log the incoming request 
-        logger.info(
-            f"[{request_id}] → {request.method} {request.url.path}"
-        )
+        logger.info({
+            "event": "request_start",
+            "request_id": request_id,
+            "method": request.method,
+            "path": request.url.path
+        })
 
-        # Call the actual route handler 
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        except Exception as e:
+            duration_ms = (time.perf_counter() - start_time) * 1000
 
-        # Calculate duration 
-        duration_ms = (time.perf_counter() - start_time) * 1000 
-
-        # Calculate duration
+            logger.exception({
+                "event": "request_error",
+                "request_id": request_id,
+                "duration_ms": round(duration_ms,2),
+                "error": str(e)
+            })
+            raise 
         duration_ms = (time.perf_counter() - start_time) * 1000
 
-        # Add the request ID to the response headers (useful for debugging)
         response.headers["X-Request-ID"] = request_id
         response.headers["X-Process-Time"] = f"{duration_ms:.2f}ms"
 
-        # Log the outgoing response
-        logger.info(
-            f"[{request_id}] ← {response.status_code} ({duration_ms:.2f}ms)"
-        )
+        logger.info({
+            "event": "request_end",
+            "request_id": request_id,
+            "status": response.status_code,
+            "duration_ms": round(duration_ms,2)
+        })
 
         return response
 

@@ -20,13 +20,17 @@ export function LiveStream() {
     router.push("/chategy");
   });
 
+  useHotkey("Control+5", () => {
+    router.push("/multiple-ai")
+  })
+
   return (
     <div>
       <h2 className="text-3xl font-semibold mb-4 md:text-left text-center">AI</h2>
       <p className="text-gray-400 -mt-2 mb-5">
         Bots/ Livechat/ tanstack-hotkeywords/ tanstack-ai / tools
       </p>
-      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 lg:gap-38">
+      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
         <div className="w-full md:w-[371px]  h-[188px] text-black bg-[radial-gradient(circle_at_top,_#fde68a_0%,_#fff7ed_35%,_#eef2ff_75%,_#f8fafc_100%)] rounded-4xl p-5 flex flex-col justify-between">
           <h1 className="text-lg lg:text-3xl font-medium leading-tight mb-1">Admin</h1>
           <p className="text-sm lg:text-base opacity-85 max-w-[240px] -mt-8">
@@ -80,6 +84,25 @@ export function LiveStream() {
               <Link href="/chategy" aria-label="navigate to code exueciton/pdf page">
                 <ArrowRight className="text-black" size={24} />
                 <span className="sr-only">Code Execution</span>
+              </Link>
+            </Button>
+          </div>
+        </div>
+        <div className="w-full md:w-[371px]  h-[188px] bg-red-500 rounded-4xl p-5 flex flex-col justify-between">
+          <h1 className="text-lg lg:text-3xl font-medium leading-tight mb-1">Multiple Models</h1>
+          <p className="text-sm lg:text-base opacity-85 max-w-[240px] -mt-8">
+            Multiple models chat bot openai/anthroic/gemini
+          </p>
+          <div className="flex justify-between items-center">
+            <div>
+              <span>
+                Press <Badge className="bg-black ml-2">Ctrl+5</Badge>
+              </span>
+            </div>
+            <Button variant="outline" size="icon-lg" className="size-12" asChild>
+              <Link href="/multiple-ai" aria-label="Navigate to admin page bot">
+                <ArrowRight className="text-black" size={24} />
+                <span className="sr-only">Multiple AI page</span>
               </Link>
             </Button>
           </div>
