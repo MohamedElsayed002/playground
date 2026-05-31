@@ -47,6 +47,30 @@ def is_valid_date(value: str) -> bool:
         return True
     except (ValueError, TypeError):
         return False
+    
+
+def normalize_date(value: str) -> str:
+        formats = [
+            "%Y-%m-%d",
+            "%d/%m/%Y",
+            "%Y/%m/%d"
+        ]
+
+        for fmt in formats:
+            try:
+                parsed = datetime.strptime(
+                    value,
+                    fmt
+                )
+
+                return parsed.strftime(
+                    "%Y-%m-%d"
+                )
+
+            except:
+                pass
+
+        return ""
 
 @inngest_client.create_function(
     fn_id="process-csv-upload",
@@ -221,6 +245,87 @@ async def process_csv_upload(ctx: inngest.Context):
 
     validation_result = await step.run("validate-csv",validate_csv)
 
+
+    # Step: Normalize CSV
+    async def normalize_csv():
+        raw_text = load_csv_from_s3(s3_key)
+
+        reader = csv.DictReader(io.StringIO(raw_text))
+
+        normalized_rows = []
+
+        for row in reader:
+            category = (row.get("category") or "").strip().title()
+            product_name = (row.get("product_name") or "").strip().title()
+
+            try:
+                price = round(float(row.get("price") or 0), 2)
+            except:
+                price = 0.0
+            
+            try:
+                quantity = max(int(row.get("quantity") or 0), 0)
+            except:
+                quantity = 0
+            
+            normalized_date = normalize_date(row.get("last_restock_date") or "")  
+
+            normalized_rows.append({
+                "product_id": row.get("product_id"),
+                "product_name": product_name,
+                "category": category,
+                "price": price,
+                "quantity": quantity,
+                "last_restock_date": normalized_date
+            })
+
+        output = io.StringIO()
+
+        writer = csv.DictWriter(output,fieldnames=REQUIRED_COLUMNS)
+
+        writer.writeheader()
+        writer.writerows(normalized_rows)
+
+        normalized_csv = output.getvalue()
+
+        normalized_s3_key = f"normalized/{job_id}.csv"
+
+        s3.put_object(
+            Bucket=BUCKET_NAME,
+            Key=normalized_s3_key,
+            Body=normalized_csv.encode("utf-8"),
+            ContentType="text/csv",
+            CacheControl="max-age=3600"
+        )
+
+        normalized_file_url = f"https://{BUCKET_NAME}.s3.amazonaws.com/{normalized_s3_key}"
+
+        return {
+            # "normalized_rows": normalized_rows,
+            "rows_count": len(normalized_rows),
+            "normalized_file_url": normalized_file_url,
+            "normalized_s3_key": normalized_s3_key
+        }
+
+
+    normalize_csv_result = await step.run("normalized_csv",normalize_csv)
+
+    async def save_normalization():
+        async with AsyncSessionLocal() as db:
+            result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
+
+            job = result.scalar_one()
+
+            job.normalized_file_s3_key = normalize_csv_result["normalized_s3_key"] 
+            job.normalized_file_url = normalize_csv_result["normalized_file_url"]
+            job.current_step = "normalized"
+            job.progress = 80
+
+            await db.commit()
+            return True
+        
+    await step.run("save-normalization",save_normalization)
+
     # Step 5: Save Validation result
     async def save_validation():
         async with AsyncSessionLocal() as db:
@@ -235,8 +340,9 @@ async def process_csv_upload(ctx: inngest.Context):
             job.invalid_quantity = validation_result["invalid_quantity"]
             job.invalid_dates = validation_result["invalid_dates"]
             job.quality_score = validation_result["quality_score"]
+            job.normalized_rows_count = normalize_csv_result["rows_count"]
 
-            job.progress = 70
+            job.progress = 90
             job.current_step = "validated"
 
             if validation_result["missing_columns"]:
@@ -286,4 +392,5 @@ async def process_csv_upload(ctx: inngest.Context):
         "s3_key": s3_key,
         "rows_found": csv_result["row_count"],
         "validation": validation_result,
+        "normalized_rows_count": normalize_csv_result["rows_count"]
     }

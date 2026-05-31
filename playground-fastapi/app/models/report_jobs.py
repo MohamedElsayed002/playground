@@ -41,7 +41,10 @@ class ReportJob(Base):
     invalid_price: Mapped[int] = mapped_column(Integer,default=0)
     invalid_quantity: Mapped[int] = mapped_column(Integer, default=0)
     invalid_dates: Mapped[int] = mapped_column(Integer, default=0)
+    normalized_rows_count: Mapped[int] = mapped_column(Integer, default=0)
+    normalized_file_s3_key: Mapped[str | None] = mapped_column(String(255))
     quality_score: Mapped[int] = mapped_column(Integer, default=0)
+    normalized_file_url: Mapped[str | None] = mapped_column(Text)
     metadata_json: Mapped[dict | None] = mapped_column(JSON)
 
     failure_reason: Mapped[str | None] = mapped_column(Text)
