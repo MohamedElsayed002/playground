@@ -130,4 +130,7 @@ PDF parsing, image processing, large JSON, hashing
 Waiting because something else is blocked
 connection pool, external service, queue
 
--> architecture problem
+-> architecture 
+
+
+https://www.reddit.com/r/FastAPI/comments/1s9nz1t/rate_limiting_in_fastapi_what_the_popular/

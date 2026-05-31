@@ -10,6 +10,7 @@ from app.db.session import AsyncSessionLocal
 from app.models.report_jobs import JobStatus, ReportJob
 from app.services.csv_extract import BUCKET_NAME, s3
 from app.services.inngest.client import inngest_client, logger 
+from datetime import datetime
 
 
 REQUIRED_COLUMNS = [
@@ -30,6 +31,22 @@ def load_csv_from_s3(s3_key: str) -> str:
     raw_bytes = response["Body"].read()
 
     return raw_bytes.decode("utf-8",errors="replace")
+
+
+def is_valid_date(value: str) -> bool:
+    try:
+        date = datetime.strptime(value,"%Y-%m-%d")
+        today = datetime.utcnow()
+
+        if date > today:
+            return False
+
+        if date.year < 2000:
+            return False
+
+        return True
+    except (ValueError, TypeError):
+        return False
 
 @inngest_client.create_function(
     fn_id="process-csv-upload",
@@ -120,21 +137,86 @@ async def process_csv_upload(ctx: inngest.Context):
             if column not in headers
         ]
 
+        if missing_columns:
+            return {
+                "headers": headers,
+                "missing_columns": missing_columns,
+                "total_rows": 0,
+                "valid_rows": 0,
+                "invalid_rows": 0,
+                "invalid_price": 0,
+                "invalid_quantity": 0,
+                "invalid_dates": 0,
+        }
+
         total_rows = 0
         valid_rows = 0
+        invalid_rows = 0
+
+        invalid_price = 0
+        invalid_quantity = 0
+        invalid_dates = 0
 
         for row in reader:
             total_rows+=1
             has_product_id = bool(row.get("product_id"))
             has_product_name = bool(row.get("product_name"))
-            if(has_product_id and has_product_name):
+
+            try:
+                price = float(row.get("price",0))
+                price_is_positive = price > 0
+
+                if not price_is_positive:
+                    invalid_price += 1
+
+            except (ValueError, TypeError):
+                invalid_price+=1
+                price_is_positive = False
+            
+            try:
+                quantity = int(row.get("quantity",0))
+                quantity_is_positive = quantity >= 0
+
+                if not quantity_is_positive:
+                    invalid_quantity+=1
+                
+            except (ValueError,TypeError):
+                invalid_quantity+=1
+                quantity_is_positive = False
+
+
+            valid_date = is_valid_date(row.get("last_restock_date"))
+
+            if not valid_date:
+                invalid_dates+=1
+
+            if(
+                has_product_id and
+                has_product_name and
+                price_is_positive and 
+                quantity_is_positive and 
+                valid_date
+            ):
                 valid_rows+=1
+            else:
+                invalid_rows+=1
         
+
+        quality_score = round(
+            (valid_rows / total_rows) * 100,
+            2
+        ) if total_rows else 0
+
         return {
             "headers": headers,
             "missing_columns": missing_columns,
             "total_rows": total_rows,
-            "valid_rows": valid_rows
+            "valid_rows": valid_rows,
+            "quality_score": quality_score,
+            "invalid_rows": invalid_rows,
+            "invalid_price": invalid_price,
+            "invalid_quantity": invalid_quantity,
+            "invalid_dates": invalid_dates
         }
 
     validation_result = await step.run("validate-csv",validate_csv)
@@ -146,13 +228,13 @@ async def process_csv_upload(ctx: inngest.Context):
 
             job = result.scalar_one()
 
-            job.total_rows = validation_result[
-                "total_rows"
-            ]
-
-            job.valid_rows = validation_result[
-                "valid_rows"
-            ]
+            job.total_rows = validation_result["total_rows"]
+            job.valid_rows = validation_result["valid_rows"]
+            job.invalid_rows = validation_result["invalid_rows"]
+            job.invalid_price = validation_result["invalid_price"]
+            job.invalid_quantity = validation_result["invalid_quantity"]
+            job.invalid_dates = validation_result["invalid_dates"]
+            job.quality_score = validation_result["quality_score"]
 
             job.progress = 70
             job.current_step = "validated"
@@ -162,6 +244,14 @@ async def process_csv_upload(ctx: inngest.Context):
                 job.failure_reason = (
                     "Missing required columns: " + ", ".join(validation_result["missing_columns"])
                 )
+            if validation_result["quality_score"] < 60:
+                job.status = JobStatus.FAILED
+                job.failure_reason = (
+                    f"Data quality too low ({validation_result['quality_score']}%)"
+                )
+            else:
+                job.status = JobStatus.PROCESSING
+            
             await db.commit()
             return True
     

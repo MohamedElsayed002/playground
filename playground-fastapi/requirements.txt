@@ -276,7 +276,6 @@ stevedore==5.7.0
 StrEnum==0.4.15
 sympy==1.14.0
 synchronicity==0.11.1
--e git+https://github.com/MohamedElsayed002/playground.git@4e830d4e2ee2a233b695dc0457b50f8cb0a524ef#egg=tanstack_ai&subdirectory=packages\python\tanstack-ai
 taskflow==6.2.0
 tenacity==9.1.4
 testresources==2.1.2

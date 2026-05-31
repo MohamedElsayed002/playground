@@ -1,6 +1,51 @@
 product_id,product_name,category,price,quantity,last_restock_date
-P001,MacBook Pro,Laptops,2499.99,15,2026-05-01
-P002,Mechanical Keyboard,Accessories,129.99,50,2026-04-28
-P003,Gaming Mouse,Accessories,79.99,120,2026-04-20
-P004,Dell XPS 15,Laptops,1899.99,8,2026-05-03
-P005,Samsung Monitor,Monitors,399.99,25,2026-04-15
+P001,Laptop,Electronics,999.99,15,2025-05-01
+P002,Mouse,Electronics,25.99,100,2025-04-20
+P003,Keyboard,Electronics,49.99,50,2025-04-15
+P004,Monitor,Electronics,299.99,20,2025-03-30
+P005,Desk,Office,199.99,10,2025-03-25
+P006,Chair,Office,149.99,25,2025-02-10
+P007,Notebook,Office,5.99,300,2025-01-05
+P008,Pen Pack,Office,3.99,500,2025-01-01
+P009,Webcam,Electronics,89.99,40,2025-04-18
+P010,Headset,Electronics,79.99,35,2025-04-12
+P011,Tablet,Electronics,499.99,12,2025-05-02
+P012,Printer,Office,249.99,8,2025-03-14
+P013,Coffee Machine,Kitchen,99.99,5,2025-02-20
+P014,Water Bottle,Kitchen,15.99,80,2025-01-15
+P015,Lamp,Home,39.99,60,2025-04-01
+P016,Speaker,Electronics,129.99,22,2025-03-08
+P017,Router,Electronics,69.99,30,2025-02-28
+P018,SSD,Electronics,119.99,45,2025-05-05
+P019,Hard Drive,Electronics,89.99,28,2025-05-03
+P020,Phone Stand,Accessories,12.99,150,2025-04-11
+P021,USB Cable,Accessories,9.99,250,2025-04-09
+P022,Power Bank,Accessories,34.99,75,2025-04-08
+P023,Backpack,Accessories,49.99,40,2025-03-20
+P024,Desk Mat,Office,19.99,90,2025-03-18
+P025,Calendar,Office,7.99,120,2025-01-10
+P026,Mouse Pad,Accessories,-5,100,2025-04-01
+P027,Tripod,Accessories,abc,20,2025-04-01
+P028,Camera,Electronics,799.99,-5,2025-04-01
+P029,Drone,Electronics,1200,10,2035-01-01
+P030,Microphone,Electronics,89.99,15,not-a-date
+P031,,Electronics,79.99,15,2025-04-01
+,Monitor Arm,Office,49.99,10,2025-04-01
+P033,Laptop Stand,Office,,20,2025-04-01
+P034,Projector,Electronics,599.99,,2025-04-01
+P035,Scanner,Office,149.99,10,
+P036,Desk Fan,Home,39.99,25,1995-01-01
+P037,Cable Organizer,Accessories,-10,50,2025-04-01
+P038,Ring Light,Accessories,hello,40,2025-04-01
+P039,External SSD,Electronics,129.99,-1,2025-04-01
+P040,Smart Watch,Electronics,299.99,10,2027-12-01
+P041,Laptop Bag,Accessories,59.99,20,wrong-date
+P042,Monitor Light,Electronics,49.99,15,2025-04-01
+P043,Docking Station,Electronics,199.99,8,2025-04-01
+P044,Ethernet Cable,Accessories,14.99,120,2025-04-01
+P045,Surge Protector,Accessories,29.99,40,2025-04-01
+P046,VR Headset,Electronics,399.99,7,2025-04-01
+P047,Gaming Chair,Office,249.99,5,2025-04-01
+P048,Mechanical Keyboard,Electronics,159.99,18,2025-04-01
+P049,Graphics Tablet,Electronics,89.99,12,2025-04-01
+P050,Smart Speaker,Electronics,79.99,30,2025-04-01
