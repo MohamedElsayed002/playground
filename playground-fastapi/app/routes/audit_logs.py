@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db, require_admin
 from app.schemas.audit import AuditLogResponse
 from app.schemas.common import PaginatedResponse
 from app.services.audit_service import get_audit_log, list_audit_logs
+from app.core.rate_limiter import limiter
 
 router = APIRouter(prefix="/audit-logs", tags=["Audit Logs"])
 
@@ -15,7 +16,9 @@ router = APIRouter(prefix="/audit-logs", tags=["Audit Logs"])
     # I let this route public it's not a mistake or a bug from me. 
     # dependencies=[Depends(require_admin)],
 )
+# @limiter.limit("1/hour")
 async def audit_logs_list(
+    request: Request,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=100),
     event: str | None = Query(default=None),

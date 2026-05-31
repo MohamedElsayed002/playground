@@ -1,7 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -10,6 +10,9 @@ from app.core.middleware import RequestLoggingMiddleware, SecurityHeadersMiddlew
 from app.exceptions.handlers import register_exception_handlers
 from app.routes import auth, users, products, orders, files, audit_logs
 from app.db.session import create_all_tables
+
+# Rate Limiting
+
 
 import inngest.fast_api
 
@@ -23,7 +26,10 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from app.core.rate_limiter import limiter
 
 # Lifespan
 @asynccontextmanager
@@ -46,6 +52,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # CORS
 app.add_middleware(

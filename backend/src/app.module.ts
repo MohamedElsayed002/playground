@@ -3,9 +3,11 @@ import {
   Module,
   NestModule,
   RequestMethod,
+  Injectable,
+  ExecutionContext,
 } from '@nestjs/common';
 
-import { GraphQLModule } from '@nestjs/graphql';
+import { GraphQLModule, GqlExecutionContext } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { UserModule } from './user/user.module';
@@ -21,10 +23,37 @@ import { GeminiModule } from './gemini/gemini.module';
 import { CodeExecutionModule } from './code-execution/code-execution.module';
 import { FileAnalysisModule } from './file-analysis/file-analysis.module';
 import { SentryModule } from '@sentry/nestjs/setup';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { SentryGlobalFilter } from '@sentry/nestjs/setup';
 import { AuditMiddleware } from './audit/audit.middleware';
 import { AuditModule } from './audit/audit.module';
+
+// Rate Limiter
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+
+@Injectable()
+class ThrottlerGqlGuard extends ThrottlerGuard {
+  protected getRequestResponse(context: ExecutionContext) {
+    const ctx = GqlExecutionContext.create(context);
+    return ctx.getContext().req ?? ctx.getContext();
+  }
+
+  protected async getTracker(req: Record<string, any>): Promise<string> {
+    const request = req ?? {};
+    const ip =
+      request.ip ||
+      request.headers?.['x-forwarded-for']?.split(',')?.[0]?.trim() ||
+      request.connection?.remoteAddress ||
+      request.socket?.remoteAddress ||
+      request.req?.ip ||
+      request.req?.connection?.remoteAddress ||
+      // graphql context shape
+      request.context?.req?.ip ||
+      request.context?.req?.connection?.remoteAddress;
+
+    return (ip as string) ?? 'unknown';
+  }
+}
 
 @Module({
   imports: [
@@ -44,6 +73,14 @@ import { AuditModule } from './audit/audit.module';
       },
       context: ({ req }: { req: any }) => ({ req }),
     }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 3600,
+          limit: 20,
+        },
+      ],
+    }),
     PrismaModule,
     UserModule,
     AiAgentModule,
@@ -60,6 +97,10 @@ import { AuditModule } from './audit/audit.module';
     {
       provide: APP_FILTER,
       useClass: SentryGlobalFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGqlGuard,
     },
     PrismaService,
     AuditMiddleware,

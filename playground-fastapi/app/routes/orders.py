@@ -1,12 +1,3 @@
-"""
-app/routers/orders.py
-──────────────────────
-Order routes.
-
-User routes:  POST /orders, GET /orders, GET /orders/{id}, POST /orders/{id}/cancel
-Admin routes: PATCH /orders/{id}/status, GET /orders (all users)
-"""
-
 from fastapi import APIRouter, Depends, Query, status, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +9,7 @@ from app.services.order_service_2 import OrderService
 from app.models.user import User
 from app.services.checkout.create_checkout import CheckoutService
 import uuid
+from app.core.rate_limiter import limiter
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
 
@@ -55,6 +47,7 @@ async def get_my_orders(
 
 
 @router.post('/testing-route')
+@limiter.limit("10/hour")
 async def testing_route(
     request: OrderCreate,
     current_user= Depends(get_current_user),

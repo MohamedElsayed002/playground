@@ -6,13 +6,15 @@ from app.models.file import File as FileModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import json
+from app.core.rate_limiter import limiter
 import uuid
-
 
 router = APIRouter(prefix="/files",tags=["Files & Upload"])
 
 @router.post("/images",response_model=FileUploadResponse)
+@limiter.limit("10/hour")
 async def upload_image(
+    request: Request,
     file: UploadFile = File(...,description="Image file (JPEG, PNG, WebP, GIF)"),
     current_user=Depends(get_current_user)
 ):
@@ -30,7 +32,9 @@ async def upload_image(
 
 
 @router.post('/documents',response_model=FileUploadResponse)
+@limiter.limit("10/hour")
 async def upload_document(
+    request: Request,
     file: UploadFile = File(...,description="Document file (PDF, DOC, DOCX)"),
     current_user=Depends(get_current_user)
 ):
@@ -43,7 +47,9 @@ async def upload_document(
     "/pdf/extract",
     response_model=PDFExtractResponse
 )
+@limiter.limit("20/hour")
 async def extract_pdf(
+    request: Request,
     file: UploadFile = File(...,description="PDF file to extract text from"),
     # current_user=Depends(get_current_user)
 ):
@@ -66,6 +72,7 @@ async def extract_pdf(
         "/extract-csv/pipeline",
         # response_model=PDFExtractResponse,
     )
+@limiter.limit("20/hour")
 async def extract_pdf_pipeline(
     request: Request,
     file: UploadFile = File(...),
@@ -79,6 +86,7 @@ async def extract_pdf_pipeline(
     status_code=202,
     summary="Upload PDF – Background Processing via Inngest"
 )
+@limiter.limit("10/hour")
 async def extract_pdf_authenticated(
     request: Request,
     file: UploadFile = File(..., description="PDF file to extract text from"),

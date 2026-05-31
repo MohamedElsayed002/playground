@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status, Request
+from app.core.rate_limiter import limiter
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +16,7 @@ router = APIRouter(prefix="/auth",tags=["Authentication"])
     status_code=status.HTTP_201_CREATED,
     summary="Register a new user account"
 )
+@limiter.limit("20/hour")
 async def register(
     request: Request,
     data: UserCreate,
@@ -28,6 +30,7 @@ async def register(
 
 
 @router.post('/login', response_model=TokenResponse, summary="Login and get JWT tokens")
+@limiter.limit("20/hour")
 async def login(
     request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
