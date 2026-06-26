@@ -1,9 +1,11 @@
 import uuid 
+from datetime import datetime, timedelta, timezone
 from pathlib import Path 
 import logging 
 
 import pdfplumber
 from fastapi import UploadFile, HTTPException, Request 
+from fastapi.responses import JSONResponse
 from PIL import Image, UnidentifiedImageError 
 
 from app.core.config import settings
@@ -21,6 +23,8 @@ from app.models.file import File
 from app.schemas.file import FileStatus
 import inngest
 from app.services.audit_service import create_audit_log 
+from app.models.idempotency import IdempotencyKey
+import json
 
 from app.services.file_service import _read_upload_chunks, _safe_filename
 from app.models.report_jobs import ReportJob, JobStatus
@@ -108,9 +112,58 @@ Mark Completed
 async def extract_csv_pipeline(
         current_user,
         file: UploadFile,
-        db: AsyncSession
+        db: AsyncSession,
+        idempotency_key: str
 ):
         from app.services.inngest import inngest_client
+
+        request_path = "/extract-csv/pipeline"
+
+        # Check if the idempotency key already exists in the database
+        result = await db.execute(
+                select(IdempotencyKey).where(
+                        IdempotencyKey.key == idempotency_key,
+                        IdempotencyKey.request_path == request_path,
+                )
+        )
+
+        existing_key = result.scalar_one_or_none()
+        if existing_key and existing_key.response_body is not None:
+                await create_audit_log(
+                        db=None,
+                        user_id=current_user.id,
+                        event="CSV_UPLOADED_IDEMPOTENCY_KEY_EXISTS",
+                        status="SUCCESS",
+                )
+                return json.loads(existing_key.response_body)
+
+        if existing_key is not None:
+                return JSONResponse(
+                        status_code=202,
+                        content={
+                                "status": "processing",
+                                "message": "This upload is already being processed. Please wait for completion.",
+                                "idempotency_key": idempotency_key,
+                        },
+                )
+        
+        if existing_key is None:
+                # Create a new idempotency key record
+                expires_at = datetime.now(timezone.utc) + timedelta(
+                        hours=settings.IDEMPOTENCY_KEY_TTL_HOURS
+                )
+
+                new_key = IdempotencyKey(
+                        key=idempotency_key,
+                        user_id=current_user.id,
+                        request_path=request_path,
+                        expires_at=expires_at,
+                )
+
+                db.add(new_key)
+                await db.commit()
+
+
 
         # Validate the extension
         content_type = file.content_type.split("/")[1]
@@ -164,7 +217,8 @@ async def extract_csv_pipeline(
         )
 
         event_payload = {
-                "job_id": str(job.id)
+                "job_id": str(job.id),
+                "idempotency_key": idempotency_key,
         }
 
         # Background jobs

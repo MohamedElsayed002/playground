@@ -78,8 +78,14 @@ async def extract_pdf_pipeline(
     file: UploadFile = File(...),
     current_user = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    idempotency_key: str | None = Header(
+                    None,
+                    description="Unique identifier for request idempotency."
+                    "Same key = cached response, prevents duplicate processing. Optional - if not provided, UUID will be auto-generated"
+    )
 ):
-    return await csv_extract.extract_csv_pipeline(current_user,file,db)
+    idempotency_key = idempotency_key or str(uuid.uuid4())
+    return await csv_extract.extract_csv_pipeline(current_user,file,db,idempotency_key)
 
 @router.post(
     "/pdf/extract-authenticated",
