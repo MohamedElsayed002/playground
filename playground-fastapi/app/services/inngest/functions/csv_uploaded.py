@@ -9,20 +9,16 @@ import inngest
 from sqlalchemy import select
 from app.db.session import AsyncSessionLocal
 from app.models.idempotency import IdempotencyKey
-from app.models.report_jobs import JobStatus, ReportJob
+from app.models.report_jobs import IngestionStatus, JobStatus, ReportJob
 from app.services.csv_extract import BUCKET_NAME, s3
+from app.services.csv_pipeline import (
+    MIN_QUALITY_SCORE,
+    REQUIRED_COLUMNS,
+    ingest_normalized_csv,
+    normalize_csv_text,
+    validate_csv_text,
+)
 from app.services.inngest.client import inngest_client, logger 
-from datetime import datetime
-
-
-REQUIRED_COLUMNS = [
-    "product_id",
-    "product_name",
-    "category",
-    "price",
-    "quantity",
-    "last_restock_date",
-]
 
 async def persist_idempotency_result(idempotency_key: str | None, payload: dict, status_code: int) -> None:
     if not idempotency_key:
@@ -53,45 +49,6 @@ def load_csv_from_s3(s3_key: str) -> str:
     return raw_bytes.decode("utf-8",errors="replace")
 
 
-def is_valid_date(value: str) -> bool:
-    try:
-        date = datetime.strptime(value,"%Y-%m-%d")
-        today = datetime.utcnow()
-
-        if date > today:
-            return False
-
-        if date.year < 2000:
-            return False
-
-        return True
-    except (ValueError, TypeError):
-        return False
-    
-
-def normalize_date(value: str) -> str:
-        formats = [
-            "%Y-%m-%d",
-            "%d/%m/%Y",
-            "%Y/%m/%d"
-        ]
-
-        for fmt in formats:
-            try:
-                parsed = datetime.strptime(
-                    value,
-                    fmt
-                )
-
-                return parsed.strftime(
-                    "%Y-%m-%d"
-                )
-
-            except:
-                pass
-
-        return ""
-
 @inngest_client.create_function(
     fn_id="process-csv-upload",
     trigger=inngest.TriggerEvent(event="csv/uploaded.requested"),
@@ -101,7 +58,7 @@ async def process_csv_upload(ctx: inngest.Context):
     step = ctx.step
     data = ctx.event.data
     job_id = data["job_id"]
-    idempotency_key = data.get("idempotency_key")
+    idempotency_key = data["idempotency_key"]
 
     try:
         async def get_job():
@@ -153,161 +110,13 @@ async def process_csv_upload(ctx: inngest.Context):
 
         async def validate_csv():
             raw_text = load_csv_from_s3(s3_key)
-            reader = csv.DictReader(io.StringIO(raw_text))
-            headers = reader.fieldnames or []
-
-            missing_columns = [
-                column for column in REQUIRED_COLUMNS if column not in headers
-            ]
-
-            if missing_columns:
-                return {
-                    "headers": headers,
-                    "missing_columns": missing_columns,
-                    "total_rows": 0,
-                    "valid_rows": 0,
-                    "invalid_rows": 0,
-                    "invalid_price": 0,
-                    "invalid_quantity": 0,
-                    "invalid_dates": 0,
-                }
-
-            total_rows = 0
-            valid_rows = 0
-            invalid_rows = 0
-            invalid_price = 0
-            invalid_quantity = 0
-            invalid_dates = 0
-
-            for row in reader:
-                total_rows += 1
-                has_product_id = bool(row.get("product_id"))
-                has_product_name = bool(row.get("product_name"))
-
-                try:
-                    price = float(row.get("price", 0))
-                    price_is_positive = price > 0
-
-                    if not price_is_positive:
-                        invalid_price += 1
-                except (ValueError, TypeError):
-                    invalid_price += 1
-                    price_is_positive = False
-
-                try:
-                    quantity = int(row.get("quantity", 0))
-                    quantity_is_positive = quantity >= 0
-
-                    if not quantity_is_positive:
-                        invalid_quantity += 1
-                except (ValueError, TypeError):
-                    invalid_quantity += 1
-                    quantity_is_positive = False
-
-                valid_date = is_valid_date(row.get("last_restock_date"))
-
-                if not valid_date:
-                    invalid_dates += 1
-
-                if (
-                    has_product_id
-                    and has_product_name
-                    and price_is_positive
-                    and quantity_is_positive
-                    and valid_date
-                ):
-                    valid_rows += 1
-                else:
-                    invalid_rows += 1
-
-            quality_score = round((valid_rows / total_rows) * 100, 2) if total_rows else 0
-
-            return {
-                "headers": headers,
-                "missing_columns": missing_columns,
-                "total_rows": total_rows,
-                "valid_rows": valid_rows,
-                "quality_score": quality_score,
-                "invalid_rows": invalid_rows,
-                "invalid_price": invalid_price,
-                "invalid_quantity": invalid_quantity,
-                "invalid_dates": invalid_dates,
-            }
+            return validate_csv_text(raw_text)
 
         validation_result = await step.run("validate-csv", validate_csv)
 
         async def normalize_csv():
             raw_text = load_csv_from_s3(s3_key)
-            reader = csv.DictReader(io.StringIO(raw_text))
-            normalized_rows = []
-
-            for row in reader:
-                category = (row.get("category") or "").strip().title()
-                product_name = (row.get("product_name") or "").strip().title()
-
-                try:
-                    price = round(float(row.get("price") or 0), 2)
-                except Exception:
-                    price = 0.0
-
-                try:
-                    quantity = max(int(row.get("quantity") or 0), 0)
-                except Exception:
-                    quantity = 0
-
-                normalized_date = normalize_date(row.get("last_restock_date") or "")
-
-                normalized_rows.append(
-                    {
-                        "product_id": row.get("product_id"),
-                        "product_name": product_name,
-                        "category": category,
-                        "price": price,
-                        "quantity": quantity,
-                        "last_restock_date": normalized_date,
-                    }
-                )
-
-            output = io.StringIO()
-            writer = csv.DictWriter(output, fieldnames=REQUIRED_COLUMNS)
-            writer.writeheader()
-            writer.writerows(normalized_rows)
-
-            normalized_csv = output.getvalue()
-            normalized_s3_key = f"normalized/{job_id}.csv"
-
-            s3.put_object(
-                Bucket=BUCKET_NAME,
-                Key=normalized_s3_key,
-                Body=normalized_csv.encode("utf-8"),
-                ContentType="text/csv",
-                CacheControl="max-age=3600",
-            )
-
-            normalized_file_url = f"https://{BUCKET_NAME}.s3.amazonaws.com/{normalized_s3_key}"
-
-            return {
-                "rows_count": len(normalized_rows),
-                "normalized_file_url": normalized_file_url,
-                "normalized_s3_key": normalized_s3_key,
-            }
-
-        normalize_csv_result = await step.run("normalized_csv", normalize_csv)
-
-        async def save_normalization():
-            async with AsyncSessionLocal() as db:
-                result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
-                job = result.scalar_one()
-
-                job.normalized_file_s3_key = normalize_csv_result["normalized_s3_key"]
-                job.normalized_file_url = normalize_csv_result["normalized_file_url"]
-                job.current_step = "normalized"
-                job.progress = 80
-
-                await db.commit()
-                return True
-
-        await step.run("save-normalization", save_normalization)
+            return normalize_csv_text(raw_text, job_id, BUCKET_NAME, s3)
 
         async def save_validation():
             async with AsyncSessionLocal() as db:
@@ -321,8 +130,7 @@ async def process_csv_upload(ctx: inngest.Context):
                 job.invalid_quantity = validation_result["invalid_quantity"]
                 job.invalid_dates = validation_result["invalid_dates"]
                 job.quality_score = validation_result["quality_score"]
-                job.normalized_rows_count = normalize_csv_result["rows_count"]
-                job.progress = 90
+                job.progress = 50
                 job.current_step = "validated"
 
                 if validation_result["missing_columns"]:
@@ -330,7 +138,7 @@ async def process_csv_upload(ctx: inngest.Context):
                     job.failure_reason = (
                         "Missing required columns: " + ", ".join(validation_result["missing_columns"])
                     )
-                elif validation_result["quality_score"] < 60:
+                elif validation_result["quality_score"] < MIN_QUALITY_SCORE:
                     job.status = JobStatus.FAILED
                     job.failure_reason = (
                         f"Data quality too low ({validation_result['quality_score']}%)"
@@ -339,9 +147,105 @@ async def process_csv_upload(ctx: inngest.Context):
                     job.status = JobStatus.PROCESSING
 
                 await db.commit()
+                return {
+                    "should_continue": job.status != JobStatus.FAILED,
+                    "status": job.status.value,
+                    "failure_reason": job.failure_reason,
+                }
+
+        validation_save_result = await step.run("save-validation", save_validation)
+
+        if not validation_save_result["should_continue"]:
+            async def complete_job():
+                async with AsyncSessionLocal() as db:
+                    result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
+                    job = result.scalar_one()
+
+                    if job.status == JobStatus.FAILED:
+                        return {"completed": False, "status": job.status.value, "failure_reason": job.failure_reason}
+
+                    job.status = JobStatus.COMPLETED
+                    job.current_step = "completed"
+                    job.progress = 100
+                    await db.commit()
+                    return {"completed": True, "status": job.status.value}
+
+            complete_result = await step.run("complete-job", complete_job)
+            final_payload = {
+                "status": "completed" if complete_result.get("completed", True) else "failed",
+                "job_id": job_id,
+                "s3_key": s3_key,
+                "rows_found": csv_result["row_count"],
+                "validation": validation_result,
+                "normalized_rows_count": 0,
+                "failure_reason": complete_result.get("failure_reason"),
+            }
+            await persist_idempotency_result(idempotency_key, final_payload, 200)
+            return final_payload
+
+        normalize_csv_result = await step.run("normalized_csv", normalize_csv)
+
+        async def save_normalization():
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
+                job = result.scalar_one()
+
+                job.normalized_file_s3_key = normalize_csv_result["normalized_s3_key"]
+                job.normalized_file_url = normalize_csv_result["normalized_file_url"]
+                job.normalized_rows_count = normalize_csv_result["rows_count"]
+                job.current_step = "normalized"
+                job.progress = 80
+                job.metadata_json = {
+                    **(job.metadata_json or {}),
+                    "normalization_changes_count": normalize_csv_result["normalization_changes_count"],
+                }
+
+                await db.commit()
                 return True
 
-        await step.run("save-validation", save_validation)
+        await step.run("save-normalization", save_normalization)
+
+        async def ingest_database():
+            normalized_s3_key = normalize_csv_result["normalized_s3_key"]
+            raw_text = load_csv_from_s3(normalized_s3_key)
+
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
+                job = result.scalar_one()
+                job.ingestion_status = IngestionStatus.PROCESSING
+                job.current_step = "ingesting"
+                job.progress = 85
+                await db.commit()
+
+            try:
+                async with AsyncSessionLocal() as db:
+                    return await ingest_normalized_csv(raw_text, UUID(job_id), db)
+            except Exception:
+                async with AsyncSessionLocal() as db:
+                    result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
+                    job = result.scalar_one()
+                    job.ingestion_status = IngestionStatus.FAILED
+                    job.status = JobStatus.FAILED
+                    job.failure_reason = "Database ingestion failed"
+                    await db.commit()
+                raise
+
+        ingest_result = await step.run("ingest-database", ingest_database)
+
+        async def save_ingestion():
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
+                job = result.scalar_one()
+
+                job.ingested_rows = ingest_result["ingested_rows"]
+                job.ingestion_status = IngestionStatus.COMPLETED
+                job.current_step = "ingested"
+                job.progress = 95
+
+                await db.commit()
+                return True
+
+        await step.run("save-ingestion-result", save_ingestion)
 
         async def complete_job():
             async with AsyncSessionLocal() as db:
@@ -366,6 +270,10 @@ async def process_csv_upload(ctx: inngest.Context):
             "rows_found": csv_result["row_count"],
             "validation": validation_result,
             "normalized_rows_count": normalize_csv_result["rows_count"],
+            "normalization_changes_count": normalize_csv_result["normalization_changes_count"],
+            "ingested_rows": ingest_result["ingested_rows"],
+            "skipped_rows": ingest_result["skipped_rows"],
+            "ingestion_status": IngestionStatus.COMPLETED.value,
             "failure_reason": complete_result.get("failure_reason"),
         }
 

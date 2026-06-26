@@ -12,11 +12,13 @@ WHY ASYNC?
   waiting for the database — just like await in Node.js/NestJS.
 """
 
+from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
     create_async_engine
 )
+from sqlalchemy.schema import CreateColumn
 
 from app.core.config import settings
 
@@ -36,10 +38,27 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False
 )
 
+
+def ensure_missing_columns(bind, metadata):
+    inspector = inspect(bind)
+
+    for table in metadata.sorted_tables:
+        if not inspector.has_table(table.name):
+            table.create(bind=bind)
+            continue
+
+        existing_columns = {column["name"] for column in inspector.get_columns(table.name)}
+        for column in table.columns:
+            if column.name not in existing_columns:
+                column_ddl = CreateColumn(column).compile(dialect=bind.dialect)
+                bind.execute(text(f"ALTER TABLE {table.name} ADD COLUMN {column_ddl}"))
+
+
 async def create_all_tables():
     from app.db.base import Base
 
-    import app.models 
+    import app.models
 
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(Base.metadata.create_all, checkfirst=True)
+        await conn.run_sync(ensure_missing_columns, Base.metadata)

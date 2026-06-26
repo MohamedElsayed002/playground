@@ -14,6 +14,13 @@ class JobStatus(str, enum.Enum):
     FAILED = "failed"
 
 
+class IngestionStatus(str, enum.Enum):
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+
+
 class ReportJob(Base):
     __tablename__ = "report_jobs"
 
@@ -45,6 +52,12 @@ class ReportJob(Base):
     normalized_file_s3_key: Mapped[str | None] = mapped_column(String(255))
     quality_score: Mapped[int] = mapped_column(Integer, default=0)
     normalized_file_url: Mapped[str | None] = mapped_column(Text)
+    ingested_rows: Mapped[int] = mapped_column(Integer, default=0)
+    ingestion_status: Mapped[IngestionStatus] = mapped_column(
+        SAEnum(IngestionStatus),
+        default=IngestionStatus.PENDING,
+        nullable=False,
+    )
     metadata_json: Mapped[dict | None] = mapped_column(JSON)
 
     failure_reason: Mapped[str | None] = mapped_column(Text)
@@ -54,6 +67,8 @@ class ReportJob(Base):
     user: Mapped["User"] = relationship(
         "User", back_populates="report_jobs", lazy="selectin"
     )
+
+    products: Mapped[list["NormalizedProduct"]] = relationship("NormalizedProduct", back_populates="job", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<ReportJob id={self.id} user_id={self.user_id} status={self.status}>"
