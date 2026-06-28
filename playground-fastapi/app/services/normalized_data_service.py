@@ -94,7 +94,7 @@ async def update_normalized_product(
     
     result = await session.execute(
         select(NormalizedProduct).where(NormalizedProduct.id == product_id).where(NormalizedProduct.job_id == job_id)
-    )
+    ).with_for_update()
 
     product = result.scalar_one_or_none()
 
@@ -106,6 +106,16 @@ async def update_normalized_product(
 
     await session.commit()
     await session.refresh(product)
+
+    await create_audit_log(
+        db=session,
+        # Allowed for now
+        user_id=1,
+        event="NORMALIZED_PRODUCT_UPDATED",
+        status="SUCCESS",
+        details=f"Product {product_id} from job {job_id} updated successfully."
+    )
+
     return product
 
 async def delete_normalized_product(
@@ -124,4 +134,13 @@ async def delete_normalized_product(
     
     await session.delete(product)
     await session.commit()
+
+    await create_audit_log(
+        db=session,
+        user_id=1,
+        event="NORMALIZED_PRODUCT_DELETED",
+        status="SUCCESS",
+        details=f"Product {product_id} from job {job_id} deleted successfully."
+    )
+    
     return True
