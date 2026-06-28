@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.core.middleware import RequestLoggingMiddleware, SecurityHeadersMiddleware
 from app.exceptions.handlers import register_exception_handlers
-from app.routes import auth, users, products, orders, files, audit_logs
+from app.routes import auth, users, products, orders, files, audit_logs, normalized_products
 from app.db.session import create_all_tables
 
 # Rate Limiting
@@ -99,6 +99,7 @@ app.include_router(products.router, prefix=API_PREFIX)
 app.include_router(orders.router, prefix=API_PREFIX)
 app.include_router(files.router, prefix=API_PREFIX)
 app.include_router(audit_logs.router, prefix=API_PREFIX)
+app.include_router(normalized_products.router, prefix=API_PREFIX)
 
 
 

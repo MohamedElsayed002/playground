@@ -110,7 +110,7 @@ Mark Completed
 """
 
 async def extract_csv_pipeline(
-        current_user,
+        # current_user,
         file: UploadFile,
         db: AsyncSession,
         idempotency_key: str
@@ -131,7 +131,8 @@ async def extract_csv_pipeline(
         if existing_key and existing_key.response_body is not None:
                 await create_audit_log(
                         db=None,
-                        user_id=current_user.id,
+                        # user_id=current_user.id,
+                        user_id=1,
                         event="CSV_UPLOADED_IDEMPOTENCY_KEY_EXISTS",
                         status="SUCCESS",
                 )
@@ -155,7 +156,7 @@ async def extract_csv_pipeline(
 
                 new_key = IdempotencyKey(
                         key=idempotency_key,
-                        user_id=current_user.id,
+                        user_id=1,
                         request_path=request_path,
                         expires_at=expires_at,
                 )
@@ -195,7 +196,7 @@ async def extract_csv_pipeline(
 
         # Save to DB
         job =   ReportJob(
-                user_id=current_user.id,
+                user_id=1,
                 file_url=url,
                 original_filename=file.filename,
                 file_s3_key=s3_key,
@@ -211,7 +212,7 @@ async def extract_csv_pipeline(
 
         await create_audit_log(
                 db=None,
-                user_id=current_user.id,
+                user_id=1,
                 event="CSV_UPLOADED_SUCCESSFULLY",
                 status="SUCCESS",
         )

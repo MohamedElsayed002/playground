@@ -61,6 +61,8 @@ async def process_csv_upload(ctx: inngest.Context):
     idempotency_key = data["idempotency_key"]
 
     try:
+
+        # Step 1
         async def get_job():
             async with AsyncSessionLocal() as db:
                 result = await db.execute(
@@ -79,7 +81,9 @@ async def process_csv_upload(ctx: inngest.Context):
 
         job_data = await step.run("get-job", get_job)
         s3_key = job_data["s3_key"]
+        
 
+        # Step 2
         async def mark_processing():
             async with AsyncSessionLocal() as db:
                 result = await db.execute(
@@ -96,6 +100,8 @@ async def process_csv_upload(ctx: inngest.Context):
 
         await step.run("mark-processing", mark_processing)
 
+
+        # Step 3
         async def parse_csv():
             raw_text = load_csv_from_s3(s3_key)
             reader = csv.DictReader(io.StringIO(raw_text))
@@ -108,16 +114,21 @@ async def process_csv_upload(ctx: inngest.Context):
 
         csv_result = await step.run("parse-csv", parse_csv)
 
+
+        # Step 4
         async def validate_csv():
             raw_text = load_csv_from_s3(s3_key)
             return validate_csv_text(raw_text)
 
         validation_result = await step.run("validate-csv", validate_csv)
+        
 
+        # Step 5
         async def normalize_csv():
             raw_text = load_csv_from_s3(s3_key)
             return normalize_csv_text(raw_text, job_id, BUCKET_NAME, s3)
-
+        
+        # Step 6
         async def save_validation():
             async with AsyncSessionLocal() as db:
                 result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
@@ -154,7 +165,9 @@ async def process_csv_upload(ctx: inngest.Context):
                 }
 
         validation_save_result = await step.run("save-validation", save_validation)
+  
 
+        # Optional Step 7: If validation fails, complete the job as failed and return early
         if not validation_save_result["should_continue"]:
             async def complete_job():
                 async with AsyncSessionLocal() as db:
@@ -185,6 +198,8 @@ async def process_csv_upload(ctx: inngest.Context):
 
         normalize_csv_result = await step.run("normalized_csv", normalize_csv)
 
+
+        # Step 8
         async def save_normalization():
             async with AsyncSessionLocal() as db:
                 result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
@@ -205,6 +220,8 @@ async def process_csv_upload(ctx: inngest.Context):
 
         await step.run("save-normalization", save_normalization)
 
+
+        # Step 9
         async def ingest_database():
             normalized_s3_key = normalize_csv_result["normalized_s3_key"]
             raw_text = load_csv_from_s3(normalized_s3_key)
@@ -232,6 +249,8 @@ async def process_csv_upload(ctx: inngest.Context):
 
         ingest_result = await step.run("ingest-database", ingest_database)
 
+
+        # Step 10
         async def save_ingestion():
             async with AsyncSessionLocal() as db:
                 result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
@@ -247,6 +266,8 @@ async def process_csv_upload(ctx: inngest.Context):
 
         await step.run("save-ingestion-result", save_ingestion)
 
+
+        # Step 10
         async def complete_job():
             async with AsyncSessionLocal() as db:
                 result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))

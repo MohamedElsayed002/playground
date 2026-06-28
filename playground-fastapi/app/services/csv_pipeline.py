@@ -250,42 +250,44 @@ async def ingest_normalized_csv(
     *,
     batch_size: int = INGEST_BATCH_SIZE,
 ) -> dict[str, Any]:
-    await session.execute(
-        delete(NormalizedProduct).where(NormalizedProduct.job_id == job_id)
-    )
-    await session.commit()
-
-    reader = csv.DictReader(io.StringIO(raw_text))
     batch: list[dict[str, Any]] = []
     ingested_rows = 0
     skipped_rows = 0
 
-    for row in reader:
-        if not is_ingestible_row(row):
-            skipped_rows += 1
-            continue
+    try:
+        async with session.begin():
+            await session.execute(
+                delete(NormalizedProduct).where(NormalizedProduct.job_id == job_id)
+            )
 
-        batch.append(
-            {
-                "job_id": job_id,
-                "product_id": (row.get("product_id") or "").strip(),
-                "product_name": (row.get("product_name") or "").strip(),
-                "category": (row.get("category") or "").strip() or None,
-                "price": float(row.get("price") or 0),
-                "quantity": int(float(row.get("quantity") or 0)),
-                "last_restock_date": _parse_restock_date(row.get("last_restock_date")),
-            }
-        )
+            reader = csv.DictReader(io.StringIO(raw_text))
 
-        if len(batch) >= batch_size:
-            await session.execute(insert(NormalizedProduct), batch)
-            await session.commit()
-            ingested_rows += len(batch)
-            batch = []
+            for row in reader:
+                if not is_ingestible_row(row):
+                    skipped_rows += 1
+                    continue
 
-    if batch:
-        await session.execute(insert(NormalizedProduct), batch)
-        await session.commit()
-        ingested_rows += len(batch)
+                batch.append(
+                    {
+                        "job_id": job_id,
+                        "product_id": (row.get("product_id") or "").strip(),
+                        "product_name": (row.get("product_name") or "").strip(),
+                        "category": (row.get("category") or "").strip() or None,
+                        "price": float(row.get("price") or 0),
+                        "quantity": int(float(row.get("quantity") or 0)),
+                        "last_restock_date": _parse_restock_date(row.get("last_restock_date")),
+                    }
+                )
+
+                if len(batch) >= batch_size:
+                    await session.execute(insert(NormalizedProduct), batch)
+                    ingested_rows += len(batch)
+                    batch.clear()
+
+            if batch:
+                await session.execute(insert(NormalizedProduct), batch)
+                ingested_rows += len(batch)
+    except Exception:
+        raise
 
     return {"inserted": True, "ingested_rows": ingested_rows, "skipped_rows": skipped_rows}
