@@ -36,9 +36,26 @@ s3 = boto3.client(
     "s3",
     region_name=settings.AWS_REGION,
     aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
-    )
+    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+)
 BUCKET_NAME = settings.BUCKET_NAME
+
+CSV_MIME_TYPES = {
+    "text/csv",
+    "application/csv",
+    "application/vnd.ms-excel",
+    "text/plain",
+    "application/octet-stream",
+}
+
+
+def _is_csv_file(file: UploadFile) -> bool:
+    filename = (file.filename or "").lower()
+    if filename.endswith(".csv"):
+        return True
+
+    content_type = (file.content_type or "").lower()
+    return content_type in CSV_MIME_TYPES
 
 """
 FLOW 
@@ -136,12 +153,16 @@ async def extract_csv_pipeline(
                         event="CSV_UPLOADED_IDEMPOTENCY_KEY_EXISTS",
                         status="SUCCESS",
                 )
-                return json.loads(existing_key.response_body)
+                response_payload = json.loads(existing_key.response_body)
+                response_payload["message"] = "Extracted the CSV Successfully go and see it"
+                response_payload["success"] = True
+                return response_payload
 
         if existing_key is not None:
                 return JSONResponse(
                         status_code=202,
                         content={
+                                "success": True,
                                 "status": "processing",
                                 "message": "This upload is already being processed. Please wait for completion.",
                                 "idempotency_key": idempotency_key,
@@ -166,30 +187,29 @@ async def extract_csv_pipeline(
 
 
 
-        # Validate the extension
-        content_type = file.content_type.split("/")[1]
+        # Validate the extension / MIME type
+        if not _is_csv_file(file):
+            raise UnprocessableFileException(
+                f"Unsupported file type: {file.content_type or 'unknown'}. Only CSV files are allowed."
+            )
 
-        if content_type != "csv":
-                raise UnprocessableFileException(f"This file type not supported {content_type} only upload csv files")
+        max_bytes = settings.max_file_size_bytes
 
-        # Validate Size
-        file_size = file.size
+        if file.size is not None and file.size > max_bytes:
+            raise HTTPException(status_code=413, detail="File exceeds the maximum upload size.")
 
-        if file_size > settings.MAX_FILE_SIZE_MB * 1024 * 1024:
-                raise HTTPException(status_code=413, detail="exceed the file size. only upload 10MB")
-                
-        # Upload the file S3 Bucket 
-        file_bytes = await _read_upload_chunks(file, settings.MAX_FILE_SIZE_MB * 1024 * 1024)
+        # Upload the file S3 Bucket
+        file_bytes = await _read_upload_chunks(file, max_bytes)
 
-        safe_filename= _safe_filename(file.filename or "document.csv")
-        
+        safe_filename = _safe_filename(file.filename or "document.csv")
+
         s3_key = f"csv/{safe_filename}"
 
         s3.put_object(
                 Bucket=BUCKET_NAME,
                 Key=s3_key,
                 Body=file_bytes,
-                ContentType=content_type
+                ContentType=file.content_type or "text/csv",
         )
 
         url = f"https://{BUCKET_NAME}.s3.amazonaws.com/{s3_key}"
@@ -232,8 +252,9 @@ async def extract_csv_pipeline(
  
 
         return {
+                "success": True,
                 "job_id": str(job.id),
-                "status": job.status,
+                "status": job.status.value,
                 "file_name": job.original_filename,
-                "current_step": job.current_step
+                "current_step": job.current_step,
         }

@@ -1,11 +1,12 @@
 from app.models.normalized_products import NormalizedProduct
 from app.models.report_jobs import ReportJob
-import logging 
+import logging
+from uuid import UUID
 from app.services.audit_service import create_audit_log
-from sqlalchemy import select, delete, update
+from sqlalchemy import select, delete, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload, load_only
-from app.exceptions.handlers import BadRequestException
+from sqlalchemy.orm import load_only, noload
+from app.exceptions.handlers import BadRequestException, NotFoundException
 
 logger = logging.getLogger(__name__)
 
@@ -13,22 +14,50 @@ logger = logging.getLogger(__name__)
 
 async def get_all_report_jobs(
         session: AsyncSession,
-        current_user: int,
+        current_user: int = 1,
         limit: int = 10,
         offset: int = 0
         ) -> list[ReportJob]:
+    filters = [ReportJob.user_id == 1]
+
+    count_result = await session.execute(
+        select(func.count()).select_from(ReportJob).where(*filters)
+    )
+    total_jobs = count_result.scalar_one()
+
     result = await session.execute(
         select(ReportJob)
-        .options(load_only(ReportJob.id,ReportJob.user_id,ReportJob.created_at))
-        .where(ReportJob.user_id == current_user)
-        .order_by(ReportJob.created_at.desc()
-        ).limit(limit).offset(offset)
+        .options(
+            load_only(
+                ReportJob.id,
+                ReportJob.user_id,
+                ReportJob.created_at,
+                ReportJob.original_filename,
+                ReportJob.status,
+                ReportJob.current_step,
+                ReportJob.progress,
+                ReportJob.total_rows,
+                ReportJob.valid_rows,
+                ReportJob.invalid_rows,
+                ReportJob.invalid_price,
+                ReportJob.invalid_quantity,
+                ReportJob.invalid_dates,
+                ReportJob.ingested_rows,
+                ReportJob.ingestion_status,
+                ReportJob.failure_reason
+            ),
+            noload(ReportJob.user)
+        )
+        .where(*filters)
+        .order_by(ReportJob.created_at.desc())
+        .limit(limit)
+        .offset(offset)
     )
 
     jobs = result.scalars().all()
 
     return {
-        "total_jobs": len(jobs),
+        "total_jobs": total_jobs,
         "jobs": jobs
     }
 
@@ -43,14 +72,21 @@ async def get_normalized_products(
         category: str | None = None,
         sort_by: str = "price",
         sort_order: str = "asc",
-    ) -> list[NormalizedProduct]:
-    query = select(NormalizedProduct).where(NormalizedProduct.job_id == job_id)
+    ) -> dict:
+    filters = [NormalizedProduct.job_id == job_id]
 
     if product_name:
-        query = query.where(NormalizedProduct.product_name.ilike(f"%{product_name}%"))
+        filters.append(NormalizedProduct.product_name.ilike(f"%{product_name}%"))
 
     if category:
-        query = query.where(NormalizedProduct.category.ilike(f"%{category}%"))
+        filters.append(NormalizedProduct.category.ilike(f"%{category}%"))
+
+    count_result = await session.execute(
+        select(func.count()).select_from(NormalizedProduct).where(*filters)
+    )
+    total = count_result.scalar_one()
+
+    query = select(NormalizedProduct).where(*filters)
 
     if sort_by == "price":
         order_column = NormalizedProduct.price
@@ -65,22 +101,30 @@ async def get_normalized_products(
     query = query.limit(limit).offset(offset)
 
     result = await session.execute(query)
-    return result.scalars().all()
+    products = result.scalars().all()
+
+    return {
+        "total": total,
+        "products": products,
+    }
 
 
 async def get_single_normalized_product(
         session: AsyncSession,
-        product_id: int,
-        job_id: int,
+        product_id: UUID,
+        job_id: UUID,
 ) -> NormalizedProduct:
     result = await session.execute(
-        select(NormalizedProduct).where(NormalizedProduct.id == product_id).where(NormalizedProduct.job_id == job_id)
+        select(NormalizedProduct)
+        .where(NormalizedProduct.id == product_id)
+        .where(NormalizedProduct.job_id == job_id)
+        .limit(1)
     )
 
     product = result.scalar_one_or_none()
 
     if not product:
-        raise BadRequestException(f"Product with ID {product_id} not found for job {job_id}")
+        raise NotFoundException("NormalizedProduct", product_id)
     
     return product
 
@@ -88,18 +132,22 @@ async def get_single_normalized_product(
 async def update_normalized_product(
         session: AsyncSession,
         product_id: int,
-        job_id: int,
+        job_id: UUID,
         data: dict
 ) -> NormalizedProduct:
     
     result = await session.execute(
-        select(NormalizedProduct).where(NormalizedProduct.id == product_id).where(NormalizedProduct.job_id == job_id)
-    ).with_for_update()
+        select(NormalizedProduct)
+        .where(NormalizedProduct.id == product_id)
+        .where(NormalizedProduct.job_id == job_id)
+        .limit(1)
+        .with_for_update()
+    )
 
     product = result.scalar_one_or_none()
 
     if not product:
-        raise BadRequestException(f"Product with ID {product_id} not found for job {job_id}")
+        raise NotFoundException("NormalizedProduct", product_id)
     
     for field, value in data.items():
         setattr(product, field, value)
@@ -120,17 +168,19 @@ async def update_normalized_product(
 
 async def delete_normalized_product(
         session: AsyncSession,
-        product_id: int,
-        job_id: int
-) -> bool:
+        product_id,
+        job_id
+):
     result = await session.execute(
-        select(NormalizedProduct).where(NormalizedProduct.id == product_id).where(NormalizedProduct.job_id == job_id)
+        select(NormalizedProduct)
+        .where(NormalizedProduct.id == product_id)
+        .where(NormalizedProduct.job_id == job_id)
+        .limit(1)
     )
 
     product = result.scalar_one_or_none()
-
     if not product:
-        raise BadRequestException(f"Product with ID {product_id} not found for job {job_id}")
+        raise NotFoundException("NormalizedProduct", product_id)
     
     await session.delete(product)
     await session.commit()

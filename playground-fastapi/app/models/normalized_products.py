@@ -28,3 +28,6 @@ class NormalizedProduct(Base):
     last_restock_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     job: Mapped["ReportJob"] = relationship("ReportJob", back_populates="products")
+
+    class Config:
+        orm_mode = True

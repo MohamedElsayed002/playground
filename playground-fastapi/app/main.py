@@ -59,9 +59,10 @@ app.add_middleware(SlowAPIMiddleware)
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
+    allow_origins=settings.cors_origins_list + [
         "https://playground-lilac-nine.vercel.app",
         "http://localhost:3000",
+        "localhost:3000"
     ],
     allow_credentials=True,
     allow_methods=["*"],

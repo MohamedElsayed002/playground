@@ -597,6 +597,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/files/extract-csv/pipeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Extract Pdf Pipeline */
+        post: operations["extract_pdf_pipeline_api_v1_files_extract_csv_pipeline_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/files/pdf/extract-authenticated": {
         parameters: {
             query?: never;
@@ -718,6 +735,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/users/{user_id}/report-jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get All Report Jobs Endpoint
+         * @description Get all report jobs for the current user
+         */
+        get: operations["get_all_report_jobs_endpoint_api_v1_users__user_id__report_jobs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Normalized Products Endpoint
+         * @description Get normalized products for a specific job ID with optional filtering and sorting.
+         */
+        get: operations["get_normalized_products_endpoint_api_v1_jobs__job_id__products_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}/products/{product_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Single Normalized Product Endpoint
+         * @description Get a single normalized product by job ID and product ID.
+         */
+        get: operations["get_single_normalized_product_endpoint_api_v1_jobs__job_id__products__product_id__get"];
+        /**
+         * Update Normalized Product Endpoint
+         * @description Update a normalized product by job ID and product ID.
+         */
+        put: operations["update_normalized_product_endpoint_api_v1_jobs__job_id__products__product_id__put"];
+        post?: never;
+        /**
+         * Delete Normalized Product Endpoint
+         * @description Delete a normalized product by job ID and product ID.
+         */
+        delete: operations["delete_normalized_product_endpoint_api_v1_jobs__job_id__products__product_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -754,7 +839,9 @@ export interface components {
             /** User Agent */
             user_agent: string | null;
             /** Extra */
-            extra: Record<string, never> | null;
+            extra: {
+                [key: string]: unknown;
+            } | null;
             /**
              * Created At
              * Format: date-time
@@ -781,7 +868,6 @@ export interface components {
         Body_extract_pdf_api_v1_files_pdf_extract_post: {
             /**
              * File
-             * Format: binary
              * @description PDF file to extract text from
              */
             file: string;
@@ -790,9 +876,13 @@ export interface components {
         Body_extract_pdf_authenticated_api_v1_files_pdf_extract_authenticated_post: {
             /**
              * File
-             * Format: binary
              * @description PDF file to extract text from
              */
+            file: string;
+        };
+        /** Body_extract_pdf_pipeline_api_v1_files_extract_csv_pipeline_post */
+        Body_extract_pdf_pipeline_api_v1_files_extract_csv_pipeline_post: {
+            /** File */
             file: string;
         };
         /** Body_login_api_v1_auth_login_post */
@@ -801,7 +891,10 @@ export interface components {
             grant_type?: string | null;
             /** Username */
             username: string;
-            /** Password */
+            /**
+             * Password
+             * Format: password
+             */
             password: string;
             /**
              * Scope
@@ -810,7 +903,10 @@ export interface components {
             scope: string;
             /** Client Id */
             client_id?: string | null;
-            /** Client Secret */
+            /**
+             * Client Secret
+             * Format: password
+             */
             client_secret?: string | null;
         };
         /** Body_update_category_api_v1_categories__category_id__patch */
@@ -830,7 +926,6 @@ export interface components {
         Body_upload_avatar_api_v1_users_me_avatar_post: {
             /**
              * File
-             * Format: binary
              * @description Profile image (JPEG, PNG, WebP)
              */
             file: string;
@@ -839,7 +934,6 @@ export interface components {
         Body_upload_document_api_v1_files_documents_post: {
             /**
              * File
-             * Format: binary
              * @description Document file (PDF, DOC, DOCX)
              */
             file: string;
@@ -848,17 +942,13 @@ export interface components {
         Body_upload_image_api_v1_files_images_post: {
             /**
              * File
-             * Format: binary
              * @description Image file (JPEG, PNG, WebP, GIF)
              */
             file: string;
         };
         /** Body_upload_product_image_api_v1_products__product_id__images_post */
         Body_upload_product_image_api_v1_products__product_id__images_post: {
-            /**
-             * File
-             * Format: binary
-             */
+            /** File */
             file: string;
         };
         /** CVStructuredData */
@@ -958,6 +1048,49 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** Job */
+        Job: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** User Id */
+            user_id: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** User */
+            user: null;
+            /** Original Filename */
+            original_filename: string;
+            /** Status */
+            status: string;
+            /** Current Step */
+            current_step: string | null;
+            /** Progress */
+            progress: number;
+            /** Total Rows */
+            total_rows: number;
+            /** Valid Rows */
+            valid_rows: number;
+            /** Invalid Rows */
+            invalid_rows: number;
+            /** Invalid Price */
+            invalid_price: number;
+            /** Invalid Quantity */
+            invalid_quantity: number;
+            /** Invalid Dates */
+            invalid_dates: number;
+            /** Ingested Rows */
+            ingested_rows: number;
+            /** Ingestion Status */
+            ingestion_status: string;
+            /** Failure Reason */
+            failure_reason: string | null;
         };
         /** OrderCreate */
         OrderCreate: {
@@ -1226,6 +1359,38 @@ export interface components {
              */
             created_at: string;
         };
+        /** ProductReportListResponse */
+        ProductReportListResponse: {
+            /** Total */
+            total: number;
+            /** Products */
+            products: components["schemas"]["ProductReportResponse"][];
+        };
+        /** ProductReportResponse */
+        ProductReportResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Job Id
+             * Format: uuid
+             */
+            job_id: string;
+            /** Product Id */
+            product_id: string;
+            /** Product Name */
+            product_name: string;
+            /** Category */
+            category?: string | null;
+            /** Price */
+            price: string;
+            /** Quantity */
+            quantity: number;
+            /** Last Restock Date */
+            last_restock_date?: string | null;
+        };
         /** ProductResponse */
         ProductResponse: {
             /** Id */
@@ -1288,6 +1453,13 @@ export interface components {
             is_active?: boolean | null;
             /** Is Featured */
             is_featured?: boolean | null;
+        };
+        /** ReportJobListResponse */
+        ReportJobListResponse: {
+            /** Total Jobs */
+            total_jobs: number;
+            /** Jobs */
+            jobs: components["schemas"]["Job"][];
         };
         /**
          * TokenResponse
@@ -1417,6 +1589,10 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
         /** WorkExperience */
         WorkExperience: {
@@ -2481,7 +2657,9 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": Record<string, never>;
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -2581,6 +2759,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PDFExtractResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extract_pdf_pipeline_api_v1_files_extract_csv_pipeline_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique identifier for request idempotency.Same key = cached response, prevents duplicate processing. Optional - if not provided, UUID will be auto-generated */
+                "idempotency-key"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_extract_pdf_pipeline_api_v1_files_extract_csv_pipeline_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -2714,6 +2928,180 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditLogResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_all_report_jobs_endpoint_api_v1_users__user_id__report_jobs_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportJobListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_normalized_products_endpoint_api_v1_jobs__job_id__products_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+                product_name?: string | null;
+                category?: string | null;
+                sort_by?: string;
+                sort_order?: string;
+            };
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductReportListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_single_normalized_product_endpoint_api_v1_jobs__job_id__products__product_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+                product_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductReportResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_normalized_product_endpoint_api_v1_jobs__job_id__products__product_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+                product_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_normalized_product_endpoint_api_v1_jobs__job_id__products__product_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: unknown;
+                product_id: unknown;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

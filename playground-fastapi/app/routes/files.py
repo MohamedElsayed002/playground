@@ -72,7 +72,7 @@ async def extract_pdf(
         "/extract-csv/pipeline",
         # response_model=PDFExtractResponse,
     )
-@limiter.limit("20/hour")
+@limiter.limit("30/hour")
 async def extract_pdf_pipeline(
     request: Request,
     file: UploadFile = File(...),

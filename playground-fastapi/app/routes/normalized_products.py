@@ -1,14 +1,30 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import UUID
 from app.core.dependencies import get_db
-from app.services.normalized_data_service import get_normalized_products, get_all_report_jobs, get_single_normalized_product, update_normalized_product, delete_normalized_product
+from app.models.report_jobs import ReportJob
+from app.schemas.report_jobs import (
+    ReportJobListResponse,
+    ProductReportResponse,
+    ProductReportListResponse,
+)
+from app.services.normalized_data_service import (
+    get_normalized_products,
+    get_all_report_jobs,
+    get_single_normalized_product,
+    update_normalized_product,
+    delete_normalized_product,
+)
 from app.core.dependencies import get_current_user
 
 router = APIRouter(tags=["Normalized Products"])
 
 
 
-@router.get("/get-all-report-jobs/{user_id}")
+@router.get(
+        "/users/{user_id}/report-jobs",
+        response_model=ReportJobListResponse,
+    )
 async def get_all_report_jobs_endpoint(
     user_id: int,
     limit: int = Query(default=10, ge=1, le=100),
@@ -23,9 +39,12 @@ async def get_all_report_jobs_endpoint(
     return result
 
 
-@router.get("/normalized-products/{job_id}")
+@router.get(
+        "/jobs/{job_id}/products",
+        response_model=ProductReportListResponse
+    )
 async def get_normalized_products_endpoint(
-    job_id: str,
+    job_id: UUID,
     db: AsyncSession = Depends(get_db),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
@@ -37,7 +56,7 @@ async def get_normalized_products_endpoint(
     """
     Get normalized products for a specific job ID with optional filtering and sorting.
     """
-    normalized_products = await get_normalized_products(
+    return await get_normalized_products(
         db,
         job_id,
         limit=limit,
@@ -47,11 +66,17 @@ async def get_normalized_products_endpoint(
         sort_by=sort_by,
         sort_order=sort_order,
     )
-    return normalized_products
 
 
-@router.get("/single-normalized-products/{job_id}/{product_id}")
-async def get_single_normalized_product_endpoint(job_id: str, product_id: str, db: AsyncSession = Depends(get_db)):
+@router.get(
+        "/jobs/{job_id}/products/{product_id}",
+        response_model=ProductReportResponse
+    )
+async def get_single_normalized_product_endpoint(
+    job_id: UUID,
+    product_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
     """
     Get a single normalized product by job ID and product ID.
     """
@@ -59,8 +84,13 @@ async def get_single_normalized_product_endpoint(job_id: str, product_id: str, d
     return product
 
 
-@router.put("/update-normalized-product/{job_id}/{product_id}")
-async def update_normalized_product_endpoint(job_id: str, product_id: str, updated_data: dict, db: AsyncSession = Depends(get_db)):
+@router.put("/jobs/{job_id}/products/{product_id}")
+async def update_normalized_product_endpoint(
+    job_id: UUID,
+    product_id: int,
+    updated_data: dict,
+    db: AsyncSession = Depends(get_db),
+):
     """
     Update a normalized product by job ID and product ID.
     """
@@ -68,8 +98,12 @@ async def update_normalized_product_endpoint(job_id: str, product_id: str, updat
     return updated_product
 
 
-@router.delete("/delete-normalized-product/{job_id}/{product_id}")
-async def delete_normalized_product_endpoint(job_id: str, product_id: str, db: AsyncSession = Depends(get_db)):
+@router.delete("/jobs/{job_id}/products/{product_id}")
+async def delete_normalized_product_endpoint(
+    job_id,
+    product_id,
+    db: AsyncSession = Depends(get_db),
+):
     """
     Delete a normalized product by job ID and product ID.
     """
