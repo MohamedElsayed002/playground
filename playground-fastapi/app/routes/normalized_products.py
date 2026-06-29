@@ -2,18 +2,19 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from app.core.dependencies import get_db
-from app.models.report_jobs import ReportJob
 from app.schemas.report_jobs import (
+    Job,
     ReportJobListResponse,
     ProductReportResponse,
-    ProductReportListResponse,
-)
+    ProductReportListResponse
+)   
 from app.services.normalized_data_service import (
     get_normalized_products,
     get_all_report_jobs,
     get_single_normalized_product,
     update_normalized_product,
     delete_normalized_product,
+    get_status_report_job 
 )
 from app.core.dependencies import get_current_user
 
@@ -38,6 +39,20 @@ async def get_all_report_jobs_endpoint(
     result = await get_all_report_jobs(db,user_id,limit,offset)
     return result
 
+
+@router.get(
+        "/jobs/{report_id}/status",
+        response_model=Job
+)
+async def get_status_report_endpoint(
+    report_id: UUID,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+        Get the status of the report 
+    """
+    result = await get_status_report_job(db, report_id=report_id)
+    return result
 
 @router.get(
         "/jobs/{job_id}/products",

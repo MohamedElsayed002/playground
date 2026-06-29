@@ -71,4 +71,5 @@ class ReportJob(Base):
     products: Mapped[list["NormalizedProduct"]] = relationship("NormalizedProduct", back_populates="job", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
-        return f"<ReportJob id={self.id} user_id={self.user_id} status={self.status}>"
+        state = self.__dict__
+        return f"<ReportJob id={state.get('id')} user_id={state.get('user_id')} status={state.get('status')}>"

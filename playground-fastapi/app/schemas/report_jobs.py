@@ -10,7 +10,6 @@ class Job(BaseModel):
     id: UUID
     user_id: int
     created_at: datetime
-    user: None
     original_filename: str 
     status: str
     current_step: Optional[str]
@@ -24,6 +23,8 @@ class Job(BaseModel):
     ingested_rows: int
     ingestion_status: str
     failure_reason: Optional[str]
+
+    model_config = {"from_attributes": True}
 
 
 class ReportJobListResponse(BaseModel):

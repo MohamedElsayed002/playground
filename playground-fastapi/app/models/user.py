@@ -54,4 +54,5 @@ class User(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<User id={self.id} email={self.email} role={self.role}>"
+        state = self.__dict__
+        return f"<User id={state.get('id')} email={state.get('email')} role={state.get('role')}>"

@@ -62,6 +62,21 @@ async def get_all_report_jobs(
     }
 
 
+async def get_status_report_job(
+        session: AsyncSession,
+        report_id: UUID
+):
+    result = await session.execute(
+        select(ReportJob).where(ReportJob.id == report_id)
+    )
+
+    report = result.scalar_one_or_none()
+
+    if not report:
+        raise NotFoundException("Report id not found", report_id)
+    
+    return report
+    
 async def get_normalized_products(
         session: AsyncSession,
         job_id: int,

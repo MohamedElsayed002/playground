@@ -259,7 +259,7 @@ async def process_csv_upload(ctx: inngest.Context):
                 job.ingested_rows = ingest_result["ingested_rows"]
                 job.ingestion_status = IngestionStatus.COMPLETED
                 job.current_step = "ingested"
-                job.progress = 95
+                job.progress = 99
 
                 await db.commit()
                 return True
