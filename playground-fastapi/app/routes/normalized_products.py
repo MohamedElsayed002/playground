@@ -6,12 +6,14 @@ from app.schemas.report_jobs import (
     Job,
     ReportJobListResponse,
     ProductReportResponse,
-    ProductReportListResponse
+    ProductReportListResponse,
+    NormalizedProductCreate,
 )   
 from app.services.normalized_data_service import (
     get_normalized_products,
     get_all_report_jobs,
     get_single_normalized_product,
+    create_normalized_product,
     update_normalized_product,
     delete_normalized_product,
     get_status_report_job 
@@ -83,6 +85,21 @@ async def get_normalized_products_endpoint(
     )
 
 
+@router.post(
+        "/jobs/{job_id}/products",
+        response_model=ProductReportResponse
+    )
+async def create_normalized_product_endpoint(
+    job_id: UUID,
+    normalized_product: NormalizedProductCreate,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Create a normalized product for a specific job ID.
+    """
+    return await create_normalized_product(db, job_id, normalized_product.model_dump())
+
+
 @router.get(
         "/jobs/{job_id}/products/{product_id}",
         response_model=ProductReportResponse
@@ -102,7 +119,7 @@ async def get_single_normalized_product_endpoint(
 @router.put("/jobs/{job_id}/products/{product_id}")
 async def update_normalized_product_endpoint(
     job_id: UUID,
-    product_id: int,
+    product_id: UUID,
     updated_data: dict,
     db: AsyncSession = Depends(get_db),
 ):
@@ -115,8 +132,8 @@ async def update_normalized_product_endpoint(
 
 @router.delete("/jobs/{job_id}/products/{product_id}")
 async def delete_normalized_product_endpoint(
-    job_id,
-    product_id,
+    job_id: UUID,
+    product_id: UUID,
     db: AsyncSession = Depends(get_db),
 ):
     """

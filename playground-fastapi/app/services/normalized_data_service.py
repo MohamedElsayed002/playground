@@ -79,7 +79,7 @@ async def get_status_report_job(
     
 async def get_normalized_products(
         session: AsyncSession,
-        job_id: int,
+        job_id: UUID,
         *,
         limit: int = 10,
         offset: int = 0,
@@ -124,6 +124,51 @@ async def get_normalized_products(
     }
 
 
+async def create_normalized_product(
+        session: AsyncSession,
+        job_id: UUID,
+        data: dict,
+) -> NormalizedProduct:
+    required_fields = ["product_id", "product_name", "price", "quantity"]
+    missing_fields = [field for field in required_fields if field not in data or data[field] in (None, "")]
+
+    if missing_fields:
+        raise BadRequestException("Missing required fields: " + ", ".join(missing_fields))
+
+    job_result = await session.execute(select(ReportJob).where(ReportJob.id == job_id))
+    job = job_result.scalar_one_or_none()
+
+    if not job:
+        raise NotFoundException("ReportJob", job_id)
+
+    product = NormalizedProduct(
+        job_id=job_id,
+        product_id=str(data["product_id"]).strip(),
+        product_name=str(data["product_name"]).strip(),
+        category=(str(data["category"]).strip() if data.get("category") not in (None, "") else None),
+        price=data["price"],
+        quantity=int(data["quantity"]),
+        last_restock_date=data.get("last_restock_date"),
+    )
+
+    session.add(product)
+
+    await create_audit_log(
+        db=session,
+        user_id=1,
+        event="NORMALIZED_PRODUCT_CREATED",
+        status="SUCCESS",
+        metadata={
+            "details": f"Product {product.product_id} created for job {job_id}.",
+        },
+    )
+
+    await session.commit()
+    await session.refresh(product)
+
+    return product
+
+
 async def get_single_normalized_product(
         session: AsyncSession,
         product_id: UUID,
@@ -146,7 +191,7 @@ async def get_single_normalized_product(
 
 async def update_normalized_product(
         session: AsyncSession,
-        product_id: int,
+        product_id: UUID,
         job_id: UUID,
         data: dict
 ) -> NormalizedProduct:
@@ -167,24 +212,25 @@ async def update_normalized_product(
     for field, value in data.items():
         setattr(product, field, value)
 
-    await session.commit()
-    await session.refresh(product)
-
     await create_audit_log(
         db=session,
-        # Allowed for now
         user_id=1,
         event="NORMALIZED_PRODUCT_UPDATED",
         status="SUCCESS",
-        details=f"Product {product_id} from job {job_id} updated successfully."
+        metadata={
+            "details": f"Product {product_id} from job {job_id} updated successfully."
+        },
     )
+
+    await session.commit()
+    await session.refresh(product)
 
     return product
 
 async def delete_normalized_product(
         session: AsyncSession,
-        product_id,
-        job_id
+        product_id: UUID,
+        job_id: UUID
 ):
     result = await session.execute(
         select(NormalizedProduct)
@@ -197,15 +243,17 @@ async def delete_normalized_product(
     if not product:
         raise NotFoundException("NormalizedProduct", product_id)
     
-    await session.delete(product)
-    await session.commit()
-
     await create_audit_log(
         db=session,
         user_id=1,
         event="NORMALIZED_PRODUCT_DELETED",
         status="SUCCESS",
-        details=f"Product {product_id} from job {job_id} deleted successfully."
+        metadata={
+            "details": f"Product {product_id} from job {job_id} deleted successfully."
+        },
     )
+
+    await session.delete(product)
+    await session.commit()
     
     return True

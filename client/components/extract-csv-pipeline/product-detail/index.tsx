@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNormalizedProduct } from "@/hooks/use-normalized-product";
 import { PageShell } from "../shared/page-shell";
+import { formatCurrency } from "../normalized-products/helpers";
+import { ProductActions } from "./product-actions";
 
 type ProductDetailViewProps = {
   jobId: string;
@@ -26,12 +28,7 @@ function DetailItem({ label, value }: { label: string; value: React.ReactNode })
 export default function ProductDetailView({ jobId, productId }: ProductDetailViewProps) {
   const { data: product, isLoading, error } = useNormalizedProduct({ jobId, productId });
 
-  const formattedPrice = product
-    ? new Intl.NumberFormat(undefined, {
-        style: "currency",
-        currency: "USD",
-      }).format(Number(product.price))
-    : null;
+  const formattedPrice = product ? formatCurrency(product.price) : null;
 
   return (
     <PageShell
@@ -65,38 +62,38 @@ export default function ProductDetailView({ jobId, productId }: ProductDetailVie
           Failed to load product details. Please try again.
         </div>
       ) : product ? (
-        <Card className="bg-background/80 backdrop-blur-sm">
-          <CardHeader className="border-b">
-            <div className="flex items-start gap-3">
-              <div className="rounded-lg bg-primary/10 p-3 text-primary">
-                <Package className="size-5" />
+        <div className="space-y-6">
+          <Card className="bg-background/80 backdrop-blur-sm">
+            <CardHeader className="border-b">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-lg bg-primary/10 p-3 text-primary">
+                    <Package className="size-5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-2xl">{product.product_name}</CardTitle>
+                    <p className="mt-1 font-mono text-sm text-muted-foreground">{product.product_id}</p>
+                  </div>
+                </div>
+                <ProductActions jobId={jobId} product={product} />
               </div>
-              <div>
-                <CardTitle className="text-2xl">{product.product_name}</CardTitle>
-                <p className="mt-1 font-mono text-sm text-muted-foreground">{product.product_id}</p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="grid gap-6 pt-6 md:grid-cols-2">
-            <DetailItem label="Category" value={product.category || "—"} />
-            <DetailItem label="Price" value={formattedPrice} />
-            <DetailItem label="Quantity" value={product.quantity} />
-            <DetailItem
-              label="Last Restock Date"
-              value={
-                product.last_restock_date
-                  ? format(new Date(product.last_restock_date), "PPP")
-                  : "—"
-              }
-            />
-            <DetailItem label="Internal ID" value={<span className="font-mono text-sm">{product.id}</span>} />
-            <DetailItem label="Job ID" value={<span className="break-all font-mono text-sm">{product.job_id}</span>} />
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="rounded-xl border bg-background/80 p-6 text-muted-foreground">
-          Product not found.
+            </CardHeader>
+
+            <CardContent className="grid gap-6 pt-6 md:grid-cols-2">
+              <DetailItem label="Category" value={product.category || "—"} />
+              <DetailItem label="Price" value={formattedPrice} />
+              <DetailItem label="Quantity" value={product.quantity} />
+              <DetailItem
+                label="Last Restock Date"
+                value={product.last_restock_date ? format(new Date(product.last_restock_date), "PPP") : "—"}
+              />
+              <DetailItem label="Internal ID" value={<span className="font-mono text-sm">{product.id}</span>} />
+              <DetailItem label="Job ID" value={<span className="break-all font-mono text-sm">{product.job_id}</span>} />
+            </CardContent>
+          </Card>
         </div>
+      ) : (
+        <div className="rounded-xl border bg-background/80 p-6 text-muted-foreground">Product not found.</div>
       )}
     </PageShell>
   );

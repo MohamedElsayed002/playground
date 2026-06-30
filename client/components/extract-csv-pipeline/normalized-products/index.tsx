@@ -7,6 +7,7 @@ import { NormalizedProductsDataTable } from "./data-table";
 import { createNormalizedProductColumns } from "./columns";
 import { useNormalizedProductsSearchParams } from "./search-params";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreateNormalizedProductDialog } from "./create-product-dialog";
 
 type NormalizedProductsViewProps = {
   jobId: string;
@@ -55,6 +56,7 @@ export default function NormalizedProductsView({ jobId }: NormalizedProductsView
         { label: "Extract CSV Pipeline", href: "/extract-csv-pipeline" },
         { label: "Normalized Products" },
       ]}
+      actions={<CreateNormalizedProductDialog jobId={jobId} />}
     >
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="bg-background/80 backdrop-blur-sm">

@@ -47,4 +47,15 @@ class ProductReportResponse(BaseModel):
     quantity: int
     last_restock_date: date | None = None
 
+    model_config = {"from_attributes": True}
+
+
+class NormalizedProductCreate(BaseModel):
+    product_id: str
+    product_name: str
+    category: str | None = None
+    price: Decimal
+    quantity: int
+    last_restock_date: date | None = None
+
 
