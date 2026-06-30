@@ -57,74 +57,6 @@ def _is_csv_file(file: UploadFile) -> bool:
     content_type = (file.content_type or "").lower()
     return content_type in CSV_MIME_TYPES
 
-"""
-FLOW 
-
-Client Uploads CSV
-        ↓
-Frontend Validation 
-        ↓
-Backend Validation
-        ↓
-Upload Raw File To S3
-        ↓
-Create Job Record 
-        ↓
-Return Job ID Immediately
-        ↓
-Background Worker Starts
-        ↓
-Parse CSV
-        ↓
-Clean Data
-        ↓
-Generate Analytics
-        ↓
-AI Analysis
-        ↓
-Generate PDF
-        ↓
-Upload PDF to S3
-        ↓
-Mark Job Completed
-        ↓
-Frontend Polling Detects Completion
-        ↓
-User Downloads Report      
-"""
-
-"""
-PHASE 1:
-
-1. Validate
-2. Process in background
-3. Save Status 
-4. User pools progress
-"""
-
-"""
-PHASE 2:
-
-Download file from S3 
-   ↓
-Parse CSV
-   ↓
-Validate data
-   ↓
-Clean data
-   ↓
-Generate Statistics
-   ↓
-Generate Charts 
-   ↓
-Ask AI
-   ↓
-Generate PDF
-   ↓
-Upload PDF
-   ↓
-Mark Completed
-"""
 
 async def extract_csv_pipeline(
         # current_user,
@@ -222,7 +154,7 @@ async def extract_csv_pipeline(
                 file_s3_key=s3_key,
                 status=JobStatus.QUEUED,
                 current_step="uploaded",
-                progress=0
+                progress=5
         )
 
         db.add(job)

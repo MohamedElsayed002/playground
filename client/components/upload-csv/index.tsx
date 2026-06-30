@@ -18,6 +18,7 @@ import {
   formatFileSize,
 } from "@/lib/csv-upload";
 import { useCsvUpload } from "@/hooks/use-csv-upload";
+import { useQuery } from "@tanstack/react-query";
 
 const steps = [
   { step: "1", title: "Select file", text: "Choose or drop a CSV inventory file." },

@@ -18,7 +18,7 @@ from app.services.csv_pipeline import (
     normalize_csv_text,
     validate_csv_text,
 )
-from app.services.inngest.client import inngest_client, logger 
+from app.services.inngest.client import inngest_client 
 
 async def persist_idempotency_result(idempotency_key: str | None, payload: dict, status_code: int) -> None:
     if not idempotency_key:
@@ -110,6 +110,13 @@ async def process_csv_upload(ctx: inngest.Context):
             for _ in reader:
                 row_count += 1
 
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
+                job = result.scalar_one()
+                job.current_step = "parsed"
+                job.progress = 20
+                await db.commit()
+
             return {"row_count": row_count}
 
         csv_result = await step.run("parse-csv", parse_csv)
@@ -118,7 +125,16 @@ async def process_csv_upload(ctx: inngest.Context):
         # Step 4
         async def validate_csv():
             raw_text = load_csv_from_s3(s3_key)
-            return validate_csv_text(raw_text)
+            result = validate_csv_text(raw_text)
+
+            async with AsyncSessionLocal() as db:
+                job_result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
+                job = job_result.scalar_one()
+                job.current_step = "validated"
+                job.progress = 30
+                await db.commit()
+
+            return result
 
         validation_result = await step.run("validate-csv", validate_csv)
         
@@ -126,7 +142,16 @@ async def process_csv_upload(ctx: inngest.Context):
         # Step 5
         async def normalize_csv():
             raw_text = load_csv_from_s3(s3_key)
-            return normalize_csv_text(raw_text, job_id, BUCKET_NAME, s3)
+            result = normalize_csv_text(raw_text, job_id, BUCKET_NAME, s3)
+
+            async with AsyncSessionLocal() as db:
+                job_result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
+                job = job_result.scalar_one()
+                job.current_step = "normalized"
+                job.progress = 40
+                await db.commit()
+
+            return result
         
         # Step 6
         async def save_validation():
@@ -209,7 +234,7 @@ async def process_csv_upload(ctx: inngest.Context):
                 job.normalized_file_url = normalize_csv_result["normalized_file_url"]
                 job.normalized_rows_count = normalize_csv_result["rows_count"]
                 job.current_step = "normalized"
-                job.progress = 80
+                job.progress = 60
                 job.metadata_json = {
                     **(job.metadata_json or {}),
                     "normalization_changes_count": normalize_csv_result["normalization_changes_count"],
@@ -231,12 +256,20 @@ async def process_csv_upload(ctx: inngest.Context):
                 job = result.scalar_one()
                 job.ingestion_status = IngestionStatus.PROCESSING
                 job.current_step = "ingesting"
-                job.progress = 85
+                job.progress = 70
                 await db.commit()
 
             try:
                 async with AsyncSessionLocal() as db:
-                    return await ingest_normalized_csv(raw_text, UUID(job_id), db)
+                    ingest_result = await ingest_normalized_csv(raw_text, UUID(job_id), db)
+
+                async with AsyncSessionLocal() as db:
+                    result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
+                    job = result.scalar_one()
+                    job.progress = 80
+                    await db.commit()
+
+                return ingest_result
             except Exception:
                 async with AsyncSessionLocal() as db:
                     result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
@@ -259,7 +292,7 @@ async def process_csv_upload(ctx: inngest.Context):
                 job.ingested_rows = ingest_result["ingested_rows"]
                 job.ingestion_status = IngestionStatus.COMPLETED
                 job.current_step = "ingested"
-                job.progress = 99
+                job.progress = 90
 
                 await db.commit()
                 return True
