@@ -20,9 +20,9 @@ export function LiveStream() {
     router.push("/chategy");
   });
 
-  useHotkey("Control+5", () => {
-    router.push("/multiple-ai")
-  })
+  // useHotkey("Control+5", () => {
+  //   router.push("/multiple-ai")
+  // })
 
   return (
     <div>
@@ -88,7 +88,7 @@ export function LiveStream() {
             </Button>
           </div>
         </div>
-        <div className="w-full md:w-[371px]  h-[188px] bg-red-500 rounded-4xl p-5 flex flex-col justify-between">
+        {/* <div className="w-full md:w-[371px]  h-[188px] bg-red-500 rounded-4xl p-5 flex flex-col justify-between">
           <h1 className="text-lg lg:text-3xl font-medium leading-tight mb-1">Multiple Models</h1>
           <p className="text-sm lg:text-base opacity-85 max-w-[240px] -mt-8">
             Multiple models chat bot openai/anthroic/gemini
@@ -106,7 +106,7 @@ export function LiveStream() {
               </Link>
             </Button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

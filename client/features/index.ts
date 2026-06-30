@@ -8,6 +8,7 @@ import { LearningRoadmap } from "./learning-roadmap";
 import { LiveStream } from "./live-stream";
 import { NoSQLVSSQL } from "./nosql-sql";
 import { Performance } from "./performance";
+import { RouteCards } from "./route-cards";
 import { RenderingStrategies } from "./rendering-strategies";
 import { SQLPerformance } from "./sql-performance";
 import { StateManagement } from "./state-management";
@@ -24,6 +25,7 @@ export {
   LiveStream,
   NoSQLVSSQL,
   Performance,
+  RouteCards,
   RenderingStrategies,
   SQLPerformance,
   StateManagement,

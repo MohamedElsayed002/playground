@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { DotPattern } from "@/components/layouts/dot-pattern";
-import { APIsAndRealtime, Chat, LiveStream, NoSQLVSSQL, Performance, Tables } from "@/features";
+import { APIsAndRealtime, Chat, LiveStream, NoSQLVSSQL, Performance, RouteCards, Tables } from "@/features";
 import { UserBadge } from "@/components/users/user-badge";
 import { Projects } from "@/features/projects";
 import { Audit } from "@/features/audit";
@@ -38,6 +38,9 @@ export default async function RootPage() {
           <div className="mt-8 flex w-full flex-col">
             {/* Performance Section */}
             <Performance />
+            <div className="my-8 h-px w-full bg-white/40" />
+
+            <RouteCards />
             <div className="my-8 h-px w-full bg-white/40" />
 
             <div className="grid w-full grid-cols-1 md:grid-cols-[1fr_auto_1fr] md:items-stretch md:gap-x-8">
