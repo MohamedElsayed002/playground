@@ -10,6 +10,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { createIdempotencyKeyForFile, formatFileSize } from "@/lib/csv-upload";
 import { useCsvUpload } from "@/hooks/use-csv-upload";
+import { Input } from "../ui/input";
 
 const steps = [
   { step: "1", title: "Select file", text: "Choose or drop a CSV inventory file." },
@@ -141,7 +142,7 @@ export function UploadFile() {
         </CardHeader>
 
         <CardContent className="space-y-6 pt-6">
-          <input
+          <Input
             ref={inputRef}
             type="file"
             accept=".csv,text/csv"

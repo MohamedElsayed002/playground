@@ -95,8 +95,8 @@ export function RouteCards() {
           description="A dedicated PDF experience is coming next for document-style workflows."
           icon={FileText}
           // label="Planned route"
+          href="/extract-pdf-pipeline"
           backgroundClassName="bg-[linear-gradient(135deg,_#dc2626_0%,_#991b1b_45%,_#450a0a_100%)]"
-          disabled
         />
 
         <RouteCard

@@ -17,6 +17,7 @@ REQUIRED_COLUMNS = [
     "quantity",
     "last_restock_date",
 ]
+
 MIN_QUALITY_SCORE = 60
 
 

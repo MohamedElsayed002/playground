@@ -11,7 +11,7 @@ from app.services.audit_service import create_audit_log
 
 async def register_user(db: AsyncSession, data: UserCreate, request: Request | None = None) -> User:
     existing = await db.execute(select(User).where(User.email == data.email))
-
+    
     if existing.scalar_one_or_none():
         await create_audit_log(
             db=None,

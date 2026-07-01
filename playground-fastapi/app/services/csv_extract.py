@@ -1,26 +1,16 @@
-import uuid 
 from datetime import datetime, timedelta, timezone
-from pathlib import Path 
 import logging 
 
-import pdfplumber
 from fastapi import UploadFile, HTTPException, Request 
 from fastapi.responses import JSONResponse
-from PIL import Image, UnidentifiedImageError 
 
 from app.core.config import settings
-from app.exceptions.handlers import UnprocessableFileException, ServiceUnavailableException
-from app.schemas.file import FileUploadResponse, PDFExtractResponse, PDFPageContent
+from app.exceptions.handlers import UnprocessableFileException
 import boto3 
-from app.services import file_service
-from app.schemas.analysis import CVStructuredData
 from sqlalchemy import select 
 
-from sqlalchemy.orm import Session 
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.idempotency import IdempotencyKey
-from app.models.file import File 
-from app.schemas.file import FileStatus
 import inngest
 from app.services.audit_service import create_audit_log 
 from app.models.idempotency import IdempotencyKey

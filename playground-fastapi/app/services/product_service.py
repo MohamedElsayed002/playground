@@ -193,7 +193,7 @@ async def get_category_by_slug(db:AsyncSession, category_slug: str) -> Category:
 
 async def get_product_by_slug(db: AsyncSession, slug: str) -> Product:
     result = await db.execute(
-        select(Product).where(Product.slug == slug, Product.is_deleted == False)  # noqa: E712
+        select(Product).where(Product.slug == slug, Product.is_deleted == False)
     )
     product = result.scalar_one_or_none()
     if not product:

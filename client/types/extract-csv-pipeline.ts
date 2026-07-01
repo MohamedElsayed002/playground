@@ -26,6 +26,7 @@ type ExtractCSVError = {
     message: string
     path: string
     request_id: string
+    error?: string
     errors: any
 }
 

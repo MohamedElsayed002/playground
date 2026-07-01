@@ -2,6 +2,7 @@ import logging
 import math
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from app.exceptions.handlers import NotFoundException
 
 from app.db.session import AsyncSessionLocal
 from app.models.audit_log import AuditLog
@@ -13,7 +14,6 @@ async def get_audit_log(db: AsyncSession, log_id: int) -> AuditLog:
     result = await db.execute(select(AuditLog).where(AuditLog.id == log_id))
     log = result.scalar_one_or_none()
     if log is None:
-        from app.exceptions.handlers import NotFoundException
         raise NotFoundException("AuditLog", log_id)
     return log
 

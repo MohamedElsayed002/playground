@@ -101,7 +101,7 @@ async def extract_pdf_pipeline(
 async def extract_pdf_authenticated(
     request: Request,
     file: UploadFile = File(..., description="PDF file to extract text from"),
-    current_user = Depends(get_current_user),
+    # current_user = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     idempotency_key: str | None = Header(
         None,
@@ -109,41 +109,13 @@ async def extract_pdf_authenticated(
                     "Same key = cached response, prevents duplicate processing. Optional - if not provided, UUID will be auto-generated"
     ),
 ):
-    """
-        Upload a PDF for **background processing** via Inngest.
-
-        🔐 **Authenticated endpoint** – Requires user login
-
-        ### How it works
-        1. Validates file type & idempotency key
-        2. Uploads raw PDF to S3
-        3. Creates a DB record (status = `processing`)
-        4. Fires an Inngest event → background worker runs:
-           - Virus scan
-           - PDF text/table extraction
-           - LLM structured data extraction
-           - DB update (status → `completed`)
-
-        ### Idempotency Protection
-        - Send unique `Idempotency-Key` header with each request
-        - Duplicate requests with same key return cached result instantly
-        - Prevents double-uploads from network retries or accidental double-clicks
-
-        ### Returns
-        - `202 Accepted` with `file_id` and `status: "processing"`
-        - Or cached full response if idempotency key was already processed
-
-        ### Example Request Header
-        ```
-        Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
-        ```
-    """
     # Auto-generate idempotency key if not provided
     key = idempotency_key or str(uuid.uuid4())
 
     return await file_service.upload_pdf_authenticated(
         upload=file,
-        user_id=current_user.id,
+        # user_id=current_user.id,
+        user_id=1,
         idempotency_key=key,
         db=db,
         request=request,
@@ -156,28 +128,7 @@ async def extract_pdf_authenticated(
 )
 async def get_pdf_status(
     file_id: int,
-    current_user=Depends(get_current_user),
+    # current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """
-        Poll the processing status of an uploaded PDF.
-
-        ### Response by status
-        - `processing` → Still working, poll again in a few seconds
-        - `completed`  → Done! Full extraction result included in `result`
-        - `failed`     → Error occurred, `error` field has details
-
-        ### Example usage (client-side)
-        ```js
-        const poll = async (fileId) => {
-            const res = await fetch(`/api/v1/files/pdf/status/${fileId}`);
-            const data = await res.json();
-            if (data.status === "processing") {
-                setTimeout(() => poll(fileId), 3000); // retry in 3s
-            } else {
-                console.log(data.result); // full extraction
-            }
-        }
-        ```
-    """
-    return await file_service.llm_response_status_result(file_id, current_user.id, db)
+    return await file_service.llm_response_status_result(file_id,1, db)

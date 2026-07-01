@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import NormalizedProductsView from "@/components/extract-csv-pipeline/normalized-products";
 
 export const metadata: Metadata = {
@@ -13,5 +14,9 @@ interface PageProps {
 export default async function Page({ params }: PageProps) {
   const { id } = await params;
 
-  return <NormalizedProductsView jobId={id} />;
+  return (
+    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading normalized products...</div>}>
+      <NormalizedProductsView jobId={id} />
+    </Suspense>
+  );
 }

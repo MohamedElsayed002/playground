@@ -1,10 +1,12 @@
 import asyncio
 import io
 import json
+from datetime import datetime, timedelta, timezone
 
 import inngest
 import pdfplumber
 
+from app.core.config import settings
 from app.schemas.analysis import CVStructuredData
 from app.schemas.file import FileStatus
 from app.services.file_service import BUCKET_NAME, s3, scan_file
@@ -68,17 +70,19 @@ async def process_pdf_upload(ctx: inngest.Context):
 
     pdf_data: dict = await step.run("parse-pdf", parse_pdf)
 
-    async def llm_extract():
-        try:
-            raw_structured = await extract_structured_cv_data(pdf_data["full_text"])
-            cv = CVStructuredData(**raw_structured)
-            cv.years_of_experience = safe_int(cv.years_of_experience)
-            return cv.dict()
-        except Exception as exc:
-            logger.warning("[inngest] LLM extraction failed: %s", exc)
-            return None
 
-    structured_data: dict | None = await step.run("llm-extract", llm_extract)
+    # commented out llm extraction for now, my budget is tight :) 
+    # async def llm_extract():
+    #     try:
+            # raw_structured = await extract_structured_cv_data(pdf_data["full_text"])
+    #         cv = CVStructuredData(**raw_structured)
+    #         cv.years_of_experience = safe_int(cv.years_of_experience)
+    #         return cv.dict()
+    #     except Exception as exc:
+    #         logger.warning("[inngest] LLM extraction failed: %s", exc)
+    #         return None
+
+    # structured_data: dict | None = await step.run("llm-extract", llm_extract)
 
     async def save_to_db():
         from sqlalchemy import select
@@ -94,7 +98,8 @@ async def process_pdf_upload(ctx: inngest.Context):
                 "total_pages": pdf_data["total_pages"],
                 "pages": pdf_data["pages"],
                 "full_text": pdf_data["full_text"],
-                "structured_data": structured_data,
+                "structured_data": None,
+                "status": "completed"
             }
             response_json = json.dumps(response_payload)
 
@@ -107,8 +112,21 @@ async def process_pdf_upload(ctx: inngest.Context):
             existing_idem = await db.execute(
                 select(IdempotencyKey).filter(IdempotencyKey.key == idempotency_key)
             )
-            if not existing_idem.scalars().first():
-                db.add(IdempotencyKey(key=idempotency_key, response=response_json))
+            idem_record = existing_idem.scalars().first()
+            if idem_record is None:
+                db.add(
+                    IdempotencyKey(
+                        key=idempotency_key,
+                        request_path="/files/pdf/extract-authenticated",
+                        expires_at=datetime.now(timezone.utc)
+                        + timedelta(hours=settings.IDEMPOTENCY_KEY_TTL_HOURS),
+                        response_body=response_json,
+                        response_status_code=200,
+                    )
+                )
+            else:
+                idem_record.response_body = response_json
+                idem_record.response_status_code = 200
 
             await db.commit()
         except Exception as exc:

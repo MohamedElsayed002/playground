@@ -25,8 +25,8 @@ export async function uploadCsvPipeline(
   const data: ExtractCSVResponse   = await response.json()
 
   if(!data.success || data.status === "failed") {
-
-    throw new Error(data.message ||  data.error)
+    // @ts-expect-error message or error may be present in the response
+    throw new Error(data.message || data.error)
   }
   return { data, status: response.status };
 }

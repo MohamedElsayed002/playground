@@ -1,11 +1,7 @@
-
 import uuid
-import hashlib
-import mimetypes
 from pathlib import Path
 import logging
 
-import aiofiles
 import pdfplumber
 from fastapi import UploadFile, HTTPException, Request
 from PIL import Image, UnidentifiedImageError
@@ -21,11 +17,9 @@ import subprocess
 import json
 import os
 import tempfile
-import shutil
 from sqlalchemy import select
 
 import pyclamd
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.idempotency import IdempotencyKey
 from app.models.file import File
@@ -48,7 +42,7 @@ try:
     cd = pyclamd.ClamdUnixSocket()
     logger.info("ClamAV connected successfully")
 except Exception as e:
-    logger.warning(f"⚠️  ClamAV not available: {e} (virus scanning will be skipped)")
+    logger.warning(f"ClamAV not available: {e} (virus scanning will be skipped)")
 
 s3 = boto3.client(
     "s3",
@@ -56,6 +50,7 @@ s3 = boto3.client(
     aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
     aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
     )
+
 BUCKET_NAME = settings.BUCKET_NAME
 
 
@@ -101,77 +96,6 @@ async def _read_upload_chunks(upload: UploadFile, max_bytes: int) -> bytes:
     return b"".join(chunks)
 
 
-
-# Flow
-# 1. Request comes in 
-# 2. Check idempotency
-# 3. Start Transaction
-# 4. Save DB record
-# 5. Upload file
-# 6. Commit or Rollback
-# 7. Return consistent response
-
-# error leave broken data? rollback? mark status as failed?
-
-# Better approach "Controlled failure"
-
-"""
-Instead of deleting the record 
-Keep it + mark it as failed
-
-Correct flow
-
-1. Save file metadata -> status = "pending"
-2. Upload File
-3. Start parsing 
-4. If success -> status = "processed"
-5. If fail -> status = "failed"
-
-When should you rollback?
-Rollback is correct only when
-
-The operation must be atomic
-
-Example
-
-    - payment + order creation
-    Either both succeeded or none
-
-Rule of thumb 
-
-- User-triggered workflows (files, jobs) -> use status tracking
-- Critical financial operations -> use transactions (rollback)
-
-A failed record is actually valuable data
-"""
-
-
-"""
-Now let me push you one level deeper:
-
-👉 What would you do if:
-
-parsing fails 3 times in a row?
-
-Do you:
-
-keep retrying forever
-stop and mark permanently failed
-escalate (log, alert, notify)
-
-POST /files/{id}/retry
-"""
-
-# async def upload_file(db: AsyncSession, file, user_id: int):
-#     async with db.begin():
-#         file_record = File(
-#             filename=file.Filename,
-#             user_id=user_id
-#         )
-
-#         db.add(file_record)
-
-
 async def upload_image(
     upload: UploadFile,
     subfolder: str = "images",
@@ -183,8 +107,6 @@ async def upload_image(
     1. Check MIME type is an allowed image type
     2. Check file size is within limit
     3. Try to actually open with Pillow (confirms it's a real image, not a renamed .exe)
-    
-    NestJS equivalent → FileTypeValidator + MaxFileSizeValidator in ParseFilePipe
     """
     # 1. MIME type check
     content_type = upload.content_type or ""
@@ -200,7 +122,7 @@ async def upload_image(
     # 3. Validate it's a real image using Pillow (magic byte check)
     try:
         img = Image.open(io.BytesIO(file_bytes))
-        img.verify()  # Raises if file is corrupted or not a real image
+        img.verify()  
     except (UnidentifiedImageError, Exception):
         raise UnprocessableFileException("The uploaded file is not a valid image")
 
@@ -238,8 +160,6 @@ async def upload_image(
         content_type=content_type,
     )
 
-
-# ── General File Upload ────────────────────────────────────────────────────────
 
 async def upload_document(upload: UploadFile) -> FileUploadResponse:
     """
@@ -312,7 +232,7 @@ These systems require: Compliance, Long-term storage, Legal reliability. Regular
   "warning": "PDF is not PDF/A compliant"
 }
 
-## Recommended architecture 
+Architecture:
 
 1. Strict route (PDF/A only)
 2. Flexible route (default) Accept any pdf, if not pdf/a return warning, still process
@@ -379,7 +299,7 @@ def scan_file(file_bytes: bytes):
     If ClamAV is not available, skip scanning (development only).
     """
     if cd is None:
-        logger.debug("⚠️  ClamAV not available - skipping virus scan")
+        logger.debug("ClamAV not available - skipping virus scan")
         return
     
     try:
@@ -473,60 +393,6 @@ async def extract_pdf_content(upload: UploadFile) -> PDFExtractResponse:
             os.remove(temp_path)
 
 
-# ── Authenticated PDF Upload with Idempotency ──────────────────────────────────
-
-"""
- IDEMPOTENCY PATTERN:
-
-The idempotency pattern ensures that identical requests produce the same result,
-even if called multiple times. This is crucial for:
-
-- Network failures: Client retries → Server should return same response
-- User double-clicks: Same upload request twice → Same file, not duplicates  
-- UI bugs: Form submitted multiple times → Only one file created
-
-FLOW:
-1. Client sends: idempotency_key (usually UUID in headers)
-2. Server checks: Does this key exist in IdempotencyKey table?
-    YES  → Return cached response (no processing)
-    NO   → Process request, cache result, return response
-3. Future identical requests: Get cached response instantly
-
-KEY BENEFITS:
-- Prevents duplicate file entries
-- Saves processing time on retries
-- Safe for user errors (accidental double-submit)
-- Database constraint: (filename, user_id) prevents actual duplicates too
-"""
-
-"""
-1. Request comes in 
-2. Check idempotency 
-3. Start transaction 
-4. Save DB record
-5. Upload file
-6. Commit or rollback 
-7. Return consistent response
-"""
-
-
-"""
-1. User uploads file
-2. API Saves record (status = Uploading)
-3. API pushes job to queue (Inngest)
-4. API return immediately
-
-5. Worker processes pDF
-6. Updates DB (Processing -> Completed / Failed)
-"""
-
-"""
-Client -> FastAPI -> Save file -> Send event -> response (fast)
-                                        |
-                                 Inngest Worker
-                                        |
-                                 process PDF + LLM + DB
-"""
 
 async def upload_pdf_authenticated(
     upload: UploadFile,
@@ -546,7 +412,7 @@ async def upload_pdf_authenticated(
             db=None,
             event=event,
             status=status,
-            user_id=user_id,
+            user_id=1,
             request=request,
             metadata={
                 "request_id": getattr(request.state, "request_id", None) if request else None,
@@ -568,12 +434,15 @@ async def upload_pdf_authenticated(
     )
     existing_key = result.scalars().first()
 
-    if existing_key and existing_key.response:
+    if existing_key and existing_key.response_body:
         await audit_upload_step(
             event="PDF_UPLOAD_IDEMPOTENCY_HIT",
             status="SUCCESS",
         )
-        return json.loads(existing_key.response)
+
+        response = json.loads(existing_key.response_body)
+        response["status"] = "completed"
+        return response
 
     #  STEP 2: Validate file type 
     if upload.content_type != "application/pdf":
@@ -590,7 +459,7 @@ async def upload_pdf_authenticated(
     existing_file = await db.execute(
         select(File).filter(
             File.filename == safe_name,
-            File.user_id == user_id
+            File.user_id == 1
         )
     )
     existing_file = existing_file.scalars().first()
@@ -621,7 +490,7 @@ async def upload_pdf_authenticated(
     else:
         file_record = File(
             filename=safe_name,
-            user_id=user_id,
+            user_id=1,
             status=FileStatus.UPLOADING,
             idempotency_key=idempotency_key,
         )
@@ -688,7 +557,7 @@ async def upload_pdf_authenticated(
     #  STEP 5: Fire Inngest event (returns immediately) 
     event_payload = {
         "file_id": file_record.id,
-        "user_id": user_id,
+        "user_id": 1,
         "s3_key": s3_key,
         "filename": upload.filename or "document.pdf",
         "idempotency_key": idempotency_key,
@@ -779,19 +648,19 @@ async def llm_response_status_result(file_id: int, user_id: int, db: AsyncSessio
             )
             idem_record = idem_result.scalars().first()
 
-            if idem_record and idem_record.response:
+            if idem_record and idem_record.response_body:
                 return {
                     "file_id": file_id,
                     "status": FileStatus.COMPLETED.value,
-                    "result": json.loads(idem_record.response),
+                    "result": json.loads(idem_record.response_body),
                 }
 
         # Fallback for legacy records: search by file_id in cached responses
         all_keys_result = await db.execute(select(IdempotencyKey))
         for key in all_keys_result.scalars().all():
-            if key.response:
+            if key.response_body:
                 try:
-                    cached = json.loads(key.response)
+                    cached = json.loads(key.response_body)
                     if cached.get("file_id") == file_id:
                         return {
                             "file_id": file_id,
