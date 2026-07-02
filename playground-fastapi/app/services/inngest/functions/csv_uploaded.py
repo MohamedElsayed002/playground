@@ -156,38 +156,50 @@ async def process_csv_upload(ctx: inngest.Context):
         # Step 6
         async def save_validation():
             async with AsyncSessionLocal() as db:
-                result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
-                job = result.scalar_one()
 
-                job.total_rows = validation_result["total_rows"]
-                job.valid_rows = validation_result["valid_rows"]
-                job.invalid_rows = validation_result["invalid_rows"]
-                job.invalid_price = validation_result["invalid_price"]
-                job.invalid_quantity = validation_result["invalid_quantity"]
-                job.invalid_dates = validation_result["invalid_dates"]
-                job.quality_score = validation_result["quality_score"]
-                job.progress = 50
-                job.current_step = "validated"
+                try:
 
-                if validation_result["missing_columns"]:
+                    result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
+                    job = result.scalar_one()
+
+                    job.total_rows = validation_result["total_rows"]
+                    job.valid_rows = validation_result["valid_rows"]
+                    job.invalid_rows = validation_result["invalid_rows"]
+                    job.invalid_price = validation_result["invalid_price"]
+                    job.invalid_quantity = validation_result["invalid_quantity"]
+                    job.invalid_dates = validation_result["invalid_dates"]
+                    job.quality_score = validation_result["quality_score"]
+                    job.progress = 50
+                    job.current_step = "validated"
+
+                    if validation_result["missing_columns"]:
+                        job.status = JobStatus.FAILED
+                        job.failure_reason = (
+                            "Missing required columns: " + ", ".join(validation_result["missing_columns"])
+                        )
+                    elif validation_result["quality_score"] < MIN_QUALITY_SCORE:
+                        job.status = JobStatus.FAILED
+                        job.failure_reason = (
+                            f"Data quality too low ({validation_result['quality_score']}%)"
+                        )
+                    else:
+                        job.status = JobStatus.PROCESSING
+
+                    await db.commit()
+                    return {
+                        "should_continue": job.status != JobStatus.FAILED,
+                        "status": job.status.value,
+                        "failure_reason": job.failure_reason,
+                    }
+                except Exception as e:
+                    
+                    result = await db.execute(select(ReportJob).where(ReportJob.id == UUID(job_id)))
+                    job = result.scalar_one()
+
                     job.status = JobStatus.FAILED
-                    job.failure_reason = (
-                        "Missing required columns: " + ", ".join(validation_result["missing_columns"])
-                    )
-                elif validation_result["quality_score"] < MIN_QUALITY_SCORE:
-                    job.status = JobStatus.FAILED
-                    job.failure_reason = (
-                        f"Data quality too low ({validation_result['quality_score']}%)"
-                    )
-                else:
-                    job.status = JobStatus.PROCESSING
-
-                await db.commit()
-                return {
-                    "should_continue": job.status != JobStatus.FAILED,
-                    "status": job.status.value,
-                    "failure_reason": job.failure_reason,
-                }
+                    job.ingestion_status = IngestionStatus.FAILED
+                    job.failure_reason = f"Error saving validation results: {str(e)}"
+                    await db.commit()
 
         validation_save_result = await step.run("save-validation", save_validation)
   
