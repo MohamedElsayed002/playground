@@ -149,7 +149,6 @@ export function RouteCards() {
           description="Upload and track your CSV reports with the full extraction workflow."
           icon={FileSpreadsheet}
           href="/extract-csv-pipeline"
-          // label="Active route"
           backgroundClassName="bg-[linear-gradient(135deg,_#f97316_0%,_#ea580c_40%,_#7c2d12_100%)]"
         />
 
@@ -157,7 +156,6 @@ export function RouteCards() {
           title="PDF Reports"
           description="A dedicated PDF experience is coming next for document-style workflows."
           icon={FileText}
-          // label="Planned route"
           href="/extract-pdf-pipeline"
           backgroundClassName="bg-[linear-gradient(135deg,_#dc2626_0%,_#991b1b_45%,_#450a0a_100%)]"
         />
@@ -166,8 +164,8 @@ export function RouteCards() {
           title="Checkout"
           description="A checkout flow can live here when you are ready to add commerce."
           icon={ShoppingCart}
-          // label="Planned route"
           backgroundClassName="bg-[linear-gradient(135deg,_#0f172a_0%,_#1e293b_45%,_#020617_100%)]"
+          href="/small-ecommerce"
         />
       </div>
     </section>
