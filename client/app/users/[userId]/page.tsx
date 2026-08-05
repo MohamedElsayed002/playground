@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import SingleUser from "@/components/users/single-user";
 import { getUserName } from "@/actions";
 
@@ -23,7 +24,13 @@ export default async function SingleUserPage({
   params: Promise<{ userId: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const userId = (await params).userId;
+  const { userId } = await params;
+  const userName = await getUserName(userId);
+
+  if (!userName) {
+    notFound();
+  }
+
   // const filters = (await searchParams)
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#fed7aa_0%,#ffedd5_35%,#fefce8_75%,#fafaf9_100%)]">

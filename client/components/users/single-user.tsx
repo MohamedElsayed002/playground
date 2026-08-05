@@ -1,9 +1,9 @@
 "use client";
 
 import { useSingleUser } from "@/hooks/use-users";
-import { useParams } from "next/navigation";
 import { Skeleton } from "../ui/skeleton";
 import { Button } from "../ui/button";
+
 
 export default function SingleUser({ userId }: { userId: string }) {
   // const params = useParams<{ userId: string }>()
@@ -25,6 +25,9 @@ export default function SingleUser({ userId }: { userId: string }) {
         ) : error ? (
           <div className="w-full max-w-md rounded-lg border border-red-300 bg-red-50 p-6 text-center">
             <h2 className="text-lg font-semibold text-red-700">Could not load user</h2>
+            <p className="mt-2 text-sm text-red-600">
+              Something went wrong while fetching this profile.
+            </p>
             <Button className="mt-4" variant="destructive" onClick={() => refetch()}>
               Try again
             </Button>
