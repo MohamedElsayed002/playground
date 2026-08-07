@@ -1,10 +1,7 @@
 import type { AuthTokens } from "@/types";
 
 /** Browser: public URL. Server (e.g. Docker): use INTERNAL_API_URL so fetches reach the backend service. */
-export const API_URL =
-  typeof window === "undefined" && process.env.INTERNAL_API_URL
-    ? process.env.INTERNAL_API_URL
-    : (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001");
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001");
 
 const TOKEN_KEY = "chat_access_token";
 const REFRESH_KEY = "chat_refresh_token";
@@ -39,7 +36,6 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     },
   });
 
-  //  Refresh token
 
   if (res.status === 401) {
     const refreshToken = tokenStorage.getRefresh();
@@ -60,7 +56,6 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     }
     await refreshPromise;
 
-    // retry original request with the new token
     return apiFetch<T>(path, options);
   }
 

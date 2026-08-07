@@ -1,13 +1,15 @@
-import { Metadata } from "next"
+import { api } from "@/lib/api/client"
+import type { Metadata } from "next"
+import { CartView } from "../../../components/cart/cart-view"
+import type { CartData } from "./components/types"
 
 export const metadata: Metadata = {
-    title: "Cart"
+    title: "Cart",
 }
 
-export default function Page() {
-    return (
-        <div>
-            <h1>Cart</h1>
-        </div>
-    )
+export default async function Page() {
+    const data = await api.GET("/api/v1/orders/cart")
+    const cart = (data.data ?? null) as CartData | null
+
+    return <CartView cart={cart} />
 }

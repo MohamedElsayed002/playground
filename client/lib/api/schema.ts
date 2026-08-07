@@ -413,13 +413,55 @@ export interface paths {
         put?: never;
         /**
          * Place Order
-         * @description Place a new order. Automatically:
+         * @description Place a new order from the current user's cart.
+         *     Automatically:
+         *     - Loads cart items
          *     - Validates product availability and stock
          *     - Snapshots prices at purchase time
          *     - Deducts stock
-         *     - Calculates tax and totals
+         *     - Clears the cart after success
          */
         post: operations["place_order_api_v1_orders__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/cart/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add To Cart
+         * @description Add a product to the current user's cart, or increment its quantity.
+         */
+        post: operations["add_to_cart_api_v1_orders_cart_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the current user's cart
+         * @description Return the current user's cart with product details and subtotal.
+         */
+        get: operations["get_cart_api_v1_orders_cart_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -437,6 +479,26 @@ export interface paths {
         put?: never;
         /** Testing Route */
         post: operations["testing_route_api_v1_orders_testing_route_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the current user's orders
+         * @description Alias route for the current user's orders.
+         */
+        get: operations["my_orders_api_v1_orders_my_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -502,23 +564,6 @@ export interface paths {
          * @description [Admin] Update an order's status (e.g., mark as shipped, delivered).
          */
         patch: operations["update_order_status_api_v1_orders__order_id__status_patch"];
-        trace?: never;
-    };
-    "/api/v1/orders/my": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List the current user's orders */
-        get: operations["my_orders_api_v1_orders_my_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/v1/files/images": {
@@ -623,36 +668,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Upload PDF – Background Processing via Inngest
-         * @description Upload a PDF for **background processing** via Inngest.
-         *
-         *     🔐 **Authenticated endpoint** – Requires user login
-         *
-         *     ### How it works
-         *     1. Validates file type & idempotency key
-         *     2. Uploads raw PDF to S3
-         *     3. Creates a DB record (status = `processing`)
-         *     4. Fires an Inngest event → background worker runs:
-         *        - Virus scan
-         *        - PDF text/table extraction
-         *        - LLM structured data extraction
-         *        - DB update (status → `completed`)
-         *
-         *     ### Idempotency Protection
-         *     - Send unique `Idempotency-Key` header with each request
-         *     - Duplicate requests with same key return cached result instantly
-         *     - Prevents double-uploads from network retries or accidental double-clicks
-         *
-         *     ### Returns
-         *     - `202 Accepted` with `file_id` and `status: "processing"`
-         *     - Or cached full response if idempotency key was already processed
-         *
-         *     ### Example Request Header
-         *     ```
-         *     Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000
-         *     ```
-         */
+        /** Upload PDF – Background Processing via Inngest */
         post: operations["extract_pdf_authenticated_api_v1_files_pdf_extract_authenticated_post"];
         delete?: never;
         options?: never;
@@ -667,28 +683,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Poll PDF processing status
-         * @description Poll the processing status of an uploaded PDF.
-         *
-         *     ### Response by status
-         *     - `processing` → Still working, poll again in a few seconds
-         *     - `completed`  → Done! Full extraction result included in `result`
-         *     - `failed`     → Error occurred, `error` field has details
-         *
-         *     ### Example usage (client-side)
-         *     ```js
-         *     const poll = async (fileId) => {
-         *         const res = await fetch(`/api/v1/files/pdf/status/${fileId}`);
-         *         const data = await res.json();
-         *         if (data.status === "processing") {
-         *             setTimeout(() => poll(fileId), 3000); // retry in 3s
-         *         } else {
-         *             console.log(data.result); // full extraction
-         *         }
-         *     }
-         *     ```
-         */
+        /** Poll PDF processing status */
         get: operations["get_pdf_status_api_v1_files_pdf_status__file_id__get"];
         put?: never;
         post?: never;
@@ -755,6 +750,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/jobs/{report_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Status Report Endpoint
+         * @description Get the status of the report
+         */
+        get: operations["get_status_report_endpoint_api_v1_jobs__report_id__status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/jobs/{job_id}/products": {
         parameters: {
             query?: never;
@@ -768,7 +783,11 @@ export interface paths {
          */
         get: operations["get_normalized_products_endpoint_api_v1_jobs__job_id__products_get"];
         put?: never;
-        post?: never;
+        /**
+         * Create Normalized Product Endpoint
+         * @description Create a normalized product for a specific job ID.
+         */
+        post: operations["create_normalized_product_endpoint_api_v1_jobs__job_id__products_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -977,6 +996,32 @@ export interface components {
              */
             work_experience: components["schemas"]["WorkExperience"][];
         };
+        /** CartItemCreate */
+        CartItemCreate: {
+            /** Product Id */
+            product_id: number;
+            /** Quantity */
+            quantity: number;
+        };
+        /** CartItemResponse */
+        CartItemResponse: {
+            /** Id */
+            id: number;
+            /** Quantity */
+            quantity: number;
+            product: components["schemas"]["ProductResponse"];
+        };
+        /** CartResponse */
+        CartResponse: {
+            /** Id */
+            id: number;
+            /** User Id */
+            user_id: number;
+            /** Items */
+            items?: components["schemas"]["CartItemResponse"][];
+            /** Subtotal */
+            subtotal?: string | null;
+        };
         /** CategoryResponse */
         CategoryResponse: {
             /** Id */
@@ -1063,8 +1108,6 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-            /** User */
-            user: null;
             /** Original Filename */
             original_filename: string;
             /** Status */
@@ -1092,10 +1135,27 @@ export interface components {
             /** Failure Reason */
             failure_reason: string | null;
         };
-        /** OrderCreate */
-        OrderCreate: {
-            /** Items */
-            items: components["schemas"]["OrderItemCreate"][];
+        /** NormalizedProductCreate */
+        NormalizedProductCreate: {
+            /** Product Id */
+            product_id: string;
+            /** Product Name */
+            product_name: string;
+            /** Category */
+            category?: string | null;
+            /** Price */
+            price: number | string;
+            /** Quantity */
+            quantity: number;
+            /** Last Restock Date */
+            last_restock_date?: string | null;
+        };
+        /**
+         * OrderCheckoutCreate
+         * @description Checkout payload for cart-based orders.
+         *     Items come from the user's cart, not the request body.
+         */
+        OrderCheckoutCreate: {
             /** Shipping Address Line1 */
             shipping_address_line1?: string | null;
             /** Shipping Address Line2 */
@@ -1108,16 +1168,6 @@ export interface components {
             shipping_postal_code?: string | null;
             /** Notes */
             notes?: string | null;
-        };
-        /**
-         * OrderItemCreate
-         * @description A single line item when placing an order
-         */
-        OrderItemCreate: {
-            /** Product Id */
-            product_id: number;
-            /** Quantity */
-            quantity: number;
         };
         /** OrderItemResponse */
         OrderItemResponse: {
@@ -2482,7 +2532,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["OrderCreate"];
+                "application/json": components["schemas"]["OrderCheckoutCreate"];
             };
         };
         responses: {
@@ -2506,6 +2556,59 @@ export interface operations {
             };
         };
     };
+    add_to_cart_api_v1_orders_cart_items_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CartItemCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_cart_api_v1_orders_cart_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartResponse"];
+                };
+            };
+        };
+    };
     testing_route_api_v1_orders_testing_route_post: {
         parameters: {
             query?: never;
@@ -2518,7 +2621,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["OrderCreate"];
+                "application/json": components["schemas"]["OrderCheckoutCreate"];
             };
         };
         responses: {
@@ -2529,6 +2632,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_orders_api_v1_orders_my_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginatedResponse_OrderResponse_"];
                 };
             };
             /** @description Validation Error */
@@ -2626,40 +2761,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    my_orders_api_v1_orders_my_get: {
-        parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
                 };
             };
             /** @description Validation Error */
@@ -2975,6 +3076,37 @@ export interface operations {
             };
         };
     };
+    get_status_report_endpoint_api_v1_jobs__report_id__status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_normalized_products_endpoint_api_v1_jobs__job_id__products_get: {
         parameters: {
             query?: {
@@ -3000,6 +3132,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProductReportListResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_normalized_product_endpoint_api_v1_jobs__job_id__products_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NormalizedProductCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductReportResponse"];
                 };
             };
             /** @description Validation Error */
@@ -3051,7 +3218,7 @@ export interface operations {
             header?: never;
             path: {
                 job_id: string;
-                product_id: number;
+                product_id: string;
             };
             cookie?: never;
         };
@@ -3088,8 +3255,8 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                job_id: unknown;
-                product_id: unknown;
+                job_id: string;
+                product_id: string;
             };
             cookie?: never;
         };
