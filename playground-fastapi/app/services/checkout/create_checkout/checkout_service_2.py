@@ -5,15 +5,18 @@ from datetime import datetime, timezone
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from app.models.user import User
 from app.models.product import Product
+from app.models.cart import Cart
+from app.models.cart_item import CartItem
 
 from app.exceptions.handlers import ConflictException, NotFoundException, InactiveProductError, OutOfStockError
 from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus 
 from app.repositories.idempotency import IdempotencyRepository
 from app.repositories.order import OrderRepository 
 from app.repositories.product import ProductRepository
-from app.schemas.order import OrderItemCreate, OrderCreate, OrderResponse
+from app.schemas.order import OrderCheckoutCreate, OrderResponse
 from app.services.audit_service import create_audit_log
 
 from decimal import Decimal
@@ -50,22 +53,26 @@ class CheckoutService:
         self.order_repo = OrderRepository(session)
         self.idempotency_repo = IdempotencyRepository(session)
 
+
     async def checkout_2(
             self,
             idempotency_key: str | None,
             user_id: str,
-            request: OrderCreate
+            request: OrderCheckoutCreate
 
     ):
+        # return "Works fine"
+        items_count = 0
+
         async def audit_checkout_step(event: str, status: str, **metadata) -> None:
             await create_audit_log(
                 db=None,
                 event=event,
                 status=status,
-                user_id=int(user_id) if str(user_id).isdigit() else None,
+                user_id=user_id,
                 metadata={
                     "idempotency_key": idempotency_key,
-                    "items_count": len(request.items),
+                    "items_count": items_count,
                     **metadata,
                 },
             )
@@ -77,6 +84,7 @@ class CheckoutService:
 
         # Step 1 check the user is in the data
         user = await self.session.execute(select(User).where(User.id == user_id))
+
         user_obj = user.scalar_one_or_none()
         if user_obj is None:
             await audit_checkout_step(
@@ -85,7 +93,23 @@ class CheckoutService:
                 checkout_error="User not found",
             )
             raise NotFoundException("User not found")
-        
+
+        # Load the current user's cart from the database
+        cart_result = await self.session.execute(
+            select(Cart)
+            .where(Cart.user_id == user_id)
+            .options(selectinload(Cart.items).selectinload(CartItem.product))
+        )
+        cart = cart_result.scalar_one_or_none()
+        if cart is None or not cart.items:
+            await audit_checkout_step(
+                event="CHECKOUT_2_EMPTY_CART",
+                status="FAILED",
+                checkout_error="No items in the cart",
+            )
+            raise NotFoundException("No items in the cart")
+        items_count = len(cart.items)
+
         # Step 2 Check idempotency key
         if idempotency_key is not None:
             existing = await self.idempotency_repo.get_by_key(idempotency_key)
@@ -101,43 +125,13 @@ class CheckoutService:
             # else:
                 # raise ConflictException("A request with this Idempotency-Key is already being processed. Please wait mate")
 
-        # Step 3 Load & Validate Cart
-        # Cart exists? not empty? also database validate the cart min is 1
-        if len(request.items) == 0:
-            await audit_checkout_step(
-                event="CHECKOUT_2_EMPTY_CART",
-                status="FAILED",
-                checkout_error="No items in the cart",
-            )
-            raise NotFoundException('No items in the cart')
-        
-        # Already done below 
-        # # Step 4 Pre-check outside transaction 
-        #     # - calculate total
-        #     #  - validate basic data
-        #     #  - Product exists?
-        # order_items_data: list[tuple[OrderItemCreate,object]] = []
-        # subtotal = Decimal("0")
-        
-        # for item in request.items:
-        #     product = await self.product_repo.get_by_id(item.product_id)
-        #     if product is None:
-        #         raise NotFoundException(f"Product {item.product_id} not found")
-        #     if not product.is_active:
-        #         raise InactiveProductError(f"Product {item.product_id} is inactive")
-        #     if product.stock_quantity < item.quantity:
-        #         raise OutOfStockError(f"Insufficient stock for product {item.product_id}")
-        #     if item.quantity <= 0:
-        #         raise ValueError("Quantity must be positive")
-        #     subtotal += product.price * item.quantity
-        
         # Step 5 Transaction starts now + acquire idempotency lock
         idem_record = None
         if idempotency_key is not None:
             try:
                 idem_record = await self.idempotency_repo.create_lock(
                     key=idempotency_key,
-                    user_id=user_obj.id,
+                    user_id=user_id,
                     request_path="/checkout"
                 )
             except IntegrityError:
@@ -157,7 +151,8 @@ class CheckoutService:
         try:
             response = await self._execute_checkout_2(
                 request=request,
-                user_id=user_obj.id,
+                user_id=user_id,
+                cart=cart,
             )
             await self.session.commit()
             await audit_checkout_step(
@@ -276,36 +271,37 @@ class CheckoutService:
     
     async def _execute_checkout_2(
             self,
-            request: OrderCreate,
+            request: OrderCheckoutCreate,
             user_id: int,
+            cart: Cart,
     ) -> OrderResponse:
         """
-            Core business logic - must be called inside an open transaction
-            All DB operations here participate in a single atomic unit work. 
-            !! ALL OR NOTHING !! 
-            any error here are not acceptable rollback immediately 
+        Core business logic - must be called inside an open transaction
+        All DB operations here participate in a single atomic unit work. 
+        !! ALL OR NOTHING !! 
+        any error here are not acceptable rollback immediately 
         """
-        order_items_data: list[tuple[OrderItemCreate, Product]] = []
-        sorted_items = sorted(request.items, key=lambda x: x.product_id)
+        order_items_data: list[tuple[CartItem, Product]] = []
+        sorted_items = sorted(cart.items, key=lambda x: x.product_id)
         low_stock_alerts = []
         subtotal = Decimal("0")
 
         # Step 6 Lock products (SELECT ... FOR UPDATE) in stable order.
-        for item_req in sorted_items:
+        for cart_item in sorted_items:
             result = await self.session.execute(
                 select(Product)
-                .where(Product.id == item_req.product_id)
+                .where(Product.id == cart_item.product_id)
                 .with_for_update()
             )
             product = result.scalars().first()
             if product is None:
-                raise NotFoundException(f"Product {item_req.product_id} not found")
+                raise NotFoundException(f"Product {cart_item.product_id} not found")
             if not product.is_active:
-                raise InactiveProductError(f"Product {item_req.product_id} is inactive")
-            if product.stock_quantity < item_req.quantity:
-                raise OutOfStockError(f"Insufficient stock for product {item_req.product_id}")
-            subtotal += product.price * item_req.quantity
-            order_items_data.append((item_req, product))
+                raise InactiveProductError(f"Product {cart_item.product_id} is inactive")
+            if product.stock_quantity < cart_item.quantity:
+                raise OutOfStockError(f"Insufficient stock for product {cart_item.product_id}")
+            subtotal += product.price * cart_item.quantity
+            order_items_data.append((cart_item, product))
 
         # Step 7 Create order row as PENDING (before payment).
         tax = subtotal * Decimal("0.10")
@@ -332,23 +328,26 @@ class CheckoutService:
         await self.session.flush()
 
         # Step 8 Create immutable order-item snapshots + decrement stock.
-        for item_req, product in order_items_data:
-            line_total = product.price * item_req.quantity
+        for cart_item, product in order_items_data:
+            line_total = product.price * cart_item.quantity
             order_item = OrderItem(
                 order_id=order.id,
                 product_id=product.id,
                 product_name=product.name,
-                quantity=item_req.quantity,
+                quantity=cart_item.quantity,
                 unit_price=product.price,
                 total_price=line_total,
             )
             self.session.add(order_item)
 
-            product.stock_quantity -= item_req.quantity
+            product.stock_quantity -= cart_item.quantity
             if product.stock_quantity <= LOW_STOCK_THRESHOLD:
                 low_stock_alerts.append(
                     {"product_id": product.id, "stock_remaining": product.stock_quantity}
                 )
+
+        for cart_item in list(cart.items):
+            await self.session.delete(cart_item)
 
         
 
@@ -363,133 +362,3 @@ class CheckoutService:
         """
         logger.info("Processing payment for order=%s amount=%s", order_id, amount)
         return True
-
-
-
-
-
-    # Old Version
-
-    # async def checkout(
-    #         self,
-    #         request: OrderCreate,
-    #         user_id: int,
-    #         user_email: str,
-    #         idempotency_key: str,
-    #         request_path: str
-    # ) -> OrderResponse:
-        
-    #     # Step 1 Check Idempotency key
-    #     existing = await self.idempotency_repo.get_by_key(idempotency_key)
-    #     if existing is not None:
-    #         if existing.is_complete():
-    #             logger.info("Already exist and ordered")
-    #             return OrderResponse(**json.loads(existing.response_body))
-    #         else:
-    #             raise ConflictException("A request with this Idempotency-Key is already being processed. Please wait and retry")
-            
-    #     # Step 2: Acquire Idempotency lock
-    #     try:
-    #         idem_record = await self.idempotency_repo.create_lock(
-    #             key=idempotency_key,
-    #             user_id=user_id,
-    #             request_path=request_path
-    #         )
-
-    #         # to get unique constraint inside the transaction
-    #         await self.session.flush()
-    #     except IntegrityError:
-    #         await self.session.rollback()
-    #         raise ConflictException("Duplicate Idempotency Key detected")
-        
-    #     # Step 3~8 : Transactional Checkout
-    #     try:
-    #         response = await self._execute_checkout(request,user_id)
-    #     except Exception:
-    #         # Roll back again: ALL OR NOTHING
-    #         await self.session.rollback()
-    #         raise
-            
-    #     # Step 9 
-    #     await self.idempotency_repo.complete(
-    #         idem_record,
-    #         response_body=response.model_dump_json(),
-    #         status_code=201
-    #     )
-    #     await self.session.commit()
-
-    #     return response
-    
-    # async def _execute_checkout(
-    #         self,
-    #         request: OrderCreate,
-    #         user_id: int
-    # ) -> OrderResponse:
-    #     """
-    #         Core business logic - must be called inside an open transaction
-    #         All DB operations here participate in a single atomic unit work. ALL OR NOTHING
-    #     """
-
-    #     order_items_data: list[tuple[OrderItemCreate,object]] = []
-    #     subtotal = Decimal("0")
-
-    #     sorted_items = sorted(request.items, key=lambda x: x.product_id)
-
-    #     low_stock_alerts = []
-
-    #     for item_req, product in order_items_data:
-    #         product.stock_quantity -= item_req.quantity
-    #         if product.stock_quantity <= LOW_STOCK_THRESHOLD:
-    #             low_stock_alerts.append({
-    #                 "product_id": product.id,
-    #                 "stock_remaining": product.stock_quantity
-    #             })
-        
-    #     # Create the order
-    #     tax = subtotal * Decimal("0.49") # Fair enough?
-    #     shipping_cost = Decimal("0")
-    #     total = subtotal + tax + shipping_cost
-
-    #     order = Order(
-    #                     order_number=_generate_order_number(),
-    #         user_id=user_id,
-    #         status=OrderStatus.PENDING,
-    #         payment_status=PaymentStatus.PENDING,
-    #         subtotal=subtotal,
-    #         tax=tax,
-    #         shipping_cost=shipping_cost,
-    #         total=total,
-    #         shipping_address_line1=request.shipping_address_line1,
-    #         shipping_address_line2=request.shipping_address_line2,
-    #         shipping_city=request.shipping_city,
-    #         shipping_country=request.shipping_country,
-    #         shipping_postal_code=request.shipping_postal_code,
-    #         notes=request.notes,
-    #     ) 
-
-    #     self.order_repo(order)
-    #     await self.session.flush()
-
-    #     # Snapshot
-    #     for item_req, product in order_items_data:
-    #         line_total = product.price * item_req.quantity
-    #         snapy = OrderItem(
-    #             order_id=order.id,
-    #             product_name=product.name,
-    #             quantity=item_req.quantity,
-    #             unit_price=product.price,
-    #             total_price=line_total
-    #         )
-    #         self.session.add(snapy)
-    #     await self.session.flush()
-
-    #     return OrderResponse(
-    #         order_id=order.id,
-    #         order_number=order.order_number,
-    #         status=order.status.value,
-    #         payment_status=order.payment_status.value,
-    #         subtotal=subtotal,
-    #         tax=tax,
-    #         shipping_cost=shipping_cost,
-    #         total=total,
-    #     )

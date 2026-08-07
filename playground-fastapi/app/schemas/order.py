@@ -35,6 +35,19 @@ class OrderCreate(BaseModel):
     shipping_postal_code: str | None = None
     notes: str | None = None
 
+
+class OrderCheckoutCreate(BaseModel):
+    """
+    Checkout payload for cart-based orders.
+    Items come from the user's cart, not the request body.
+    """
+    shipping_address_line1: str | None = None
+    shipping_address_line2: str | None = None
+    shipping_city: str | None = None
+    shipping_country: str | None = None
+    shipping_postal_code: str | None = None
+    notes: str | None = None
+
 class OrderStatusUpdate(BaseModel):
     status: OrderStatus
     payment_status: PaymentStatus | None = None

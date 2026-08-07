@@ -5,10 +5,14 @@ from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from sqlalchemy.orm import selectinload
 
+from app.models.cart import Cart
+from app.models.cart_item import CartItem
 from app.models.order import Order, OrderItem, OrderStatus
 from app.models.product import Product 
-from app.schemas.order import OrderCreate, OrderStatusUpdate
+from app.schemas.order import OrderCheckoutCreate, OrderStatusUpdate
+from app.models.user import User
 from app.exceptions.handlers import NotFoundException, BadRequestException
 
 def __generate_order_number() -> str:
@@ -21,24 +25,121 @@ def __generate_order_number() -> str:
     return f"ORD-{date_str}-{unique_part}"
 
 
-async def create_order(db:AsyncSession, user_id: int, data: OrderCreate):
+
+async def get_cart(db: AsyncSession, user_id: int) -> Cart:
+    """
+    Get the current user's cart.
+    If the user does not have one yet, create an empty cart.
+    """
+
+    user_result = await db.execute(select(User).where(User.id == user_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise NotFoundException("User", user_id)
+
+    cart_result = await db.execute(
+        select(Cart)
+        .where(Cart.user_id == user_id)
+        .options(selectinload(Cart.items).selectinload(CartItem.product))
+    )
+    cart = cart_result.scalar_one_or_none()
+
+    if cart is None:
+        cart = Cart(user_id=user_id)
+        db.add(cart)
+        await db.flush()
+
+    refreshed = await db.execute(
+        select(Cart)
+        .where(Cart.id == cart.id)
+        .options(selectinload(Cart.items).selectinload(CartItem.product))
+    )
+    return refreshed.scalar_one()
+
+
+async def add_to_cart(db: AsyncSession, user_id: int, product_id: int, quantity: int):
+    if quantity <= 0:
+        raise BadRequestException("Quantity must be greater than zero")
+
+    user_result = await db.execute(select(User).where(User.id == user_id))
+    user = user_result.scalar_one_or_none()
+    if not user:
+        raise NotFoundException("User", user_id)
+
+    product_result = await db.execute(
+        select(Product).where(
+            Product.id == product_id,
+            Product.is_deleted == False,
+            Product.is_active == True,
+        )
+    )
+    product = product_result.scalar_one_or_none()
+    if not product:
+        raise NotFoundException("Product", product_id)
+
+    cart = await get_cart(db, user_id)
+
+    item_result = await db.execute(
+        select(CartItem).where(
+            CartItem.cart_id == cart.id,
+            CartItem.product_id == product_id,
+        )
+    )
+    item = item_result.scalar_one_or_none()
+    current_quantity = item.quantity if item is not None else 0
+    requested_quantity = current_quantity + quantity
+
+    if requested_quantity > product.stock_quantity:
+        raise BadRequestException(
+            f"Insufficient stock for '{product.name}'. "
+            f"Available: {product.stock_quantity}, requested in cart: {requested_quantity}."
+        )
+
+    if item is None:
+        item = CartItem(cart_id=cart.id, product_id=product_id, quantity=quantity)
+        db.add(item)
+    else:
+        item.quantity += quantity
+
+    await db.flush()
+
+    return await get_cart(db, user_id)
+
+
+async def create_order(db: AsyncSession, user_id: int, data: OrderCheckoutCreate):
     """
         Place and Order:
-        1. Load and validate each product
-        2. Check stock availability 
+        1. Load the user's cart
+        2. Validate each cart item against inventory
         3. Snapshot prices
-        4. Deduct stock 
+        4. Deduct stock
         5. Create order + OrderItems
+        6. Clear the cart after successful checkout
     """
+
+    user_result = await db.execute(select(User).where(User.id == user_id))
+    user = user_result.scalar_one_or_none()
+
+    if not user:
+        raise NotFoundException("User", user_id)
+
+    cart_result = await db.execute(
+        select(Cart)
+        .where(Cart.user_id == user_id)
+        .options(selectinload(Cart.items))
+    )
+    cart = cart_result.scalar_one_or_none()
+    if not cart or not cart.items:
+        raise BadRequestException("Your cart is empty")
 
     order_items_data = []
     subtotal = Decimal("0")
 
     # Now only one request can modify that inventory row at once
-    for item_data in data.items:
+    for cart_item in sorted(cart.items, key=lambda item: item.product_id):
         # Load Product 
         result = await db.execute(select(Product).where(
-            Product.id == item_data.product_id,
+            Product.id == cart_item.product_id,
             Product.is_deleted == False,
             Product.is_active == True
         ).with_for_update()
@@ -47,27 +148,27 @@ async def create_order(db:AsyncSession, user_id: int, data: OrderCreate):
         product = result.scalar_one_or_none()
 
         if not product:
-            raise NotFoundException("Product",item_data.product_id)
+            raise NotFoundException("Product", cart_item.product_id)
         
         # Check stock 
-        if product.stock_quantity < item_data.quantity:
+        if product.stock_quantity < cart_item.quantity:
             raise BadRequestException(
                 f"Insufficient stock for '{product.name}'. "
-                f"Available: {product.stock_quantity}, requested: {item_data.quantity}."
+                f"Available: {product.stock_quantity}, requested: {cart_item.quantity}."
             )
         
         # Snapshot price at order time
         unit_price = product.price 
-        total_price = unit_price * item_data.quantity 
+        total_price = unit_price * cart_item.quantity 
         subtotal += total_price
 
         # Deduct stock immediately (prevents over-selling)
-        product.stock_quantity -= item_data.quantity
+        product.stock_quantity -= cart_item.quantity
 
         order_items_data.append({
             "product_id": product.id,
             "product_name": product.name,
-            "quantity": item_data.quantity,
+            "quantity": cart_item.quantity,
             "unit_price": unit_price,
             "total_price": total_price
         })
@@ -94,6 +195,10 @@ async def create_order(db:AsyncSession, user_id: int, data: OrderCreate):
     for item_data in order_items_data:
         order_item = OrderItem(order_id=order.id, **item_data)
         db.add(order_item)
+
+    for cart_item in list(cart.items):
+        await db.delete(cart_item)
+
     await db.flush()
     await db.refresh(order) 
     return order

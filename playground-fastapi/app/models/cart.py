@@ -1,6 +1,7 @@
 from app.db.base import Base 
 from sqlalchemy import String, Text, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from decimal import Decimal
 
 class Cart(Base):
     __tablename__ = "carts"
@@ -17,3 +18,12 @@ class Cart(Base):
     items: Mapped[list["CartItem"]] = relationship(
         "CartItem", back_populates="cart", cascade="all, delete-orphan", lazy="selectin"
     )
+
+    @property
+    def subtotal(self) -> Decimal:
+        total = Decimal("0")
+        for item in self.items:
+            if item.product is None or item.product.price is None:
+                continue
+            total += item.product.price * item.quantity
+        return total
