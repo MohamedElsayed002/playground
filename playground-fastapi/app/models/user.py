@@ -1,15 +1,3 @@
-"""
-app/models/user.py
-──────────────────
-User database model.
-
-NestJS/TypeORM equivalent → @Entity() class with @Column decorators
-FastAPI/SQLAlchemy approach → Python class extending Base with Mapped[] types
-
-Mapped[str] is SQLAlchemy 2.0's typed column syntax — it gives you full
-type checking and IDE autocompletion, just like TypeORM's typed properties.
-"""
-
 from sqlalchemy import String, Boolean, Enum as SAEnum 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum 
@@ -49,9 +37,15 @@ class User(Base):
         "Order", back_populates="user", lazy="selectin"
     )
 
+    cart: Mapped["Cart | None"] = relationship(
+        "Cart", back_populates="user", uselist=False, lazy="selectin"
+    )
+
     report_jobs: Mapped[list["ReportJob"]] = relationship(
         "ReportJob", back_populates="user", lazy="selectin"
     )
+
+    
 
     def __repr__(self) -> str:
         state = self.__dict__

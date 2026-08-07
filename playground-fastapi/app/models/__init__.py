@@ -1,6 +1,8 @@
 from .user import User
 from .product import Product
 from .order import Order
+from .cart import Cart
+from .cart_item import CartItem
 from .category import Category
 from .audit_log import AuditLog
 from .report_jobs import IngestionStatus, JobStatus, ReportJob

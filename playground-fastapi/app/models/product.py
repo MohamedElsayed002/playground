@@ -1,12 +1,3 @@
-"""
-Product model with images (one-to-many) and category (many-to-one)
-
-Demonstrates:
-- NUMERIC column for prices (avoids floating-point rounding issues)
-- One-to-many relation with ProductImage
-- Many-to-one relationship with Category
-"""
-
 from decimal import Decimal
 from sqlalchemy import String, Text, Numeric, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -60,11 +51,6 @@ class Product(Base):
 
 
 class ProductImage(Base):
-    """
-        Product images - one product can have multiple images
-        NestJS equivalent -> a separate @Entity() for ProductImage with @ManyToOne(Product)
-    """
-
     __tablename__ = "product_images"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)

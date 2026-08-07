@@ -1,11 +1,3 @@
-"""
-Product category model with self-referential (parent/child) relationship.
-
-This demonstrates SQLAlchemy's self-referential foreign key - a category
-can have a parent category, enabling a tree structure:
-
-"""
-
 from sqlalchemy import String, Text, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
