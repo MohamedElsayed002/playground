@@ -1,9 +1,6 @@
 import Link from "next/link"
 import type { CartData } from "@/types/cart"
-
-interface CartItemsListProps {
-    cart: CartData | null
-}
+// type CartItem = components["schemas"]["CartItemResponse"]
 
 function formatPrice(value: string | number | null | undefined) {
     if (value === null || value === undefined || value === "") return "N/A"
@@ -17,7 +14,7 @@ function formatPrice(value: string | number | null | undefined) {
     }).format(numberValue)
 }
 
-export function CartItemsList({ cart }: CartItemsListProps) {
+export function CartItemsList({ cart }: { cart: CartData | null }) {
     if (!cart || cart.items.length === 0) {
         return (
             <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-600">

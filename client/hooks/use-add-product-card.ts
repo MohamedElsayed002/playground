@@ -1,7 +1,7 @@
 "use client"
 
 import { addCartItemAction } from "@/actions/cart.action";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type AddCartItemVariables = {
     productId: number;
@@ -9,9 +9,16 @@ type AddCartItemVariables = {
 };
 
 export const useAddProductCard = () => {
-    const { mutate, error, isPending} = useMutation({
+
+    const queryClient = useQueryClient()
+
+    const { mutate, error, isPending } = useMutation({
+        mutationKey: ["add-cart-item"],
         mutationFn: ({ productId, quantity }: AddCartItemVariables) =>
             addCartItemAction(productId, quantity),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["user-cart"] })
+        }
     })
 
     return {

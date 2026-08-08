@@ -17,3 +17,14 @@ export async function addCartItemAction(productId: number, quantity: number) {
 
     return result.data
 }
+
+
+export async function getUserCart() {
+    const result = await api.GET("/api/v1/orders/cart")
+
+    if(result.error) {
+        throw new Error("Failed to fetch user cart")
+    }
+
+    return result.data
+}
