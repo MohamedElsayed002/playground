@@ -81,6 +81,7 @@ async def get_my_orders(
     )
 
 
+# Checkout Route 
 @router.post('/testing-route')
 async def testing_route(
     data: OrderCheckoutCreate,
@@ -105,25 +106,26 @@ async def testing_route(
 async def my_orders(
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=20, ge=1, le=50),
-    current_user: User = Depends(get_current_user),
+    # current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """Alias route for the current user's orders."""
     return await order_service.list_user_orders(
-        db, user_id=current_user.id, page=page, page_size=page_size
+        db, user_id=3, page=page, page_size=page_size
+        # db, user_id=current_user.id, page=page, page_size=page_size
     )
 
 @router.get("/{order_id}", response_model=OrderResponse)
 async def get_order(
     order_id: int,
-    current_user=Depends(get_current_user),
+    # current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """
     Get a specific order. Users can only see their own orders.
     Admins can see any order via the admin endpoint below.
     """
-    return await order_service.get_order(db, order_id, user_id=current_user.id)
+    return await order_service.get_order(db, order_id, user_id=3)
 
 
 @router.post("/{order_id}/cancel", response_model=OrderResponse)

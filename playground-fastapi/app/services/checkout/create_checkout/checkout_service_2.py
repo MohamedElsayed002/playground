@@ -296,7 +296,7 @@ class CheckoutService:
             product = result.scalars().first()
             if product is None:
                 raise NotFoundException(f"Product {cart_item.product_id} not found")
-            if not product.is_active:
+            if not product.is_active or product.is_deleted: 
                 raise InactiveProductError(f"Product {cart_item.product_id} is inactive")
             if product.stock_quantity < cart_item.quantity:
                 raise OutOfStockError(f"Insufficient stock for product {cart_item.product_id}")

@@ -96,14 +96,23 @@ async def add_to_cart(db: AsyncSession, user_id: int, product_id: int, quantity:
         )
 
     if item is None:
-        item = CartItem(cart_id=cart.id, product_id=product_id, quantity=quantity)
+        item = CartItem(product_id=product_id, quantity=quantity)
+        # attach item to cart in-memory so the cart.items relationship reflects the change
+        cart.items.append(item)
         db.add(item)
     else:
         item.quantity += quantity
 
     await db.flush()
 
-    return await get_cart(db, user_id)
+    # Return a freshly loaded cart (with items and product details) to ensure
+    # the newly added/updated item appears in the response.
+    refreshed = await db.execute(
+        select(Cart)
+        .where(Cart.user_id == user_id)
+        .options(selectinload(Cart.items).selectinload(CartItem.product))
+    )
+    return refreshed.scalar_one()
 
 
 async def create_order(db: AsyncSession, user_id: int, data: OrderCheckoutCreate):
