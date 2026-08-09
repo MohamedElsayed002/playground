@@ -3,8 +3,8 @@
 import { useGetUserCart } from "@/hooks/use-get-user-cart"
 import { CartItemsList } from "./cart-items-list"
 import { CartSummary } from "./cart-summary"
-import type { CartData } from "@/types/cart"
 import { Skeleton } from "../ui/skeleton"
+
 
 
 export function CartView() {
@@ -36,7 +36,7 @@ export function CartView() {
 
             <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
                 {/* @ts-ignore */}
-                <CartItemsList cart={data || null} />
+                <CartItemsList cart={data} />
                 {/* @ts-ignore */}
                 <CartSummary cart={data} />
             </div>

@@ -1,6 +1,10 @@
+import { components } from "@/lib/api/schema"
 import Link from "next/link"
-import type { CartData } from "@/types/cart"
-// type CartItem = components["schemas"]["CartItemResponse"]
+
+
+type CartItem = components["schemas"]["CartResponse"]
+
+
 
 function formatPrice(value: string | number | null | undefined) {
     if (value === null || value === undefined || value === "") return "N/A"
@@ -14,8 +18,8 @@ function formatPrice(value: string | number | null | undefined) {
     }).format(numberValue)
 }
 
-export function CartItemsList({ cart }: { cart: CartData | null }) {
-    if (!cart || cart.items.length === 0) {
+export function CartItemsList({ cart }: { cart: CartItem }) {
+    if (!cart || cart.items?.length === 0) {
         return (
             <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-600">
                 Your cart is empty. Add some products to see them here.
@@ -25,7 +29,7 @@ export function CartItemsList({ cart }: { cart: CartData | null }) {
 
     return (
         <div className="space-y-4">
-            {cart.items.map((item) => {
+            {cart.items?.map((item) => {
                 const product = item.product
                 const imageUrl = product.images?.[0]?.url || "https://placehold.co/600x600/png?text=No+Image"
 
