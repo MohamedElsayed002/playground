@@ -24,11 +24,14 @@ import {
     FieldGroup,
     FieldLabel,
 } from "@/components/ui/field"
+import { useCheckout } from "@/hooks/use-checkout"
+import { sileo } from "sileo"
+import { useRouter } from "next/navigation"
 
 const formSchema = z.object({
-    notes: z.string().optional(),
+    notes: z.string(),
     shipping_address_line1: z.string().min(1, "Shipping address line 1 is required"),
-    shipping_address_line2: z.string().optional(),
+    shipping_address_line2: z.string(),
     shipping_city: z.string().min(1, "City is required"),
     shipping_country: z.string().min(1, "Country is required"),
     shipping_postal_code: z.string().min(1, "Postal code is required"),
@@ -38,6 +41,10 @@ export const CheckoutDialog = () => {
     const [open, setOpen] = useState(false)
     const [showConfetti, setShowConfetti] = useState(false)
     const [windowSize, setWindowSize] = useState({ width: 0, height: 0 })
+
+    const { checkoutMutate, isPending, error } = useCheckout()
+
+    const router = useRouter()
 
     useEffect(() => {
         if (typeof window === "undefined") return
@@ -64,19 +71,40 @@ export const CheckoutDialog = () => {
     })
 
     const handleSubmit = (data: z.infer<typeof formSchema>) => {
-        console.log("Submitted", data)
-        setShowConfetti(true)
-
-        window.setTimeout(() => {
-            setShowConfetti(false)
-            setOpen(false)
-            form.reset()
-        }, 4000)
+        checkoutMutate(
+            {
+                notes: data.notes ?? null,
+                shipping_address_line1: data.shipping_address_line1,
+                shipping_address_line2: data.shipping_address_line2 ?? null,
+                shipping_city: data.shipping_city,
+                shipping_country: data.shipping_country,
+                shipping_postal_code: data.shipping_postal_code,
+            },
+            {
+                onSuccess: () => {
+                    setShowConfetti(true)
+                    sileo.success({ title: "Checkout Successfully" })
+                    window.setTimeout(() => {
+                        setShowConfetti(false)
+                        setOpen(false)
+                        form.reset()
+                        router.push("/small-ecommerce")
+                    }, 4000)
+                },
+                onError: (error) => {
+                    const message =
+                        error instanceof Error
+                            ? error.message
+                            : "Failed Checkout"
+                    sileo.error({ title: message })
+                },
+            },
+        )
     }
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <Button type="button" onClick={() => setOpen(true)}>
+            <Button className="bg-yellow-500" type="button" onClick={() => setOpen(true)}>
                 <ShoppingBag className="size-4" />
                 Checkout
             </Button>
@@ -143,11 +171,19 @@ export const CheckoutDialog = () => {
                         </Field>
                     </FieldGroup>
 
+                    {error ? (
+                        <div className="rounded-md border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                            {error instanceof Error ? error.message : "An error occurred during checkout."}
+                        </div>
+                    ) : null}
+
                     <DialogFooter>
-                        <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
+                        <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={isPending}>
                             Cancel
                         </Button>
-                        <Button type="submit">Checkout</Button>
+                        <Button type="submit" disabled={isPending}>
+                            {isPending ? "Submitting..." : "Checkout"}
+                        </Button>
                     </DialogFooter>
                 </form>
 

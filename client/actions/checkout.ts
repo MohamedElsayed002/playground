@@ -1,7 +1,6 @@
 import { api } from "@/lib/api/client";
-import { useMutation } from "@tanstack/react-query";
 
-export const checkout = async (notes: string | null,shipping_address_line1: string | null,shipping_address_line2: string | null,shipping_city: string | null,shipping_country: string | null,shipping_postal_code: string | null) => {
+export const checkout = async (notes: string | null,shipping_address_line1: string,shipping_address_line2: string | null,shipping_city: string,shipping_country: string,shipping_postal_code: string) => {
 
     const response = await api.POST("/api/v1/orders/testing-route",{
         body: {
