@@ -17,3 +17,4 @@ pillow
 pyClamd
 openai
 resend
+workos

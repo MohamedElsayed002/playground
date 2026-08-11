@@ -1,3 +1,6 @@
+from datetime import datetime
+import logging
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select 
 from fastapi import Request
@@ -5,9 +8,13 @@ from fastapi import Request
 from app.models.user import User 
 from app.schemas.user  import UserCreate, TokenResponse 
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
+from app.core.audit_events import AuditEvent
+from app.core.workos import create_workos_audit_event_async
 from app.exceptions.handlers import ConflictException, BadRequestException, NotFoundException
 from jose import JWTError
 from app.services.audit_service import create_audit_log
+
+logger = logging.getLogger(__name__)
 
 async def register_user(db: AsyncSession, data: UserCreate, request: Request | None = None) -> User:
     existing = await db.execute(select(User).where(User.email == data.email))
@@ -65,17 +72,27 @@ async def login_user(db: AsyncSession, email: str, password: str, request: Reque
     if not user or not verify_password(password,user.hashed_password):
         await create_audit_log(
             db=None,
-            event="AUTH_LOGIN_FAILED",
+            event=AuditEvent.USER_LOGIN_FAILED,
             status="FAILED",
             request=request,
             metadata={"email": email, "reason": "invalid_credentials"},
+        )
+
+        await create_workos_audit_event_async(
+            AuditEvent.USER_LOGIN_FAILED,
+            actor_id=email,
+            target_id=email,
+            target_type="Auth",
+            target_name="Auth",
+            request=request,
+            metadata={"email": email},
         )
         raise BadRequestException("Invalid email or password")
     
     if not user.is_active:
         await create_audit_log(
             db=None,
-            event="AUTH_LOGIN_FAILED",
+            event=AuditEvent.USER_LOGIN_FAILED,
             status="FAILED",
             user_id=user.id,
             request=request,
@@ -91,12 +108,24 @@ async def login_user(db: AsyncSession, email: str, password: str, request: Reque
     refresh_token = create_refresh_token(subject=user.id)
     await create_audit_log(
         db=None,
-        event="AUTH_LOGIN_SUCCESS",
+        event=AuditEvent.USER_LOGGED_IN,
         status="SUCCESS",
         user_id=user.id,
         request=request,
         metadata={"email": user.email, "role": user.role.value},
     )
+    try:
+        await create_workos_audit_event_async(
+            AuditEvent.USER_LOGGED_IN,
+            actor_id=str(user.id),
+            target_id=str(user.id),
+            target_type="Auth",
+            request=request,
+            metadata={"email": user.email, "role": user.role.value},
+            idempotency_key=f"user-login-{user.id}-{int(datetime.utcnow().timestamp())}",
+        )
+    except Exception as exc:
+        logger.exception("WorkOS audit event failed during login: %s", exc)
 
     return TokenResponse(
         access_token=access_token,

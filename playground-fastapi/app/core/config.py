@@ -53,6 +53,10 @@ class Settings(BaseSettings):
 
     RESEND_API_KEY: str
 
+    WORKOS_ORGANIZATION_ID: str
+    WORKOS_CLIENT_ID: str 
+    WORKOS_API_KEY: str
+
 
 
     # Pydantic-settings config: reads from .env file

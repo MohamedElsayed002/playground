@@ -2,8 +2,10 @@ import logging
 import math
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
+from fastapi import Request
 from app.exceptions.handlers import NotFoundException
 
+from app.core.audit_events import AuditEventType
 from app.db.session import AsyncSessionLocal
 from app.models.audit_log import AuditLog
 
@@ -56,10 +58,10 @@ async def list_audit_logs(
 
 async def create_audit_log(
         db: AsyncSession | None,
-        event: str,
+        event: AuditEventType | str,
         status: str,
         user_id: int | None = None,
-        request=None,
+        request: Request | None = None,
         metadata: dict | None = None,
         commit: bool = False,
 ):
