@@ -5,7 +5,8 @@ import { Metadata } from "next"
 import { ProductsGrid } from "./products-grid";
 
 export const metadata: Metadata = {
-    title: "Small E-commerce"
+    title: "Small E-commerce",
+    description: "Mohamed Elsayed"
 }
 export default async function Page() {
 

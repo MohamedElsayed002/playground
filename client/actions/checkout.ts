@@ -14,6 +14,7 @@ export const checkout = async (notes: string | null,shipping_address_line1: stri
     })
 
     if(response.error) {
+        // @ts-expect-error
         throw new Error(response.error.detail || "Checkout failed")
     }
 
