@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <DotPattern className="min-h-screen bg-[radial-gradient(circle_at_top,_#065f46_0%,_#022c22_40%,_#020617_100%)]">
+    <DotPattern className="min-h-screen bg-[radial-gradient(circle_at_top,_#dc2626_0%,_#450a0a_40%,_#020617_100%)]">
       <RegisterForm />
     </DotPattern>
   );

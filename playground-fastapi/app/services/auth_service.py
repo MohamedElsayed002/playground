@@ -62,6 +62,16 @@ async def register_user(db: AsyncSession, data: UserCreate, request: Request | N
         request=request,
         metadata={"email": user.email, "username": user.username},
     )
+
+    await create_workos_audit_event_async(
+        AuditEvent.USER_REGISTERED,
+        actor_id=str(user.id),
+        target_id=str(user.id),
+        target_type="Auth",
+        request=request,
+        metadata={"email": user.email, "username": user.username, "timestamp": datetime.utcnow().isoformat()},
+    )
+
     return user
 
 

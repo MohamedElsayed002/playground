@@ -138,7 +138,7 @@ export function RegisterForm() {
         </CardContent>
         <CardFooter>
           <Field orientation="vertical">
-            <Button className="w-full" type="submit" form="register-playground">
+            <Button className="w-full bg-[radial-gradient(circle_at_top,_#065f46_0%,_#022c22_40%,_#020617_100%)] hover:opacity-80" type="submit" form="register-playground">
               Register
             </Button>
             <span>
