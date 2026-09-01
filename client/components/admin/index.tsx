@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { ApprovalPrompt } from "@/components/admin/approval";
 
 import { Badge } from "@/components/ui/badge";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useHotkey } from "@tanstack/react-hotkeys";
 import { RealtimeChatPanel } from "./realtime-chat-panel";
 import { extractImageUrl, formatJsonLike, stripMarkdownImage } from "@/lib/utils";
@@ -20,6 +20,9 @@ import { extractImageUrl, formatJsonLike, stripMarkdownImage } from "@/lib/utils
 const formSchema = z.object({
   message: z.string().min(3, "Send Message not less than 3 characters"),
 });
+
+const MESSAGE_DRAFT_STORAGE_KEY = "admin-message-draft";
+const MESSAGE_DRAFT_SAVE_DELAY = 300;
 
 export default function AdminPage() {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -32,6 +35,39 @@ export default function AdminPage() {
     resolver: zodResolver(formSchema),
     defaultValues: { message: "" },
   });
+  const message = useWatch({ control: form.control, name: "message" });
+  const hasHydratedDraft = useRef(false);
+
+  useEffect(() => {
+    try {
+      const savedDraft = window.localStorage.getItem(MESSAGE_DRAFT_STORAGE_KEY);
+      if (savedDraft) {
+        form.setValue("message", savedDraft, { shouldDirty: false });
+      }
+    } catch {
+      // Storage may be unavailable in private browsing or restricted environments.
+    } finally {
+      hasHydratedDraft.current = true;
+    }
+  }, [form]);
+
+  useEffect(() => {
+    if (!hasHydratedDraft.current) return;
+
+    const timeoutId = window.setTimeout(() => {
+      try {
+        if (message) {
+          window.localStorage.setItem(MESSAGE_DRAFT_STORAGE_KEY, message);
+        } else {
+          window.localStorage.removeItem(MESSAGE_DRAFT_STORAGE_KEY);
+        }
+      } catch {
+        // Storage may be unavailable in private browsing or restricted environments.
+      }
+    }, MESSAGE_DRAFT_SAVE_DELAY);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [message]);
 
   const applyShortcutMessage = (text: string) => {
     form.setValue("message", text, { shouldDirty: true, shouldValidate: true });
@@ -51,6 +87,11 @@ export default function AdminPage() {
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     sendMessage(values.message);
+    try {
+      window.localStorage.removeItem(MESSAGE_DRAFT_STORAGE_KEY);
+    } catch {
+      // Storage may be unavailable in private browsing or restricted environments.
+    }
     form.reset();
   };
 
@@ -86,7 +127,7 @@ export default function AdminPage() {
                           type="text"
                           placeholder="Type your message..."
                           className="h-12 rounded-2xl border-slate-200 bg-white/90 text-slate-900 shadow-sm focus-visible:ring-slate-400"
-                          // @ts-expect-error
+                          // @ts-expect-error Input's ref type is narrower than react-hook-form's field ref.
                           ref={inputRef}
                           {...field}
                         />

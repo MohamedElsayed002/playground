@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { sileo } from "sileo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChategyForm } from "./chategy-form";
@@ -8,16 +8,80 @@ import { ChategyResponsePanel } from "./chategy-response";
 import { useChategyFileAnalysis, useChategyPrompt } from "@/hooks/use-chategy";
 import type { ChategyMode, ChategyResponse } from "@/lib/chategy-api";
 
+const CHATEGY_DRAFT_STORAGE_KEY = "chategy-request-draft";
+const CHATEGY_DRAFT_SAVE_DELAY = 300;
+
+type ChategyDraft = {
+  mode: ChategyMode;
+  prompt: string;
+};
+
+const isChategyMode = (value: unknown): value is ChategyMode =>
+  value === "code-execution" || value === "file-analysis";
+
 export function ChategyWorkspace() {
   const [mode, setMode] = useState<ChategyMode>("code-execution");
   const [prompt, setPrompt] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [response, setResponse] = useState<ChategyResponse | null>(null);
+  const [formResetVersion, setFormResetVersion] = useState(0);
+  const hasHydratedDraft = useRef(false);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      try {
+        const savedDraft = window.localStorage.getItem(CHATEGY_DRAFT_STORAGE_KEY);
+        if (!savedDraft) return;
+
+        const draft = JSON.parse(savedDraft) as Partial<ChategyDraft>;
+        if (isChategyMode(draft.mode)) setMode(draft.mode);
+        if (typeof draft.prompt === "string") setPrompt(draft.prompt);
+      } catch {
+        // Storage may be unavailable or contain invalid data.
+      } finally {
+        hasHydratedDraft.current = true;
+      }
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydratedDraft.current) return;
+
+    const timeoutId = window.setTimeout(() => {
+      try {
+        if (!prompt && mode === "code-execution") {
+          window.localStorage.removeItem(CHATEGY_DRAFT_STORAGE_KEY);
+          return;
+        }
+
+        const draft: ChategyDraft = { mode, prompt };
+        window.localStorage.setItem(CHATEGY_DRAFT_STORAGE_KEY, JSON.stringify(draft));
+      } catch {
+        // Storage may be unavailable in private browsing or restricted environments.
+      }
+    }, CHATEGY_DRAFT_SAVE_DELAY);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [mode, prompt]);
 
   const promptMutation = useChategyPrompt();
   const fileMutation = useChategyFileAnalysis();
 
   const isLoading = promptMutation.isPending || fileMutation.isPending;
+
+  const resetForm = () => {
+    try {
+      window.localStorage.removeItem(CHATEGY_DRAFT_STORAGE_KEY);
+    } catch {
+      // Storage may be unavailable in private browsing or restricted environments.
+    }
+    setMode("code-execution");
+    setPrompt("");
+    setSelectedFile(null);
+    setFormResetVersion((version) => version + 1);
+  };
 
   const handleSubmit = async () => {
     try {
@@ -39,6 +103,7 @@ export function ChategyWorkspace() {
           title: "File analyzed",
           description: "Analysis successed",
         });
+        resetForm();
         return;
       }
 
@@ -60,6 +125,7 @@ export function ChategyWorkspace() {
         title: "Response received",
         description: `Data fetched from ${mode}.`,
       });
+      resetForm();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error";
       sileo.error({
@@ -87,6 +153,7 @@ export function ChategyWorkspace() {
               <CardDescription>Choose send prompt or file input</CardDescription>
               <CardContent>
                 <ChategyForm
+                  key={formResetVersion}
                   mode={mode}
                   prompt={prompt}
                   selectedFile={selectedFile}
