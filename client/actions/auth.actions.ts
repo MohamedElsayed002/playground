@@ -64,6 +64,37 @@ export async function registerAction(formData: FormData) {
   }
 }
 
+export async function registerFastAPIAction(formData: FormData) {
+  const email = formData.get("email") as string
+  const password = formData.get("password") as string
+  const first_name = formData.get("first_name") as string
+  const username = formData.get("username") as string
+  const last_name = formData.get("last_name") as string
+
+  try {
+    const response = await api.POST("/api/v1/auth/register", {
+      body: {
+        username,
+        password,
+        first_name,
+        last_name,
+        email
+      }
+    })
+
+    if (response.error) {
+      const rawError = response.error as { message?: string; errors?: Array<{ msg?: string; loc?: string[] }> }
+      const errMessage = rawError?.message && rawError.message !== "Error" ? rawError.message : rawError?.errors?.[0]?.msg ?? "Login failed"
+      throw new Error(errMessage)
+    }
+
+    return response.data
+  } catch (error) {
+    throw new Error(error instanceof Error ? error.message : "Error");
+  }
+}
+
+
 export async function loginAction(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;

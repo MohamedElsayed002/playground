@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { authApi, tokenStorage } from "@/lib/api";
-import { clearAuthCookiesAction, clearAuthCookiesActionFastAPI, loginAction, loginFastAPIAction, registerAction } from "@/actions/auth.actions";
+import { clearAuthCookiesAction, clearAuthCookiesActionFastAPI, loginAction, loginFastAPIAction, registerAction, registerFastAPIAction } from "@/actions/auth.actions";
 import { useAuthStore } from "@/store/auth.store";
 import { sileo } from "sileo";
 import { disconnectSocket } from "@/lib/socket";
@@ -27,6 +27,36 @@ export function useRegister() {
       router.push("/");
     },
   });
+}
+
+export function useRegisterFastAPI() {
+  // const setSession = useAuthStoreFastAPI((s) => s.setSession)
+  const router = useRouter()
+
+  return useMutation({
+    mutationFn: async (data: { email: string; password: string; first_name: string; last_name: string; username: string }) => {
+      const formData = new FormData()
+      formData.set("email", data.email)
+      formData.set("password", data.password)
+      formData.set("first_name", data.first_name)
+      formData.set("last_name", data.last_name)
+      formData.set("username", data.username)
+      return registerFastAPIAction(formData)
+    },
+    onSuccess: (data) => {
+      sileo.success({
+        title: "User registered successfully",
+        description: "Please login to continue",
+      })
+      router.push("/auth/login-fastapi")
+    },
+    onError: (error) => {
+      sileo.error({
+        title: "Error",
+        description: error.message,
+      })
+    }
+  })
 }
 
 export function useLogin() {

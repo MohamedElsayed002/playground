@@ -10,22 +10,26 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { Input } from "../ui/input";
 
 import Link from "next/link";
-import { useRegister } from "@/hooks/use-auth";
+import { useRegisterFastAPI } from "@/hooks/use-auth";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   username: z.string().min(2, "Min characters 2").max(20, "Max 20"),
   password: z.string().min(6, "Min 6"),
+  first_name: z.string().min(2, "Min characters 2").max(20, "Max 20"),
+  last_name: z.string().min(2, "Min characters 2").max(20, "Max 20"),
 });
 
 export function RegisterForm() {
-  const register = useRegister();
+  const register = useRegisterFastAPI();
 
   const form = useForm({
     defaultValues: {
       email: "",
       username: "",
       password: "",
+      last_name: "",
+      first_name: "",
     },
     validators: {
       onSubmit: formSchema,
@@ -110,6 +114,50 @@ export function RegisterForm() {
                 }}
               />
 
+              <form.Field
+                name="first_name"
+                children={(field) => {
+                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>First Name</FieldLabel>
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        aria-invalid={isInvalid}
+                        placeholder="Mohamed"
+                        autoComplete="off"
+                      />
+                      {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                    </Field>
+                  );
+                }}
+              />
+              <form.Field
+                name="last_name"
+                children={(field) => {
+                  const isInvalid = field.state.meta.isTouched && !field.state.meta.isValid;
+                  return (
+                    <Field data-invalid={isInvalid}>
+                      <FieldLabel htmlFor={field.name}>Last Name</FieldLabel>
+                      <Input
+                        id={field.name}
+                        name={field.name}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        aria-invalid={isInvalid}
+                        placeholder="Elsayed"
+                        autoComplete="off"
+                      />
+                      {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                    </Field>
+                  );
+                }}
+              />
               <form.Field
                 name="password"
                 children={(field) => {
