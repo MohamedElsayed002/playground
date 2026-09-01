@@ -33,6 +33,12 @@ export interface AuthTokens {
   profile: AuthProfile;
 }
 
+export interface AuthTokensFastAPI {
+  access_token: string;
+  refresh_token: string;
+  token_type: string
+}
+
 // GraphQL Models
 
 export interface Profile {

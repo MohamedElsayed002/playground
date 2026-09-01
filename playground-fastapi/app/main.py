@@ -10,6 +10,7 @@ from app.core.middleware import RequestLoggingMiddleware, SecurityHeadersMiddlew
 from app.exceptions.handlers import register_exception_handlers
 from app.routes import auth, users, products, orders, files, audit_logs, normalized_products
 from app.db.session import create_all_tables
+# from strawberry.fastapi import GraphQLRouter
 
 # Rate Limiting
 

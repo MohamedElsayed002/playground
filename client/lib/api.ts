@@ -16,7 +16,7 @@ export const tokenStorage = {
   },
   clearTokens: () => {
     (localStorage.removeItem(TOKEN_KEY), localStorage.removeItem(REFRESH_KEY));
-  },
+  }
 };
 
 // Fetch Wrapper

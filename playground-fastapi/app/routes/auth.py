@@ -49,6 +49,22 @@ async def login(
     return token
 
 
+@router.post(
+    "/logout",
+    status_code=status.HTTP_200_OK,
+    summary="Logout current user",
+)
+async def logout(
+    request: Request,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+        Log the current user out and record audit events.
+    """
+    return await auth_service.logout_user(db, current_user, request=request)
+
+
 @router.get(
     "/me",
     response_model=UserResponse,

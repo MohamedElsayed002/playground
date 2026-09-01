@@ -5,6 +5,7 @@ from typing import Literal
 class AuditEvent(str, Enum):
     USER_LOGGED_IN = "user.loggedIn"
     USER_LOGIN_FAILED = "user.loginFailed"
+    USER_LOGGED_OUT = "user.loggedOut"
     USER_UPDATED = "user.updated"
     USER_REGISTERED = "user.registered"
     USER_REFRESH_TOKEN = "user.refreshToken"
@@ -14,6 +15,7 @@ class AuditEvent(str, Enum):
 AuditEventType = Literal[
     "user.loggedIn",
     "user.loginFailed",
+    "user.loggedOut",
     "user.updated",
     "user.registered",
     "user.refreshToken",

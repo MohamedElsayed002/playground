@@ -8,5 +8,6 @@ from .category import Category
 from .audit_log import AuditLog
 from .report_jobs import IngestionStatus, JobStatus, ReportJob
 from .normalized_products import NormalizedProduct
+from .audit_outbox import AuditOutbox
 # from .audit_log import audit_log
 # from .candidate import Candidate, CandidateSkill,WorkExperience,Education,CandidateScore

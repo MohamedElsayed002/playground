@@ -192,3 +192,40 @@ async def refresh_access_token(
         access_token=create_access_token(user.id, {"role": user.role.value}),
         refresh_token=create_refresh_token(user.id)
     )
+
+
+
+async def logout_user(
+    db: AsyncSession,
+    user: User,
+    request: Request | None = None
+):
+    """
+        Logout the user by invalidating the refresh token
+        In this implementation, we don't store refresh tokens in the database,
+        so we can't truly invalidate them. However, we can log the logout event.
+    """
+    await create_audit_log(
+        db=None,
+        event=AuditEvent.USER_LOGGED_OUT,
+        status="SUCCESS",
+        user_id=user.id,
+        request=request,
+        metadata={"email": user.email},
+    )
+
+    try:
+        await create_workos_audit_event_async(
+            AuditEvent.USER_LOGGED_OUT,
+            actor_id=str(user.id),
+            target_id=str(user.id),
+            target_type="Auth",
+            request=request,
+            metadata={"email": user.email, "action": "logout"},
+            idempotency_key=f"user-logout-{user.id}-{int(datetime.utcnow().timestamp())}",
+        )
+    except Exception as exc:
+        logger.exception("WorkOS audit event failed during logout: %s", exc)
+
+    return {"message": "Logged out successfully"}
+

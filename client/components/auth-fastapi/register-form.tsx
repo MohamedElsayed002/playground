@@ -52,7 +52,7 @@ export function RegisterForm() {
       <Card className="w-full sm:max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center tracking-tight">
-            Welcome to my Arsenal
+            Welcome to my Arsenal (FastAPI)
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -143,7 +143,7 @@ export function RegisterForm() {
             </Button>
             <span>
               Already have an account?
-              <Link className="underline ml-1" href="/auth/login-nestjs">
+              <Link className="underline ml-1" href="/auth/login-fastapi">
                 Login
               </Link>
             </span>
