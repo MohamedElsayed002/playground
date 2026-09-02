@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
 from app.models.user import User
 from app.models.product import Product
@@ -292,6 +292,7 @@ class CheckoutService:
                 select(Product)
                 .where(Product.id == cart_item.product_id)
                 .with_for_update()
+                .execution_options(populate_existing=True)
             )
             product = result.scalars().first()
             if product is None:
@@ -340,10 +341,25 @@ class CheckoutService:
             )
             self.session.add(order_item)
 
-            product.stock_quantity -= cart_item.quantity
-            if product.stock_quantity <= LOW_STOCK_THRESHOLD:
+            stock_update = await self.session.execute(
+                update(Product)
+                .where(
+                    Product.id == product.id,
+                    Product.stock_quantity >= cart_item.quantity,
+                )
+                .values(stock_quantity=Product.stock_quantity - cart_item.quantity)
+                .returning(Product.stock_quantity)
+            )
+            stock_remaining = stock_update.scalar_one_or_none()
+            if stock_remaining is None:
+                raise OutOfStockError(
+                    f"Insufficient stock for product {product.id}"
+                )
+
+            product.stock_quantity = stock_remaining
+            if stock_remaining <= LOW_STOCK_THRESHOLD:
                 low_stock_alerts.append(
-                    {"product_id": product.id, "stock_remaining": product.stock_quantity}
+                    {"product_id": product.id, "stock_remaining": stock_remaining}
                 )
 
         for cart_item in list(cart.items):
