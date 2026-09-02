@@ -81,6 +81,7 @@ export function RegisterForm() {
                         aria-invalid={isInvalid}
                         placeholder="mosayed002"
                         autoComplete="off"
+                        disabled={register.isPending}
                       />
                       {isInvalid && <FieldError errors={field.state.meta.errors} />}
                     </Field>
@@ -103,6 +104,7 @@ export function RegisterForm() {
                         aria-invalid={isInvalid}
                         placeholder="mo@gmail.com"
                         autoComplete="off"
+                        diabled={register.isPending}
                       />
                       {isInvalid && <FieldError errors={field.state.meta.errors} />}
                     </Field>
@@ -127,6 +129,7 @@ export function RegisterForm() {
                         aria-invalid={isInvalid}
                         placeholder="*****"
                         autoComplete="off"
+                        disabled={register.isPending}
                       />
                       {isInvalid && <FieldError errors={field.state.meta.errors} />}
                     </Field>
@@ -138,7 +141,7 @@ export function RegisterForm() {
         </CardContent>
         <CardFooter>
           <Field orientation="vertical">
-            <Button className="w-full bg-[radial-gradient(circle_at_top,_#065f46_0%,_#022c22_40%,_#020617_100%)] hover:opacity-80" type="submit" form="register-playground">
+            <Button disabled={register.isPending} className="w-full bg-[radial-gradient(circle_at_top,_#065f46_0%,_#022c22_40%,_#020617_100%)] hover:opacity-80" type="submit" form="register-playground">
               Register
             </Button>
             <span>

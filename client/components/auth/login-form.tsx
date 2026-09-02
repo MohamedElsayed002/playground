@@ -80,6 +80,7 @@ export function LoginForm() {
                         aria-invalid={isInvalid}
                         placeholder="mo@gmail.com"
                         autoComplete="off"
+                        disabled={login.isPending}
                       />
                       {isInvalid && <FieldError errors={field.state.meta.errors} />}
                     </Field>
@@ -103,6 +104,7 @@ export function LoginForm() {
                         aria-invalid={isInvalid}
                         placeholder="*****"
                         autoComplete="off"
+                        disabled={login.isPending}
                       />
                       {isInvalid && <FieldError errors={field.state.meta.errors} />}
                     </Field>
@@ -114,7 +116,7 @@ export function LoginForm() {
         </CardContent>
         <CardFooter>
           <Field orientation="vertical">
-            <Button className="w-full bg-[radial-gradient(circle_at_top,_#065f46_0%,_#022c22_40%,_#020617_100%)] hover:opacity-80" type="submit" form="login-playground">
+            <Button disabled={login.isPending} className="w-full bg-[radial-gradient(circle_at_top,_#065f46_0%,_#022c22_40%,_#020617_100%)] hover:opacity-80" type="submit" form="login-playground">
               Login
             </Button>
             <p>
