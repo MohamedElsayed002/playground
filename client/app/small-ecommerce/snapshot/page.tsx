@@ -2,6 +2,7 @@ import { api } from "@/lib/api/client"
 import { Metadata } from "next"
 import OrderList from "@/components/snapshot/OrderList"
 import type { components } from "@/lib/api/schema"
+import { cookies } from "next/headers"
 export const metadata: Metadata = {
     title: "SnapShot",
 }
@@ -9,7 +10,13 @@ export const metadata: Metadata = {
 export type Order = components["schemas"]["PaginatedResponse_OrderResponse_"]["items"][number]
 
 export default async function Page() {
+
+    const accessToken = (await cookies()).get("fastapi_access")?.value
+
     const data = await api.GET("/api/v1/orders/my", {
+        headers: {
+            "Authorization": `Bearer ${accessToken}`
+        },
         params: {
             query: {
                 page_size: 10,
