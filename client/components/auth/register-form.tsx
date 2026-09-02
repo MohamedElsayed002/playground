@@ -104,7 +104,7 @@ export function RegisterForm() {
                         aria-invalid={isInvalid}
                         placeholder="mo@gmail.com"
                         autoComplete="off"
-                        diabled={register.isPending}
+                        disabled={register.isPending}
                       />
                       {isInvalid && <FieldError errors={field.state.meta.errors} />}
                     </Field>
