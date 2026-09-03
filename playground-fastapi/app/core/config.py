@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     APP_DEBUG: bool = True 
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8000 
+    OTEL_EXPORTER_OTLP_ENDPOINT: str = "http://localhost:4317"
+    OTEL_EXPORTER_OTLP_PROTOCOL: str = "grpc"
+    OTEL_EXPORTER_OTLP_HEADERS: str = ""
+    OTEL_SERVICE_VERSION: str = "1.0.0"
 
     # Database 
     DATABASE_URL: str 
