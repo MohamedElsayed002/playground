@@ -1,15 +1,18 @@
 from datetime import datetime
 from app.db.base import Base 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 
 class IdempotencyKey(Base):
     __tablename__ = "idempotency_keys"
+    __table_args__ = (
+        UniqueConstraint("key", "user_id", name="uq_idempotency_key_user"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    key: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    key: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
 
     user_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id",ondelete="SET NULL"), nullable=True

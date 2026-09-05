@@ -1,11 +1,27 @@
+from datetime import datetime, timezone
+from decimal import Decimal
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.exceptions.handlers import ConflictException, NotFoundException
-from app.models.flash_sale import FlashSale
-from app.models.product import Product
-from app.schemas.flash_sale import CreateFlashSale
+from app.core.config import settings
+import logging
 
+from app.exceptions.handlers import BadRequestException, ConflictException, NotFoundException, OutOfStockError
+from app.models.flash_sale import FlashSale, FlashSalePurchase
+from app.models.product import Product
+from app.models.idempotency import IdempotencyKey
+from app.schemas.flash_sale import CreateFlashSale, FlashSalePurchaseResponse
+
+
+from app.services.audit_service import create_audit_log
+
+import json
+from fastapi.responses import JSONResponse
+from datetime import datetime, timedelta, timezone
+
+
+logger = logging.getLogger(__name__)
 class FlashSaleService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
@@ -50,6 +66,9 @@ class FlashSaleService:
         if already_exist:
             raise ConflictException("This product already has a flash sale")
 
+        if product.stock_quantity < data.sale_quantity:
+            raise BadRequestException("sale quantity is bigger than products in the stock")
+
         flash_sale = FlashSale(
             product_id=data.product_id,
             starts_at=data.starts_at.isoformat(),
@@ -65,3 +84,188 @@ class FlashSaleService:
         await self.session.refresh(flash_sale)
         return flash_sale
 
+
+
+    """
+            Purchase
+
+            1. Authenticate User  ✅      
+            2. Begin Database Transaction
+            3. Select Flash Sale "Lock the Row" ✅  
+            4. Check flash if doesn't exist ✅  
+            5. Check ends/starts at and status if sale is cancelled ✅  
+            6. Check if the user redeemed or used the sale before ✅  
+            7. Check Inventory✅  
+            8. Calculate discounted price ✅  
+            9. decrement he product ✅  
+            10. Create FlashSalePurchase✅  
+            11. Commit ✅  
+
+                POST /flash-sales/123/purchase
+                │
+                ▼
+        Authenticate user
+                │
+                ▼
+        BEGIN TRANSACTION
+                │
+                ▼
+    SELECT flash_sale FOR UPDATE
+                │
+        ┌─────┴─────┐
+        │           │
+        doesn't      exists
+        exist         │
+        │           ▼
+        404       Check time
+                    │
+                    ▼
+                Check duplicate
+                    │
+                    ▼
+                Check remaining
+                    │
+                ┌─────┴──────┐
+                │            │
+            0 units      > 0
+                │            │
+            SOLD OUT        ▼
+                        decrement by 1
+                            │
+                            ▼
+                    create purchase
+                            │
+                            ▼
+                        COMMIT
+                            │
+                            ▼
+                        SUCCESS
+    """
+    async def redeem_sale(
+        self, flash_sale_id: int, user_id: int, idempotency_key: str
+    ) -> FlashSalePurchase:
+        async with self.session.begin_nested():
+            request_path = f"/flash-sale/{flash_sale_id}/purchase"
+
+            result = await self.session.execute(
+                select(IdempotencyKey).where(
+                    IdempotencyKey.key == idempotency_key,
+                    IdempotencyKey.user_id == user_id,
+                    IdempotencyKey.request_path == request_path,
+                )
+            )
+
+            existing = result.scalar_one_or_none()
+
+            if existing and existing.response_body is not None:
+                await create_audit_log(
+                    db=self.session,
+                    user_id=user_id,
+                    event="USER_REDEEMED_SALE",
+                    status="SUCCESS"
+                )
+
+                response_payload = json.loads(existing.response_body)
+                response_payload["message"] = "User already redeemed discount successfully"
+                response_payload["success"] = True
+                return response_payload
+
+            if existing is not None:
+                return JSONResponse(
+                    status_code=202,
+                    content={
+                        "success": True,
+                        "status": "processing",
+                        "message": "might take a while to checkout",
+                        "idempotency_key": idempotency_key
+                    }
+                )
+
+
+            if existing is None:
+                expires_at = datetime.now(timezone.utc) + timedelta(
+                    hours=settings.IDEMPOTENCY_KEY_TTL_HOURS
+                )
+
+                new_key = IdempotencyKey(
+                    key=idempotency_key,
+                    user_id=user_id,
+                    request_path=request_path,
+                    expires_at=expires_at
+                )
+
+                self.session.add(new_key)
+                await self.session.flush()
+
+            flash_sale_exist = await self.session.execute(
+                select(FlashSale).where(FlashSale.id == flash_sale_id).with_for_update()
+            )
+
+            flash_sale = flash_sale_exist.scalar_one_or_none()
+
+            if not flash_sale:
+                raise BadRequestException("Flash sale not found")
+
+            user_redeemed_exist = await self.session.execute(
+                select(FlashSalePurchase).where(
+                    FlashSalePurchase.flash_sale_id == flash_sale_id,
+                    FlashSalePurchase.user_id == user_id
+                )
+            )
+
+            user_redeemed = user_redeemed_exist.scalar_one_or_none()
+
+            if user_redeemed is not None:
+                raise ConflictException("User already redeemed the discount need to pay full price")
+
+            now = datetime.now(timezone.utc)
+            starts_at = datetime.fromisoformat(flash_sale.starts_at.replace("Z", "+00:00"))
+            ends_at = datetime.fromisoformat(flash_sale.ends_at.replace("Z", "+00:00"))
+
+            # if now < starts_at or now > ends_at or flash_sale.status != "active":
+            #     raise BadRequestException("This flash sale is not currently active")
+
+            if flash_sale.remaining_quantity <= 0:
+                raise OutOfStockError("This flash sale is sold out")
+
+            product_exist = await self.session.execute(
+                select(Product).where(
+                    Product.id == flash_sale.product_id,
+                    Product.is_deleted == False,
+                    Product.is_active == True
+                )
+                .with_for_update()
+            )
+
+            product = product_exist.scalar_one_or_none()
+
+            if product is None:
+                raise BadRequestException("Product not found")
+            
+            if product.stock_quantity <= 0:
+                raise OutOfStockError("Product out of the stock. Sorry :'( ")
+
+            price_paid = product.price * (
+                Decimal("1") - Decimal(flash_sale.discount_percentage) / Decimal("100")
+            )
+
+            flash_sale.remaining_quantity -= 1
+            product.stock_quantity -=1
+
+            purchase = FlashSalePurchase(
+                flash_sale_id=flash_sale.id,
+                user_id=user_id,
+                product_id=product.id,
+                price_paid=price_paid,
+            )
+            self.session.add(purchase)
+            await self.session.flush()
+            await self.session.refresh(purchase)
+
+            response_body = FlashSalePurchaseResponse.model_validate(
+                purchase
+            ).model_dump_json()
+            new_key.response_body = response_body
+            new_key.response_status_code = 201
+            await self.session.flush()
+            return purchase

@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from decimal import Decimal
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
@@ -26,5 +28,15 @@ class FlashSaleResponse(BaseModel):
     sale_quantity: int
     remaining_quantity: int
     status: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class FlashSalePurchaseResponse(BaseModel):
+    id: int
+    flash_sale_id: int
+    user_id: int
+    product_id: int
+    price_paid: Decimal
 
     model_config = ConfigDict(from_attributes=True)
