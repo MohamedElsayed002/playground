@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query, UploadFile, File, status, Form 
 from sqlalchemy.ext.asyncio import AsyncSession 
 
-from app.core.dependencies import get_db, require_admin 
+from app.core.dependencies import get_db, get_current_user, require_admin 
 from app.schemas.product import (
     CategoryCreate, CategoryUpdate, CategoryResponse, CategoryWithChildren,
     ProductCreate, ProductUpdate, ProductResponse, ProductListResponse, ProductImageResponse
@@ -175,9 +175,10 @@ async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):
 async def create_product(
     data: ProductCreate,
     db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
 ):
     """[Admin] Create a new product."""
-    return await product_service.create_product(db, data)
+    return await product_service.create_product(db, data, owner_id=current_user.id)
 
 
 @router.patch(

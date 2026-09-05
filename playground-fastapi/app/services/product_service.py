@@ -112,10 +112,13 @@ async def delete_category(db: AsyncSession, category_id: int) -> None:
 
 # Product Service
 
-async def create_product(db: AsyncSession, data: ProductCreate) -> Product:
+async def create_product(
+    db: AsyncSession, data: ProductCreate, owner_id: int | None = None
+) -> Product:
     slug = await _unique_slug(db, Product, _slugify(data.name))
     payload = data.model_dump(exclude_none=False)
     payload["slug"] = slug
+    payload["owner_id"] = owner_id
 
     product = Product(**payload)
 

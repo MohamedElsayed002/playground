@@ -42,6 +42,14 @@ class Product(Base):
         lazy="selectin", cascade="all, delete-orphan"
     )
 
+    owner_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+
+    owner: Mapped["User | None"] = relationship(
+        "User", back_populates="products", foreign_keys=[owner_id], lazy="noload"
+    )
+
     order_items: Mapped[list["OrderItem"]] = relationship(
         "OrderItem", back_populates="product", lazy="selectin"
     )

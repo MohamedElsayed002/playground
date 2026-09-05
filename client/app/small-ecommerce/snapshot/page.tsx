@@ -3,6 +3,7 @@ import { Metadata } from "next"
 import OrderList from "@/components/snapshot/OrderList"
 import type { components } from "@/lib/api/schema"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 export const metadata: Metadata = {
     title: "SnapShot",
 }
@@ -13,6 +14,8 @@ export default async function Page() {
 
     const accessToken = (await cookies()).get("fastapi_access")?.value
 
+
+    if(!accessToken) redirect("/auth/login-fastapi")
     const data = await api.GET("/api/v1/orders/my", {
         headers: {
             "Authorization": `Bearer ${accessToken}`
@@ -27,6 +30,7 @@ export default async function Page() {
 
     const orders = data.data?.items || []
     const total = data?.data?.items.reduce((acc: number, order: Order) => acc + parseFloat(order.total), 0)
+
 
     return (    
         <div className="min-h-screen py-8">

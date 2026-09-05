@@ -45,6 +45,10 @@ class User(Base):
         "ReportJob", back_populates="user", lazy="selectin"
     )
 
+    products: Mapped[list["Product"]] = relationship(
+        "Product", back_populates="owner", foreign_keys="Product.owner_id", lazy="noload"
+    )
+
     
 
     def __repr__(self) -> str:

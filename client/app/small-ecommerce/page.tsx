@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Metadata } from "next"
 import { ProductsGrid } from "./products-grid";
 
+import { cookies } from "next/headers"
+
 export const metadata: Metadata = {
     title: "Small E-commerce",
     description: "Mohamed Elsayed"
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
 export default async function Page() {
 
     const data = await api.GET("/api/v1/products")
-
+    const accessToken = (await cookies()).get("fastapi_access")?.value
 
  
     return (
@@ -34,8 +36,8 @@ export default async function Page() {
                 <div className="flex justify-between">
                     <h1 className='text-2xl text-blue-500'>Total Products: {data.data?.items.length}</h1>
                     <div className='flex gap-2'>
-                    <Link href="/small-ecommerce/cart" className='bg-blue-500 px-4 py-2 rounded-md text-white'>User Cart</Link>
-                    <Link href="/small-ecommerce/snapshot" className='bg-violet-500 px-4 py-2 rounded-md text-white'>Snapshot</Link>
+                    <Link href={accessToken ? "/small-ecommerce/cart" : "/auth/login-fastapi"} className='bg-blue-500 px-4 py-2 rounded-md text-white'>User Cart</Link>
+                    <Link href={accessToken ? "/small-ecommerce/snapshot" : "/auth/login-fastapi"} className='bg-violet-500 px-4 py-2 rounded-md text-white'>Snapshot</Link>
 
                     </div>
                 </div>

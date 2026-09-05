@@ -97,6 +97,7 @@ class ProductResponse(BaseModel):
     is_active: bool
     is_featured: bool
     category_id: int | None
+    owner_id: int | None
     images: list[ProductImageResponse] = []
     created_at: datetime
 
@@ -111,6 +112,7 @@ class ProductListResponse(BaseModel):
     compare_at_price: Decimal | None
     stock_quantity: int
     is_featured: bool
+    owner_id: int | None
     images: list[ProductImageResponse] = []
     created_at: datetime
 
