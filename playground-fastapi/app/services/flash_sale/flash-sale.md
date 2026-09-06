@@ -173,3 +173,69 @@ Task 1:
                          │
                        commit
 ```
+
+---
+
+## Next Task
+
+
+### Retries + failure states 
+
+```
+POST /flash-sales/123/purchase
+        ↓
+validate user
+        ↓
+reserve flash-sale unit
+        ↓
+decrement product stock
+        ↓
+create purchase
+        ↓
+ call payment provider
+        ↓
+payment fails / timeout / network error
+```
+
+So the problem now 
+
+```
+Flash sale unit -= 1
+Product Stock -= 1
+Purchase created = YES
+Payment = UNKNOWN
+```
+
+Need to create route `GET /flash-sales/{flash_sale_id}/purchases/{purchase_id}`
+
+Frontend can poll. to check the status of the payment 
+
+
+The Statuses that we need for payment is "COMPLETED", "PROCESSING", "FAILED"
+and if the payment fail we need to recover the product +1 and the status payment to be failed 
+and we might send the user an email to his email address telling him that payment failed. he needs to check that out
+
+if the payment timeout or something wrong happen so we can let the user can report us and we can investigate because the payment gateway has logs for what happens in our application if there is someone paid. and in chapter 8 in DDIA. this problem it's in all distributed system 
+
+```
+                    FLASH SALE
+                        │
+          ┌─────────────┼──────────────┐
+          │             │              │
+          ▼             ▼              ▼
+    Transactions    Race conditions  Idempotency
+          │             │              │
+          └─────────────┼──────────────┘
+                        │
+                        ▼
+                  Payment Provider
+                        │
+                        ▼
+                Network failure
+                        │
+                        ▼
+                 UNKNOWN STATE
+                        │
+                        ▼
+                 Retry / Recovery
+```

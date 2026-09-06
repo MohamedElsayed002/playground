@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal
+from random import choice
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -8,10 +9,14 @@ from app.core.config import settings
 import logging
 
 from app.exceptions.handlers import BadRequestException, ConflictException, NotFoundException, OutOfStockError
-from app.models.flash_sale import FlashSale, FlashSalePurchase
+
+from app.models.flash_sale import FlashSale, FlashSalePurchase, PurchaseStatus
 from app.models.product import Product
 from app.models.idempotency import IdempotencyKey
-from app.schemas.flash_sale import CreateFlashSale, FlashSalePurchaseResponse
+from app.models.audit_outbox import AuditOutbox
+
+from app.schemas.flash_sale import CreateFlashSale, FlashSalePurchaseResponse, PaymentResult
+
 
 
 from app.services.audit_service import create_audit_log
@@ -257,15 +262,65 @@ class FlashSaleService:
                 user_id=user_id,
                 product_id=product.id,
                 price_paid=price_paid,
+                status=PurchaseStatus.PROCESSING.value
             )
             self.session.add(purchase)
             await self.session.flush()
             await self.session.refresh(purchase)
 
-            response_body = FlashSalePurchaseResponse.model_validate(
-                purchase
-            ).model_dump_json()
-            new_key.response_body = response_body
-            new_key.response_status_code = 201
-            await self.session.flush()
-            return purchase
+            self.session.add(
+                AuditOutbox(
+                    organization_id=settings.WORKOS_ORGANIZATION_ID,
+                    event_type="FLASH_SALE_PURCHASE_CREATED",
+                    payload={
+                        "purchase_id": purchase.id,
+                        "flash_sale_id": flash_sale.id,
+                        "user_id": user_id,
+                        "product_id": product.id,
+                        "price_paid": str(price_paid),
+                        "status": PurchaseStatus.PROCESSING.value,
+                        "payment_id": purchase.payment_id,
+                    },
+                    status=PurchaseStatus.PROCESSING.value,
+                    idempotency_key=f"flash-sale-purchase:{purchase.id}",
+                )
+            )
+
+            await create_audit_log(
+                db=self.session,
+                user_id=user_id,
+                event="FLASH_SALE_PURCHASE_CREATED",
+                status=PurchaseStatus.PROCESSING.value,
+                metadata={
+                    "purchase_id": purchase.id,
+                    "flash_sale_id": flash_sale.id,
+                    "product_id": product.id,
+                    "price_paid": str(price_paid),
+                    "payment_id": purchase.payment_id,
+                },
+            )
+
+        # response_stripe = await self.charge_customer()
+        # purchase.status = response_stripe.value
+        # purchase.payment_id = "1234"
+        # await self.session.commit()
+        return purchase
+
+    async def get_payment_status(self, payment_id: str):
+        payment_exist = await self.session.execute(
+            select(
+                FlashSalePurchase.id,
+                FlashSalePurchase.payment_id,
+                FlashSalePurchase.status
+            ).where(FlashSalePurchase.payment_id == payment_id)
+        )
+
+        payment = payment_exist.mappings().one_or_none()
+
+        if not payment:
+            raise BadRequestException("Payment not found")
+
+        return payment
+
+    async def charge_customer(self) -> PaymentResult:
+        return choice(list(PaymentResult))

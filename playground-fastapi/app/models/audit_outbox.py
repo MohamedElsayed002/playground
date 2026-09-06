@@ -11,7 +11,8 @@ class AuditOutbox(Base):
     __tablename__ = "audit_outbox"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
-    organization_id = Column(UUID(as_uuid=True), nullable=False)
+    organization_id = Column(String, nullable=False)
+    # organization_id = Column(UUID(as_uuid=True), nullable=False)
     event_type = Column(String, nullable=False)
 
     payload = Column(JSONB, nullable=True)

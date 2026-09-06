@@ -3,6 +3,12 @@ from datetime import datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from enum import Enum
+
+class PaymentResult(Enum):
+    SUCCESS = "success"
+    FAILED = "failed"
+    TIMEOUT = "timeout"
 
 
 class CreateFlashSale(BaseModel):
@@ -40,3 +46,9 @@ class FlashSalePurchaseResponse(BaseModel):
     price_paid: Decimal
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class FlashSaleGetStatus(BaseModel):
+    id: int
+    payment_id: str
+    status: str

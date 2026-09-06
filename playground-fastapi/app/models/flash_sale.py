@@ -1,9 +1,16 @@
 from app.db.base import Base 
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy import ForeignKey, Integer, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from decimal import Decimal
+from enum import Enum
 
+class PurchaseStatus(str,Enum):
+    PROCESSING = "processing"
+    FAILED = "failed"
+    COMPLETED = "completed"
+    UNKNOWN = "unknown"
 
 class FlashSale(Base):
     __tablename__ = "flash_sale"
@@ -40,4 +47,13 @@ class FlashSalePurchase(Base):
     product_id: Mapped[int] = mapped_column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
 
     price_paid: Mapped[Decimal] = mapped_column(Numeric(10,2),nullable=False)
+
+    payment_id: Mapped[str] = mapped_column(String(255),nullable=True)
+
+    status: Mapped[PurchaseStatus] = mapped_column(
+        SAEnum(PurchaseStatus),
+        nullable=False,
+        default=PurchaseStatus.PROCESSING,
+        server_default=PurchaseStatus.PROCESSING.name,
+    )
 
