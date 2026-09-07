@@ -51,9 +51,23 @@ async def redeem_sale(
                 status_code=200
 )
 async def check_status(
-        payment_id: str,
+        payment_id: int,
         db: AsyncSession = Depends(get_db),
         user: User = Depends(get_current_user),
 ):
         service = FlashSaleService(db)
         return await service.get_payment_status(payment_id)
+
+
+@router.get(
+                "/{flash_sale_id}/check-redeemed",
+        response_model=bool,
+        status_code=200,
+)
+async def check_redeemed(
+        flash_sale_id: int,
+        db: AsyncSession = Depends(get_db),
+        user: User = Depends(get_current_user),
+):
+        service = FlashSaleService(db)
+        return await service.check_user_redeemed(user_id=user.id, flash_sale_id=flash_sale_id)

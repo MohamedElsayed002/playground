@@ -311,14 +311,14 @@ class FlashSaleService:
         # await self.session.commit()
         return purchase
 
-    async def get_payment_status(self, payment_id: str):
+    async def get_payment_status(self, payment_id: int):
         payment_exist = await self.session.execute(
             select(
                 FlashSalePurchase.id,
                 FlashSalePurchase.payment_id,
                 FlashSalePurchase.status,
                 FlashSalePurchase.stripe_client_secret
-            ).where(FlashSalePurchase.payment_id == payment_id)
+            ).where(FlashSalePurchase.id == payment_id)
         )
 
         payment = payment_exist.mappings().one_or_none()
@@ -327,6 +327,18 @@ class FlashSaleService:
             raise BadRequestException("Payment not found")
 
         return payment
+
+    async def check_user_redeemed(self, user_id: int, flash_sale_id: int):
+        redeemed_exist = await self.session.execute(
+            select(FlashSalePurchase.id).where(
+                FlashSalePurchase.flash_sale_id == flash_sale_id,
+                FlashSalePurchase.user_id == user_id,
+            )
+        )
+
+        redeemed = redeemed_exist.scalar_one_or_none()
+
+        return redeemed is not None
 
     async def charge_customer(self) -> PaymentResult:
         return choice(list(PaymentResult))

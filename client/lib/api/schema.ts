@@ -842,6 +842,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/flash-sale/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Flash Sale */
+        post: operations["create_flash_sale_api_v1_flash_sale__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/flash-sale/{flash_sale_id}/purchase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Redeem Sale */
+        post: operations["redeem_sale_api_v1_flash_sale__flash_sale_id__purchase_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/flash-sale/{payment_id}/check-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Check Status */
+        get: operations["check_status_api_v1_flash_sale__payment_id__check_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/flash-sale/{flash_sale_id}/check-redeemed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Check Redeemed */
+        get: operations["check_redeemed_api_v1_flash_sale__flash_sale_id__check_redeemed_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Root */
+        get: operations["root__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -851,6 +936,23 @@ export interface paths {
         };
         /** Health Check */
         get: operations["health_check_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/testing-otel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Test Opentelemetry */
+        get: operations["test_opentelemetry_testing_otel_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1087,6 +1189,25 @@ export interface components {
             /** Children */
             children?: components["schemas"]["CategoryResponse"][];
         };
+        /** CreateFlashSale */
+        CreateFlashSale: {
+            /** Product Id */
+            product_id: number;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /** Discount Percentage */
+            discount_percentage: number;
+            /** Sale Quantity */
+            sale_quantity: number;
+        };
         /** Education */
         Education: {
             /** Degree */
@@ -1108,6 +1229,55 @@ export interface components {
             size_bytes: number;
             /** Content Type */
             content_type: string;
+        };
+        /** FlashSaleGetStatus */
+        FlashSaleGetStatus: {
+            /** Id */
+            id: number;
+            /** Payment Id */
+            payment_id: string | null;
+            /** Stripe Client Secret */
+            stripe_client_secret: string | null;
+            /** Status */
+            status: string;
+        };
+        /** FlashSalePurchaseResponse */
+        FlashSalePurchaseResponse: {
+            /** Id */
+            id: number;
+            /** Flash Sale Id */
+            flash_sale_id: number;
+            /** User Id */
+            user_id: number;
+            /** Product Id */
+            product_id: number;
+            /** Price Paid */
+            price_paid: string;
+        };
+        /** FlashSaleResponse */
+        FlashSaleResponse: {
+            /** Id */
+            id: number;
+            /** Product Id */
+            product_id: number;
+            /**
+             * Starts At
+             * Format: date-time
+             */
+            starts_at: string;
+            /**
+             * Ends At
+             * Format: date-time
+             */
+            ends_at: string;
+            /** Discount Percentage */
+            discount_percentage: number;
+            /** Sale Quantity */
+            sale_quantity: number;
+            /** Remaining Quantity */
+            remaining_quantity: number;
+            /** Status */
+            status: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1418,11 +1588,12 @@ export interface components {
             stock_quantity: number;
             /** Is Featured */
             is_featured: boolean;
-            /**
-             * Images
-             * @default []
-             */
-            images: components["schemas"]["ProductImageResponse"][];
+            /** Owner Id */
+            owner_id: number | null;
+            /** Images */
+            images?: components["schemas"]["ProductImageResponse"][];
+            /** Flash Sales */
+            flash_sales?: components["schemas"]["FlashSaleResponse"][];
             /**
              * Created At
              * Format: date-time
@@ -1487,16 +1658,17 @@ export interface components {
             is_featured: boolean;
             /** Category Id */
             category_id: number | null;
-            /**
-             * Images
-             * @default []
-             */
-            images: components["schemas"]["ProductImageResponse"][];
+            /** Owner Id */
+            owner_id: number | null;
+            /** Images */
+            images?: components["schemas"]["ProductImageResponse"][];
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
+            /** Flash Sales */
+            flash_sales?: components["schemas"]["FlashSaleResponse"][];
         };
         /**
          * ProductUpdate
@@ -3322,7 +3494,176 @@ export interface operations {
             };
         };
     };
+    create_flash_sale_api_v1_flash_sale__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFlashSale"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlashSaleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    redeem_sale_api_v1_flash_sale__flash_sale_id__purchase_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique identifier for request idempotency. */
+                "idempotency-key"?: string | null;
+            };
+            path: {
+                flash_sale_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlashSalePurchaseResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_status_api_v1_flash_sale__payment_id__check_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payment_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlashSaleGetStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    check_redeemed_api_v1_flash_sale__flash_sale_id__check_redeemed_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                flash_sale_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": boolean;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    root__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     health_check_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    test_opentelemetry_testing_otel_get: {
         parameters: {
             query?: never;
             header?: never;

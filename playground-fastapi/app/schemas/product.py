@@ -7,6 +7,8 @@ from decimal import Decimal
 from pydantic import BaseModel , Field, field_validator
 import re 
 
+from app.schemas.flash_sale import FlashSaleResponse
+
 class CategoryCreate(BaseModel):
     name: str = Field(min_length=1,max_length=100)
     description: str | None = None
@@ -98,8 +100,10 @@ class ProductResponse(BaseModel):
     is_featured: bool
     category_id: int | None
     owner_id: int | None
-    images: list[ProductImageResponse] = []
+    images: list[ProductImageResponse] = Field(default_factory=list)
     created_at: datetime
+
+    flash_sales: list[FlashSaleResponse] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
 
@@ -113,7 +117,8 @@ class ProductListResponse(BaseModel):
     stock_quantity: int
     is_featured: bool
     owner_id: int | None
-    images: list[ProductImageResponse] = []
+    images: list[ProductImageResponse] = Field(default_factory=list)
+    flash_sales: list[FlashSaleResponse] = Field(default_factory=list)
     created_at: datetime
 
     model_config = {"from_attributes": True}

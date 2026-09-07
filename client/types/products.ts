@@ -6,6 +6,18 @@ export interface ProductImageData {
     sort_order?: number
 }
 
+
+export interface ProductFlashSale {
+    id: number
+    product_id: number
+    starts_at: string
+    ends_at: string
+    discount_percentage: number
+    sale_quantity: number
+    remaining_quantity: number
+    status: string
+}
+
 export interface ProductDetail {
     id: number
     name: string
@@ -21,4 +33,6 @@ export interface ProductDetail {
     category_id?: number | null
     images?: ProductImageData[]
     created_at?: string | null
+    flash_sales?: ProductFlashSale[]
 }
+

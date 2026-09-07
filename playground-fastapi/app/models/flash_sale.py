@@ -31,6 +31,8 @@ class FlashSale(Base):
 
     status: Mapped[str] = mapped_column(String(50), nullable=False)
 
+    product: Mapped["Product"] = relationship("Product", back_populates="flash_sales")
+
 
 class FlashSalePurchase(Base):
     __tablename__ ="flash_sale_purchase"

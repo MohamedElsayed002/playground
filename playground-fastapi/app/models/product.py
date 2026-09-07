@@ -42,6 +42,10 @@ class Product(Base):
         lazy="selectin", cascade="all, delete-orphan"
     )
 
+    flash_sales: Mapped[list["FlashSale"]] = relationship(
+        "FlashSale", back_populates="product", lazy="selectin"
+    )
+
     owner_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
     )

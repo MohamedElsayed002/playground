@@ -31,8 +31,6 @@ export default async function Page({ params }: PageProps) {
             },
         },
     })
-
     const product = (data.data ?? null) as ProductDetail | null
-
     return <ProductDetailView product={product} />
 }

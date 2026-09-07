@@ -120,11 +120,11 @@ export function ProductsExplorer() {
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {data?.items.map((item) => (
                     <article key={item.id} className="overflow-hidden rounded-lg border bg-card shadow-sm">
-                        <div className="relative aspect-4/3 w-full bg-muted">
-                            {item.images[0] ? (
+                        {/* <div className="relative aspect-4/3 w-full bg-muted">
+                            {item?.images.length > 0 && item.images[0] ? (
                                 <Image
                                     src={item.images[0].url}
-                                    alt={item.images[0].alt_text ?? item.name}
+                                    alt={item!.images[0]?.alt_text ?? item.name}
                                     fill
                                     className="object-cover"
                                 />
@@ -133,7 +133,7 @@ export function ProductsExplorer() {
                                     No image
                                 </div>
                             )}
-                        </div>
+                        </div> */}
                         <div className="space-y-2 p-4">
                             <h2 className="line-clamp-1 text-lg font-medium">{item.name}</h2>
                             <p className="text-xs text-muted-foreground">ID: {item.id}</p>
