@@ -44,6 +44,7 @@ class FlashSalePurchaseResponse(BaseModel):
     user_id: int
     product_id: int
     price_paid: Decimal
+    payment_id: str | None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -51,4 +52,5 @@ class FlashSalePurchaseResponse(BaseModel):
 class FlashSaleGetStatus(BaseModel):
     id: int
     payment_id: str
+    stripe_client_secret: str
     status: str

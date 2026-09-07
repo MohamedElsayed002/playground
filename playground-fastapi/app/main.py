@@ -24,6 +24,11 @@ from app.db.session import create_all_tables
 # from opentelemetry.metrics import get_meter
 import inngest.fast_api
 
+import stripe 
+
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
 from app.services.inngest import inngest_client, inngest_functions
 
 

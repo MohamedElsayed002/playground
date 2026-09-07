@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 from random import choice
+from uuid import uuid4
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +21,7 @@ from app.schemas.flash_sale import CreateFlashSale, FlashSalePurchaseResponse, P
 
 
 from app.services.audit_service import create_audit_log
+from app.services.inngest.dispatch import send_flash_sale_payment_job
 
 import json
 from fastapi.responses import JSONResponse
@@ -279,7 +281,6 @@ class FlashSaleService:
                         "product_id": product.id,
                         "price_paid": str(price_paid),
                         "status": PurchaseStatus.PROCESSING.value,
-                        "payment_id": purchase.payment_id,
                     },
                     status=PurchaseStatus.PROCESSING.value,
                     idempotency_key=f"flash-sale-purchase:{purchase.id}",
@@ -296,10 +297,14 @@ class FlashSaleService:
                     "flash_sale_id": flash_sale.id,
                     "product_id": product.id,
                     "price_paid": str(price_paid),
-                    "payment_id": purchase.payment_id,
                 },
             )
 
+        # From this Point Background job starts outbox/worker or inngest 
+        await send_flash_sale_payment_job(
+            flash_sale_purchase_id=purchase.id,
+        )
+        
         # response_stripe = await self.charge_customer()
         # purchase.status = response_stripe.value
         # purchase.payment_id = "1234"
@@ -311,7 +316,8 @@ class FlashSaleService:
             select(
                 FlashSalePurchase.id,
                 FlashSalePurchase.payment_id,
-                FlashSalePurchase.status
+                FlashSalePurchase.status,
+                FlashSalePurchase.stripe_client_secret
             ).where(FlashSalePurchase.payment_id == payment_id)
         )
 

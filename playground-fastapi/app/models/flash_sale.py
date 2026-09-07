@@ -49,6 +49,7 @@ class FlashSalePurchase(Base):
     price_paid: Mapped[Decimal] = mapped_column(Numeric(10,2),nullable=False)
 
     payment_id: Mapped[str] = mapped_column(String(255),nullable=True)
+    stripe_client_secret: Mapped[str] = mapped_column(String(255),nullable=True)
 
     status: Mapped[PurchaseStatus] = mapped_column(
         SAEnum(PurchaseStatus),

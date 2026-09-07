@@ -18,6 +18,7 @@ pillow
 pyClamd
 openai
 resend
+stripe
 workos
 opentelemetry-api
 opentelemetry-sdk

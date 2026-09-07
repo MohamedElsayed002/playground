@@ -238,4 +238,30 @@ if the payment timeout or something wrong happen so we can let the user can repo
                         │
                         ▼
                  Retry / Recovery
-```
+``` 
+
+---
+
+## Difference between `audit_logs` and `audit_outbox`
+
+| | `audit_logs` | `audit_outbox` |
+|---|---|---|
+| Purpose | Permanent history of what happened | Temporary worklist of what still needs delivering |
+| Lifespan | Forever, immutable | Until successfully delivered (or investigated) |
+| Who reads it | Humans, compliance, debugging | The worker process |
+| Changes after insert? | Never | Yes — status moves PENDING → PROCESSING → SUCCESS/FAILED |
+
+`audit_logs` answers "what happened, and when?" forever.
+`audit_outbox` answers "what do we still owe WorkOS, right now?"
+
+
+
+## Difference between an outbox and a worker 
+
+- The **outbox** (`audit_outbox` table) is just data. "A list of things to do". It doesn't run anything doesn't know about WorkOS/Stripe whatever what external system. doesn't know what "processing" means
+- The **worker** is a process that reads that list and actually does the thing - call WorkOS,  checks 
+the result, updates the row's status
+
+The outbox is mailbox. The worker is the mail carrier
+
+Worker's job poll for PENDING rows, claim one, call WorkOS, record the outcome. It's the only piece of this system that talks to WorkOS

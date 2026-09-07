@@ -56,10 +56,15 @@ class Settings(BaseSettings):
     INNGEST_EVENT_KEY: Optional[str] = None
 
     RESEND_API_KEY: str
+    STRIPE_SECRET_KEY: Optional[str] = None
 
     WORKOS_ORGANIZATION_ID: str
     WORKOS_CLIENT_ID: str 
     WORKOS_API_KEY: str
+
+    STRIPE_SECRET_KEY: str 
+    STRIPE_PUBLISHABLE_KEY: str 
+    STRIPE_WEBHOOK_SECRET: str
 
 
 

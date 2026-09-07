@@ -24,3 +24,16 @@ async def send_checkout_background_jobs(
             },
         )
     )
+
+
+async def send_flash_sale_payment_job(
+    flash_sale_purchase_id: int,
+) -> None:
+    await inngest_client.send(
+        inngest.Event(
+            name="flash-sale/payment.requested",
+            data={
+                "flash_sale_purchase_id": flash_sale_purchase_id,
+            },
+        )
+    )
