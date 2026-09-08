@@ -43,3 +43,25 @@ export async function getUserCart() {
 
     return result.data
 }
+
+
+export async function removeItem(productId: number) {
+    const accessToken = (await cookies()).get("fastapi_access")?.value
+
+    const result = await api.DELETE('/api/v1/orders/cart/items/{product_id}', {
+        headers: {
+            "Authorization": `Bearer ${accessToken}`
+        },
+        params: {
+            path: {
+                product_id: productId
+            }
+        }
+    })
+
+    if(result.error) {
+        throw new Error("Failed remove item from cart")
+    }
+
+    return result.data
+}

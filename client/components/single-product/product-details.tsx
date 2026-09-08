@@ -53,6 +53,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             sale.remaining_quantity > 0
         )
     })
+    
     const {
         data: hasRedeemed = false,
         isPending: isCheckingRedemption,

@@ -2,6 +2,12 @@ import { components } from "@/lib/api/schema"
 
 type Product = components["schemas"]["ProductResponse"]
 
+type CartPricingOptions = {
+    redeemedSaleIds?: ReadonlySet<number>
+    isCheckingRedemption?: boolean
+    isLoggedIn?: boolean
+}
+
 export type CartPriceBreakdown = {
     regularUnitPrice: number
     saleUnitPrice: number | null
@@ -18,7 +24,11 @@ function toNumber(value: string | number | null | undefined) {
     return Number.isFinite(numberValue) ? numberValue : null
 }
 
-export function getActiveFlashSale(product: Product, now = new Date()) {
+export function getActiveFlashSale(
+    product: Product,
+    now = new Date(),
+    options: CartPricingOptions = {},
+) {
     return (product.flash_sales ?? []).find((sale) => {
         const startsAt = new Date(sale.starts_at)
         const endsAt = new Date(sale.ends_at)
@@ -30,7 +40,9 @@ export function getActiveFlashSale(product: Product, now = new Date()) {
             Number.isFinite(endsAt.getTime()) &&
             startsAt <= now &&
             now <= endsAt &&
-            sale.remaining_quantity > 0
+            sale.remaining_quantity > 0 &&
+            !options.isCheckingRedemption &&
+            !(options.isLoggedIn && options.redeemedSaleIds?.has(sale.id))
         )
     }) ?? null
 }
@@ -39,9 +51,10 @@ export function getCartPriceBreakdown(
     product: Product,
     quantity: number,
     now = new Date(),
+    options: CartPricingOptions = {},
 ): CartPriceBreakdown {
     const regularUnitPrice = toNumber(product.price) ?? 0
-    const sale = getActiveFlashSale(product, now)
+    const sale = getActiveFlashSale(product, now, options)
     const discount = sale ? Math.min(Math.max(sale.discount_percentage, 0), 100) : 0
     const saleUnitPrice = sale
         ? regularUnitPrice * (1 - discount / 100)

@@ -1,6 +1,6 @@
 "use client"
 
-import { addCartItemAction } from "@/actions/cart.action";
+import { addCartItemAction, removeItem } from "@/actions/cart.action";
 import { checkWhetherUserRedeemed, getFlashSalePaymentStatus, redeemFlashSale } from "@/actions/flash-sale.action";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -81,19 +81,59 @@ export const useClaimDiscount = () => {
     }
 }
 
-export const useCheckUser = (flashSaleId: number | null) => {
+export const useCheckUser = (flashSaleId: number | number[] | null) => {
     const { isLoggedIn } = useAuthStoreFastAPI()
+    const flashSaleIds = flashSaleId === null
+        ? []
+        : Array.isArray(flashSaleId)
+            ? [...new Set(flashSaleId)]
+            : [flashSaleId]
 
     const { data, isPending, error } = useQuery({
-        queryKey: ["user-redeemed", flashSaleId],
-        queryFn: async () => checkWhetherUserRedeemed(flashSaleId!),
-        enabled: isLoggedIn && flashSaleId !== null,
+        queryKey: ["user-redeemed", flashSaleIds],
+        queryFn: async () => {
+            if (Array.isArray(flashSaleId)) {
+                return Promise.all(flashSaleIds.map((id) => checkWhetherUserRedeemed(id)))
+            }
+
+            return checkWhetherUserRedeemed(flashSaleIds[0])
+        },
+        enabled: isLoggedIn && flashSaleIds.length > 0,
     })
-    console.log("DATA", data)
+
+    const redeemedSaleIds = Array.isArray(flashSaleId)
+        ? new Set(
+            flashSaleIds.filter((id, index) => Array.isArray(data) && data[index]),
+        )
+        : new Set(data === true ? [flashSaleIds[0]] : [])
+
     return {
         data,
+        redeemedSaleIds,
         isPending,
         error,
         isLoggedIn,
+    }
+}
+
+export const useRemoveItemCart = () => {
+
+    const queryClient = useQueryClient()
+
+    const { mutate, isError, isPending } = useMutation({
+        mutationKey: ["remove-product"],
+        mutationFn: ({productId}: {productId: number}) => removeItem(productId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["user-cart"] })
+            sileo.success({
+                title: "Product removed successfully"
+            })
+        }
+    })
+
+    return {
+        mutate, 
+        isError, 
+        isPending
     }
 }

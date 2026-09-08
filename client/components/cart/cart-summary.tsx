@@ -8,7 +8,18 @@ import { CheckoutDialog } from "./checkout-dialog"
 
 type CartItem = components["schemas"]["CartResponse"]
 
-export function CartSummary({ cart }: { cart: CartItem }) {
+type CartPricingProps = {
+    redeemedSaleIds: ReadonlySet<number>
+    isCheckingRedemption: boolean
+    isLoggedIn: boolean
+}
+
+export function CartSummary({
+    cart,
+    redeemedSaleIds,
+    isCheckingRedemption,
+    isLoggedIn,
+}: { cart: CartItem } & CartPricingProps) {
     if (!cart || !cart.items?.length) {
         return (
             <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-600 shadow-sm">
@@ -21,7 +32,11 @@ export function CartSummary({ cart }: { cart: CartItem }) {
     const itemCount = cart.items?.reduce((total, item) => total + item.quantity, 0) ?? 0
     const pricedItems = cart.items.map((item) => ({
         item,
-        pricing: getCartPriceBreakdown(item.product, item.quantity),
+        pricing: getCartPriceBreakdown(item.product, item.quantity, new Date(), {
+            redeemedSaleIds,
+            isCheckingRedemption,
+            isLoggedIn,
+        }),
     }))
     const subtotalValue = pricedItems.reduce((total, { pricing }) => total + pricing.total, 0)
     const taxesValue = subtotalValue * 0.10

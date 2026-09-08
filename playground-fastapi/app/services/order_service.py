@@ -115,6 +115,31 @@ async def add_to_cart(db: AsyncSession, user_id: int, product_id: int, quantity:
     return refreshed.scalar_one()
 
 
+async def remove_item(db: AsyncSession, user_id: int, product_id: int):
+    cart_result = await db.execute(
+        select(Cart)
+        .where(Cart.user_id == user_id)
+        .options(selectinload(Cart.items).selectinload(CartItem.product))
+    )
+    cart = cart_result.scalar_one_or_none()
+
+    if cart is None:
+        raise NotFoundException("Cart", user_id)
+
+    item = next(
+        (cart_item for cart_item in cart.items if cart_item.product_id == product_id),
+        None,
+    )
+    if item is None:
+        raise NotFoundException("Cart item", product_id)
+
+    await db.delete(item)
+    await db.flush()
+
+    return await get_cart(db, user_id)
+    
+
+
 async def create_order(db: AsyncSession, user_id: int, data: OrderCheckoutCreate):
     """
         Place and Order:

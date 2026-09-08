@@ -1,5 +1,6 @@
 "use client"
 
+import { useCheckUser } from "@/hooks/use-add-product-card"
 import { useGetUserCart } from "@/hooks/use-get-user-cart"
 import { CartItemsList } from "./cart-items-list"
 import { CartSummary } from "./cart-summary"
@@ -10,6 +11,12 @@ import { Skeleton } from "../ui/skeleton"
 export function CartView() {
 
     const { data, isLoading } = useGetUserCart()
+    const flashSaleIds = data?.items?.flatMap((item) => item.product.flash_sales?.map((sale) => sale.id) ?? []) ?? []
+    const {
+        redeemedSaleIds,
+        isPending: isCheckingRedemption,
+        isLoggedIn,
+    } = useCheckUser(flashSaleIds)
 
     if (isLoading) {
         return (
@@ -35,10 +42,18 @@ export function CartView() {
             </div>
 
             <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
-                {/* @ts-ignore */}
-                <CartItemsList cart={data} />
-                {/* @ts-ignore */}
-                <CartSummary cart={data} />
+                <CartItemsList
+                    cart={data!}
+                    redeemedSaleIds={redeemedSaleIds}
+                    isCheckingRedemption={isCheckingRedemption}
+                    isLoggedIn={isLoggedIn}
+                />
+                <CartSummary
+                    cart={data!}
+                    redeemedSaleIds={redeemedSaleIds}
+                    isCheckingRedemption={isCheckingRedemption}
+                    isLoggedIn={isLoggedIn}
+                />
             </div>
         </div>
     )

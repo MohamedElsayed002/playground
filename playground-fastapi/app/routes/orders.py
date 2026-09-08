@@ -68,6 +68,25 @@ async def get_cart(
     return CartResponse.model_validate(cart)
 
 
+@router.delete(
+    "/cart/items/{product_id}",
+    response_model=CartResponse,
+    summary="Remove a product from the current user's cart",
+)
+async def remove_from_cart(
+    product_id: int,
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Remove the product and return the user's refreshed cart."""
+    cart = await order_service.remove_item(
+        db,
+        user_id=current_user.id,
+        product_id=product_id,
+    )
+    return CartResponse.model_validate(cart)
+
+
 @router.get("/", response_model=PaginatedResponse[OrderResponse])
 async def get_my_orders(
     page: int = Query(default=1, ge=1),
