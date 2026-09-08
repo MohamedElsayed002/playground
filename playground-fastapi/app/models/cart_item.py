@@ -1,5 +1,5 @@
 from app.db.base import Base 
-from sqlalchemy import String, Text, ForeignKey, Integer
+from sqlalchemy import String, Text, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 class CartItem(Base):
@@ -15,3 +15,4 @@ class CartItem(Base):
 
     cart: Mapped["Cart"] = relationship("Cart", back_populates="items", lazy="selectin")
     product: Mapped["Product"] = relationship("Product", lazy="selectin")
+

@@ -30,10 +30,8 @@ class Order(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    # Human-readable order reference (e.g., "ORD-20240101-0042")
     order_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
 
-    # Status enums
     status: Mapped[OrderStatus] = mapped_column(
         SAEnum(OrderStatus), default=OrderStatus.PENDING, nullable=False
     )
@@ -41,13 +39,11 @@ class Order(Base):
         SAEnum(PaymentStatus), default=PaymentStatus.PENDING, nullable=False
     )
 
-    # Price snapshot at order time (prices can change later!)
     subtotal: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     shipping_cost: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0"))
     tax: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0"))
     total: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
-    # Shipping address (JSON-like denormalized — avoids complex address normalization)
     shipping_address_line1: Mapped[str | None] = mapped_column(String(255))
     shipping_address_line2: Mapped[str | None] = mapped_column(String(255))
     shipping_city: Mapped[str | None] = mapped_column(String(100))
@@ -56,12 +52,12 @@ class Order(Base):
 
     notes: Mapped[str | None] = mapped_column(Text)  # Customer notes
 
-    # ── Foreign Keys ──────────────────────────────────────────────────────────
+    # ── Foreign Keys
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
     )
 
-    # ── Relationships ─────────────────────────────────────────────────────────
+    # ── Relationships
     user: Mapped["User"] = relationship(  # type: ignore # noqa: F821
         "User", back_populates="orders", lazy="selectin"
     )
@@ -98,6 +94,14 @@ class OrderItem(Base):
     )
     product_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("products.id", ondelete="SET NULL"), nullable=True
+    )
+
+    flash_sale_id: Mapped[int | None] = mapped_column(
+        Integer, ForeignKey("flash_sale.id", ondelete="SET NULL"), nullable=True
+    )
+
+    flash_sale_quantity: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
     )
 
     # ── Relationships ─────────────────────────────────────────────────────────

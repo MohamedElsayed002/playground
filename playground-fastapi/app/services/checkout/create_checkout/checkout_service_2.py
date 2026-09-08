@@ -13,6 +13,7 @@ from app.models.cart_item import CartItem
 
 from app.exceptions.handlers import ConflictException, NotFoundException, InactiveProductError, OutOfStockError
 from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus 
+from app.models.flash_sale import FlashSale, FlashSalePurchase, PurchaseStatus
 from app.repositories.idempotency import IdempotencyRepository
 from app.repositories.order import OrderRepository 
 from app.repositories.product import ProductRepository
@@ -43,6 +44,29 @@ def _generate_order_number() -> str:
 7. Commit 
 8. return success
 9. Background jobs afterward
+
+v2
+
+1. Begin transactions
+2. Load cart + cart items
+3. validate products
+4. validate flash sale 
+    - is sale active?
+    - does flash-sale inventory remain?
+    - has this user already redeemed it?
+5. calculate final price 
+6. atomically reserve/decrement inventory
+7. atomically claim flash-sale purchase 
+    - flash_sale_purchase
+8. create order 
+9. create order items
+    - snapshot original price
+    - actual unit price
+    - flash_sale_id
+    - flash_sale_quantity
+10. create payment/outbox record
+11. commit 
+12. Background job 
 """
 
 
@@ -61,7 +85,6 @@ class CheckoutService:
             request: OrderCheckoutCreate
 
     ):
-        # return "Works fine"
         items_count = 0
 
         async def audit_checkout_step(event: str, status: str, **metadata) -> None:
@@ -82,17 +105,6 @@ class CheckoutService:
             status="SUCCESS",
         )
 
-        # Step 1 check the user is in the data
-        user = await self.session.execute(select(User).where(User.id == user_id))
-
-        user_obj = user.scalar_one_or_none()
-        if user_obj is None:
-            await audit_checkout_step(
-                event="CHECKOUT_2_USER_NOT_FOUND",
-                status="FAILED",
-                checkout_error="User not found",
-            )
-            raise NotFoundException("User not found")
 
         # Load the current user's cart from the database
         cart_result = await self.session.execute(
@@ -100,7 +112,9 @@ class CheckoutService:
             .where(Cart.user_id == user_id)
             .options(selectinload(Cart.items).selectinload(CartItem.product))
         )
+
         cart = cart_result.scalar_one_or_none()
+
         if cart is None or not cart.items:
             await audit_checkout_step(
                 event="CHECKOUT_2_EMPTY_CART",
@@ -108,6 +122,7 @@ class CheckoutService:
                 checkout_error="No items in the cart",
             )
             raise NotFoundException("No items in the cart")
+        
         items_count = len(cart.items)
 
         # Step 2 Check idempotency key
@@ -281,9 +296,8 @@ class CheckoutService:
         !! ALL OR NOTHING !! 
         any error here are not acceptable rollback immediately 
         """
-        order_items_data: list[tuple[CartItem, Product]] = []
+        order_items_data: list[tuple[CartItem, Product, FlashSale | None, bool]] = []
         sorted_items = sorted(cart.items, key=lambda x: x.product_id)
-        low_stock_alerts = []
         subtotal = Decimal("0")
 
         # Step 6 Lock products (SELECT ... FOR UPDATE) in stable order.
@@ -301,8 +315,35 @@ class CheckoutService:
                 raise InactiveProductError(f"Product {cart_item.product_id} is inactive")
             if product.stock_quantity < cart_item.quantity:
                 raise OutOfStockError(f"Insufficient stock for product {cart_item.product_id}")
-            subtotal += product.price * cart_item.quantity
-            order_items_data.append((cart_item, product))
+
+            sale_result = await self.session.execute(
+                select(FlashSale)
+                .where(FlashSale.product_id == product.id)
+                .with_for_update()
+            )
+            flash_sale = sale_result.scalar_one_or_none()
+            discounted = False
+
+            if flash_sale is not None and self._flash_sale_is_active(flash_sale):
+                purchase_result = await self.session.execute(
+                    select(FlashSalePurchase).where(
+                        FlashSalePurchase.flash_sale_id == flash_sale.id,
+                        FlashSalePurchase.user_id == user_id,
+                    )
+                )
+                already_redeemed = purchase_result.scalar_one_or_none() is not None
+                discounted = not already_redeemed and flash_sale.remaining_quantity > 0
+
+            discounted_quantity = 1 if discounted else 0
+            sale_price = product.price
+            if discounted:
+                sale_price = product.price * (
+                    Decimal("1") - Decimal(flash_sale.discount_percentage) / Decimal("100")
+                )
+
+            subtotal += sale_price * discounted_quantity
+            subtotal += product.price * (cart_item.quantity - discounted_quantity)
+            order_items_data.append((cart_item, product, flash_sale if discounted else None, discounted))
 
         # Step 7 Create order row as PENDING (before payment).
         tax = subtotal * Decimal("0.10")
@@ -329,17 +370,45 @@ class CheckoutService:
         await self.session.flush()
 
         # Step 8 Create immutable order-item snapshots + decrement stock.
-        for cart_item, product in order_items_data:
-            line_total = product.price * cart_item.quantity
-            order_item = OrderItem(
-                order_id=order.id,
-                product_id=product.id,
-                product_name=product.name,
-                quantity=cart_item.quantity,
-                unit_price=product.price,
-                total_price=line_total,
-            )
-            self.session.add(order_item)
+        for cart_item, product, flash_sale, discounted in order_items_data:
+            discounted_quantity = 1 if discounted else 0
+            if discounted_quantity:
+                sale_price = product.price * (
+                    Decimal("1") - Decimal(flash_sale.discount_percentage) / Decimal("100")
+                )
+                self.session.add(OrderItem(
+                    order_id=order.id,
+                    product_id=product.id,
+                    product_name=product.name,
+                    quantity=1,
+                    unit_price=sale_price,
+                    total_price=sale_price,
+                    flash_sale_id=flash_sale.id,
+                    flash_sale_quantity=1,
+                ))
+
+                flash_sale.remaining_quantity -= 1
+                self.session.add(FlashSalePurchase(
+                    flash_sale_id=flash_sale.id,
+                    user_id=user_id,
+                    order_id=order.id,
+                    product_id=product.id,
+                    price_paid=sale_price,
+                    quantity=1,
+                    status=PurchaseStatus.PROCESSING,
+                ))
+
+            full_price_quantity = cart_item.quantity - discounted_quantity
+            if full_price_quantity:
+                self.session.add(OrderItem(
+                    order_id=order.id,
+                    product_id=product.id,
+                    product_name=product.name,
+                    quantity=full_price_quantity,
+                    unit_price=product.price,
+                    total_price=product.price * full_price_quantity,
+                    flash_sale_quantity=0,
+                ))
 
             stock_update = await self.session.execute(
                 update(Product)
@@ -357,11 +426,6 @@ class CheckoutService:
                 )
 
             product.stock_quantity = stock_remaining
-            if stock_remaining <= LOW_STOCK_THRESHOLD:
-                low_stock_alerts.append(
-                    {"product_id": product.id, "stock_remaining": stock_remaining}
-                )
-
         for cart_item in list(cart.items):
             await self.session.delete(cart_item)
 
@@ -370,6 +434,17 @@ class CheckoutService:
         await self.session.flush()
         await self.session.refresh(order, attribute_names=["items"])
         return OrderResponse.model_validate(order)
+
+    @staticmethod
+    def _flash_sale_is_active(flash_sale: FlashSale) -> bool:
+        now = datetime.now(timezone.utc)
+        starts_at = datetime.fromisoformat(flash_sale.starts_at.replace("Z", "+00:00"))
+        ends_at = datetime.fromisoformat(flash_sale.ends_at.replace("Z", "+00:00"))
+        return (
+            flash_sale.status in {"active", "scheduled"}
+            and starts_at <= now <= ends_at
+            and flash_sale.remaining_quantity > 0
+        )
 
     async def _process_payment(self, order_id: int, amount: Decimal) -> bool:
         """

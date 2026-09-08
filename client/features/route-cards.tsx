@@ -30,6 +30,11 @@ const flowImages = [
     description: "A visual walkthrough of the PDF upload and extraction process.",
     src: "/pdf-pipeline-steps.png",
   },
+  {
+    title: "Flash Sale flow",
+    description: "A visual walkthrough of the redeem flash sale process",
+    src: "/flash-sale.png"
+  }
 ];
 
 
@@ -161,7 +166,7 @@ export function RouteCards() {
         />
 
         <RouteCard
-          title="Checkout"
+          title="Checkout/ Flash Sale"
           description="A checkout flow can live here when you are ready to add commerce."
           icon={ShoppingCart}
           backgroundClassName="bg-[linear-gradient(135deg,_#0f172a_0%,_#1e293b_45%,_#020617_100%)]"

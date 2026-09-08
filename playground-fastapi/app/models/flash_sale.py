@@ -29,6 +29,8 @@ class FlashSale(Base):
 
     remaining_quantity : Mapped[int] = mapped_column(Integer, nullable=False)
 
+    max_quantity_per_user: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+
     status: Mapped[str] = mapped_column(String(50), nullable=False)
 
     product: Mapped["Product"] = relationship("Product", back_populates="flash_sales")
@@ -46,9 +48,12 @@ class FlashSalePurchase(Base):
 
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
+    order_id: Mapped[int] = mapped_column(Integer, ForeignKey("orders.id",ondelete="SET NULL"),nullable=False)
+
     product_id: Mapped[int] = mapped_column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
 
     price_paid: Mapped[Decimal] = mapped_column(Numeric(10,2),nullable=False)
+    quantity: Mapped[int] = mapped_column(Integer,nullable=False)
 
     payment_id: Mapped[str] = mapped_column(String(255),nullable=True)
     stripe_client_secret: Mapped[str] = mapped_column(String(255),nullable=True)

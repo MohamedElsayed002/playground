@@ -82,7 +82,7 @@ async def get_my_orders(
 
 
 # Checkout Route 
-@router.post('/testing-route')
+@router.post('/testing-route', response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
 async def testing_route(
     data: OrderCheckoutCreate,
     current_user= Depends(get_current_user),
