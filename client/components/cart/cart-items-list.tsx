@@ -1,22 +1,12 @@
 import { components } from "@/lib/api/schema"
 import Link from "next/link"
-
+import {
+    formatPrice,
+    formatSaleDate,
+    getCartPriceBreakdown,
+} from "@/lib/cart-pricing"
 
 type CartItem = components["schemas"]["CartResponse"]
-
-
-
-function formatPrice(value: string | number | null | undefined) {
-    if (value === null || value === undefined || value === "") return "N/A"
-
-    const numberValue = typeof value === "number" ? value : Number(value)
-    if (Number.isNaN(numberValue)) return "N/A"
-
-    return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-    }).format(numberValue)
-}
 
 export function CartItemsList({ cart }: { cart: CartItem }) {
     if (!cart || cart.items?.length === 0) {
@@ -27,10 +17,12 @@ export function CartItemsList({ cart }: { cart: CartItem }) {
         )
     }
 
+
     return (
         <div className="space-y-4">
             {cart.items?.map((item) => {
                 const product = item.product
+                const pricing = getCartPriceBreakdown(product, item.quantity)
                 const imageUrl = product.images?.[0]?.url || "https://placehold.co/600x600/png?text=No+Image"
 
                 return (
@@ -46,10 +38,26 @@ export function CartItemsList({ cart }: { cart: CartItem }) {
                                     <p className="mt-1 text-sm text-slate-600">{product.short_description || product.description || "No description available."}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-lg font-semibold text-slate-900">{formatPrice(product.price)}</p>
-                                    <p className="text-sm text-slate-500">Qty: {item.quantity}</p>
+                                    <p className="text-lg font-semibold text-slate-900">{formatPrice(pricing.total)}</p>
+                                    <p className="text-sm text-slate-500">{item.quantity} item{item.quantity === 1 ? "" : "s"}</p>
                                 </div>
                             </div>
+                            {pricing.sale && pricing.saleUnitPrice !== null ? (
+                                <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-950">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <p className="font-semibold">Flash sale: {pricing.sale.discount_percentage}% off 1 item</p>
+                                        <p className="font-semibold">{formatPrice(pricing.saleUnitPrice)}</p>
+                                    </div>
+                                    {pricing.regularQuantity > 0 ? (
+                                        <p className="mt-1 text-emerald-800">
+                                            {pricing.regularQuantity} item{pricing.regularQuantity === 1 ? "" : "s"} at {formatPrice(pricing.regularUnitPrice)} each
+                                        </p>
+                                    ) : null}
+                                    <p className="mt-1 text-xs text-emerald-700">
+                                        Sale ends {formatSaleDate(pricing.sale.ends_at)}
+                                    </p>
+                                </div>
+                            ) : null}
                         </div>
                     </div>
                 )

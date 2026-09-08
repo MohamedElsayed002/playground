@@ -1,31 +1,12 @@
 import { components } from "@/lib/api/schema"
+import {
+    formatPrice,
+    formatSaleDate,
+    getCartPriceBreakdown,
+} from "@/lib/cart-pricing"
 import { CheckoutDialog } from "./checkout-dialog"
 
 type CartItem = components["schemas"]["CartResponse"]
-
-function formatPrice(value: string | number | null | undefined) {
-    if (value === null || value === undefined || value === "") return "N/A"
-
-    const numberValue = typeof value === "number" ? value : Number(value)
-    if (Number.isNaN(numberValue)) return "N/A"
-
-    return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-    }).format(numberValue)
-}
-
-function calculateTaxes(value: string | number | null | undefined) {
-    if (value === null || value === undefined || value === "") return "N/A"
-
-    const numberValue = typeof value === "number" ? value : Number(value)
-    if (Number.isNaN(numberValue)) return "N/A"
-
-    return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-    }).format(numberValue * 0.10)
-}
 
 export function CartSummary({ cart }: { cart: CartItem }) {
     if (!cart || !cart.items?.length) {
@@ -38,11 +19,13 @@ export function CartSummary({ cart }: { cart: CartItem }) {
     }
 
     const itemCount = cart.items?.reduce((total, item) => total + item.quantity, 0) ?? 0
-    const subtotal = formatPrice(cart.subtotal)
-    const taxes = calculateTaxes(cart.subtotal)
-    const calculatedTotal = cart.subtotal
-        ? formatPrice(Number(cart.subtotal) * 1.1)
-        : "N/A"
+    const pricedItems = cart.items.map((item) => ({
+        item,
+        pricing: getCartPriceBreakdown(item.product, item.quantity),
+    }))
+    const subtotalValue = pricedItems.reduce((total, { pricing }) => total + pricing.total, 0)
+    const taxesValue = subtotalValue * 0.10
+    const calculatedTotal = subtotalValue + taxesValue
 
     return (
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/50">
@@ -63,7 +46,7 @@ export function CartSummary({ cart }: { cart: CartItem }) {
                 </div>
 
                 <div className="space-y-4">
-                    {cart.items.map((item) => (
+                    {pricedItems.map(({ item, pricing }) => (
                         <div
                             key={item.id}
                             className="rounded-3xl border border-slate-200 bg-slate-50 p-4 shadow-sm"
@@ -71,10 +54,23 @@ export function CartSummary({ cart }: { cart: CartItem }) {
                             <div className="flex items-center justify-between gap-4">
                                 <div>
                                     <p className="text-base font-semibold text-slate-900">{item.product.name}</p>
-                                    <p className="mt-1 text-sm text-slate-500">{item.quantity}× {formatPrice(item.product.price)}</p>
+                                    <p className="mt-1 text-sm text-slate-500">
+                                        {pricing.discountedQuantity > 0 ? (
+                                            <>{pricing.discountedQuantity} item at {formatPrice(pricing.saleUnitPrice)}</>
+                                        ) : null}
+                                        {pricing.discountedQuantity > 0 && pricing.regularQuantity > 0 ? " + " : null}
+                                        {pricing.regularQuantity > 0 ? (
+                                            <>{pricing.regularQuantity} item{pricing.regularQuantity === 1 ? "" : "s"} at {formatPrice(pricing.regularUnitPrice)}</>
+                                        ) : null}
+                                    </p>
+                                    {pricing.sale ? (
+                                        <p className="mt-1 text-xs text-emerald-700">
+                                            Flash sale ends {formatSaleDate(pricing.sale.ends_at)}
+                                        </p>
+                                    ) : null}
                                 </div>
                                 <p className="text-base font-semibold text-slate-900">
-                                    {formatPrice(Number(item.product.price) * item.quantity)}
+                                    {formatPrice(pricing.total)}
                                 </p>
                             </div>
                         </div>
@@ -85,15 +81,15 @@ export function CartSummary({ cart }: { cart: CartItem }) {
                     <div className="grid gap-3 text-sm text-slate-600">
                         <div className="flex items-center justify-between">
                             <span>Subtotal</span>
-                            <span className="font-medium text-slate-900">{subtotal}</span>
+                            <span className="font-medium text-slate-900">{formatPrice(subtotalValue)}</span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span>Estimated taxes</span>
-                            <span className="font-medium text-slate-900">{taxes}</span>
+                            <span className="font-medium text-slate-900">{formatPrice(taxesValue)}</span>
                         </div>
                         <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-base font-semibold text-slate-950">
                             <span>Total</span>
-                            <span>{calculatedTotal}</span>
+                            <span>{formatPrice(calculatedTotal)}</span>
                         </div>
                     </div>
                 </div>

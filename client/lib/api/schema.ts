@@ -2838,12 +2838,12 @@ export interface operations {
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["OrderResponse"];
                 };
             };
             /** @description Validation Error */

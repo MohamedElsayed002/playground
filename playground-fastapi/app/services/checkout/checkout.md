@@ -26,3 +26,32 @@ I created this image with ChatGPT after I disccussed with him the desgin or the 
 
 But no I don't do that. recently I trying to focus more in each route. in multiple parts
 tradeoffs, evil path طريق الشيطان :"D, transactions. what is acceptable to fail and what is not acceptable to fail 
+
+
+```
+POST /checkout
+        ↓
+DB transaction
+        ↓
+Order = PENDING
+        ↓
+COMMIT
+        ↓
+Create PaymentIntent on server
+        ↓
+save payment_intent_id
+        ↓
+return client_secret
+        ↓
+Frontend
+        ↓
+Stripe.js confirmPayment(...)
+        ↓
+Stripe processes payment
+        ↓
+Stripe webhook
+        ↓
+Your backend verifies event
+        ↓
+Order = CONFIRMED / FAILED
+```
