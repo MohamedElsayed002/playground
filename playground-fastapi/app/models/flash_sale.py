@@ -48,15 +48,15 @@ class FlashSalePurchase(Base):
 
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
-    order_id: Mapped[int] = mapped_column(Integer, ForeignKey("orders.id",ondelete="SET NULL"),nullable=False)
+    order_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("orders.id", ondelete="SET NULL"), nullable=True)
 
     product_id: Mapped[int] = mapped_column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
 
-    price_paid: Mapped[Decimal] = mapped_column(Numeric(10,2),nullable=False)
-    quantity: Mapped[int] = mapped_column(Integer,nullable=False)
+    price_paid: Mapped[Decimal | None] = mapped_column(Numeric(10,2),nullable=True)
+    quantity: Mapped[int] = mapped_column(Integer, nullable=True, default=1)
 
-    payment_id: Mapped[str] = mapped_column(String(255),nullable=True)
-    stripe_client_secret: Mapped[str] = mapped_column(String(255),nullable=True)
+    payment_id: Mapped[str | None] = mapped_column(String(255),nullable=True)
+    stripe_client_secret: Mapped[str | None] = mapped_column(String(255),nullable=True)
 
     status: Mapped[PurchaseStatus] = mapped_column(
         SAEnum(PurchaseStatus),

@@ -63,7 +63,7 @@ export const useClaimDiscount = () => {
         refetchInterval: (query) => {
             const payment = query.state.data
 
-            return payment?.payment_id && payment.stripe_client_secret ? false : 1000
+            return payment?.payment_id && payment.stripe_client_secret ? false : 5000
         },
         refetchIntervalInBackground: true,
         retry: true,

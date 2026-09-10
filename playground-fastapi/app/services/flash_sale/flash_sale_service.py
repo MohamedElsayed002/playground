@@ -153,7 +153,7 @@ class FlashSaleService:
     ) -> FlashSalePurchase:
         async with self.session.begin_nested():
             request_path = f"/flash-sale/{flash_sale_id}/purchase"
-
+            print("156",request_path,flash_sale_id)
             result = await self.session.execute(
                 select(IdempotencyKey).where(
                     IdempotencyKey.key == idempotency_key,
@@ -163,7 +163,7 @@ class FlashSaleService:
             )
 
             existing = result.scalar_one_or_none()
-
+            print("166",existing)
             if existing and existing.response_body is not None:
                 await create_audit_log(
                     db=self.session,
@@ -207,7 +207,7 @@ class FlashSaleService:
             flash_sale_exist = await self.session.execute(
                 select(FlashSale).where(FlashSale.id == flash_sale_id).with_for_update()
             )
-
+            print("210",flash_sale_exist)
             flash_sale = flash_sale_exist.scalar_one_or_none()
 
             if not flash_sale:
@@ -263,29 +263,33 @@ class FlashSaleService:
                 flash_sale_id=flash_sale.id,
                 user_id=user_id,
                 product_id=product.id,
+                order_id=None,
                 price_paid=price_paid,
-                status=PurchaseStatus.PROCESSING.value
+                quantity=1,
+                status=PurchaseStatus.PROCESSING,
             )
+
+            print("PURCHASEEE",purchase)
             self.session.add(purchase)
             await self.session.flush()
             await self.session.refresh(purchase)
 
-            self.session.add(
-                AuditOutbox(
-                    organization_id=settings.WORKOS_ORGANIZATION_ID,
-                    event_type="FLASH_SALE_PURCHASE_CREATED",
-                    payload={
-                        "purchase_id": purchase.id,
-                        "flash_sale_id": flash_sale.id,
-                        "user_id": user_id,
-                        "product_id": product.id,
-                        "price_paid": str(price_paid),
-                        "status": PurchaseStatus.PROCESSING.value,
-                    },
-                    status=PurchaseStatus.PROCESSING.value,
-                    idempotency_key=f"flash-sale-purchase:{purchase.id}",
-                )
-            )
+            # self.session.add(
+            #     AuditOutbox(
+            #         organization_id=settings.WORKOS_ORGANIZATION_ID,
+            #         event_type="FLASH_SALE_PURCHASE_CREATED",
+            #         payload={
+            #             "purchase_id": purchase.id,
+            #             "flash_sale_id": flash_sale.id,
+            #             "user_id": user_id,
+            #             "product_id": product.id,
+            #             "price_paid": str(price_paid),
+            #             "status": PurchaseStatus.PROCESSING.value,
+            #         },
+            #         status=PurchaseStatus.PROCESSING.value,
+            #         idempotency_key=f"flash-sale-purchase:{purchase.id}",
+            #     )
+            # )
 
             await create_audit_log(
                 db=self.session,
@@ -299,6 +303,9 @@ class FlashSaleService:
                     "price_paid": str(price_paid),
                 },
             )
+
+        # Commit first so the worker can query the purchase in another session.
+        await self.session.commit()
 
         # From this Point Background job starts outbox/worker or inngest 
         await send_flash_sale_payment_job(

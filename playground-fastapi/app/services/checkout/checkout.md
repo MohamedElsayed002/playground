@@ -55,3 +55,32 @@ Your backend verifies event
         ↓
 Order = CONFIRMED / FAILED
 ```
+
+```
+1. Fix flash-sale compensation
+   ├─ restore remaining_quantity
+   └─ mark FlashSalePurchase appropriately
+
+2. Define FlashSalePurchase state transitions
+   PROCESSING
+   COMPLETED
+   FAILED
+
+3. Decide coupon + flash-sale stacking rules
+   and perform final calculation in checkout
+
+4. Decide whether Order is:
+   PENDING_PAYMENT
+   rather than immediately treating it as a completed purchase
+
+5. Change simulated _process_payment()
+   → server-side Stripe PaymentIntent creation
+
+6. Add Stripe webhook handling
+   → payment_intent.succeeded
+   → payment_intent.payment_failed
+   → other relevant states
+
+7. Eventually move background dispatch to a real outbox
+   if you want durable event delivery
+```
