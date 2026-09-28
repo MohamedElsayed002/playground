@@ -1138,6 +1138,12 @@ export interface components {
              */
             work_experience: components["schemas"]["WorkExperience"][];
         };
+        /** CartActionResponse */
+        CartActionResponse: {
+            /** Message */
+            message: string;
+            cart: components["schemas"]["CartResponse"];
+        };
         /** CartItemCreate */
         CartItemCreate: {
             /** Product Id */
@@ -2807,7 +2813,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CartResponse"];
+                    "application/json": components["schemas"]["CartActionResponse"];
                 };
             };
             /** @description Validation Error */

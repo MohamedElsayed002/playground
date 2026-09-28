@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db, get_current_user, require_admin
 from app.schemas.order import OrderCreate, OrderCheckoutCreate, OrderResponse, OrderStatusUpdate
-from app.schemas.cart import CartItemCreate, CartResponse
+from app.schemas.cart import CartActionResponse, CartItemCreate, CartResponse
 from app.schemas.common import PaginatedResponse
 from app.services import order_service
 from app.services.order_service_2 import OrderService
@@ -37,7 +37,7 @@ async def place_order(
 
 @router.post(
     "/cart/items",
-    response_model=CartResponse,
+    response_model=CartActionResponse,
     status_code=status.HTTP_201_CREATED,
 )
 async def add_to_cart(
@@ -46,12 +46,16 @@ async def add_to_cart(
     db: AsyncSession = Depends(get_db),
 ):
     """Add a product to the current user's cart, or increment its quantity."""
-    return await order_service.add_to_cart(
+    cart = await order_service.add_to_cart(
         db,
         user_id=current_user.id,
         product_id=data.product_id,
         quantity=data.quantity,
     )
+    return {
+        "message": "Product successfully added to cart",
+        "cart": CartResponse.model_validate(cart),
+    }
 
 
 @router.get(

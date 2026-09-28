@@ -122,3 +122,103 @@ export const getUsersByNameDef = toolDefinition({
     ),
   }),
 });
+
+
+// Small E-commerce
+
+export const getProductByNameDef = toolDefinition({
+  name: "get_product_by_name",
+  description: "Get top products matches the name query",
+  inputSchema: z.object({
+    name: z.string().describe("the name of the product"),
+  }),
+  outputSchema: z.object({
+    products: z.array(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+        slug: z.string(),
+        price: z.string(),
+        compare_at_price: z.string().nullable(),
+        stock_quantity: z.number(),
+        is_featured: z.boolean(),
+        owner_id: z.number().nullable().optional(),
+        images: z
+          .array(
+            z.object({
+              id: z.number(),
+              url: z.string().optional(),
+              alt_text: z.string().nullable(),
+              is_primary: z.boolean(),
+              sort_order: z.number(),
+            }),
+          )
+          .optional(),
+        flash_sales: z
+          .array(
+            z.object({
+              id: z.number(),
+              product_id: z.number(),
+              starts_at: z.string(),
+              ends_at: z.string(),
+              discount_percentage: z.number(),
+              sale_quantity: z.number(),
+              remaining_quantity: z.number(),
+              status: z.string(),
+            }),
+          )
+          .optional(),
+        created_at: z.string(),
+      }),
+    ),
+  }),
+});
+
+
+export const getCategoryByNameDef = toolDefinition({
+  name: "get_category_by_name",
+  description: "Get the categories by name",
+  inputSchema: z.object({
+    name: z.string().describe("Get the category by name")
+  }),
+  outputSchema: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string(),
+      slug: z.string(),
+      description: z.string(),
+      image_url: z.string(),
+      parent_id: z.any().optional(),
+      created_at: z.date()
+    })
+  )
+})
+
+
+export const addProductToCartDef = toolDefinition({
+  name: "add_product_to_cart",
+  description: "Add the product to user's cart by product id",
+  inputSchema: z.object({
+    productId: z.string()
+  }),
+  outputSchema: z.object({
+    message: z.string()
+  })
+})
+
+
+export const checkoutSessionDef = toolDefinition({
+  name: "checkout_session",
+  description: "User can checkout out and get the products in his cart",
+  inputSchema: z.object({
+    notes: z.string().describe("User notes"),
+    shipping_address_line1: z.string().describe("user's address 1"),
+    shipping_address_line2: z.string().describe("user's address 2").optional(),
+    shipping_city: z.string().describe("user's city living in"),
+    shipping_country: z.string().describe("user's country living in"),
+    shipping_postal_code: z.string().describe("user's house postal code")
+  }),
+  outputSchema: z.object({
+    message: z.string()
+  })
+})

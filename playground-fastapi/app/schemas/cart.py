@@ -25,3 +25,10 @@ class CartResponse(BaseModel):
     subtotal: Decimal | None = None
 
     model_config = {"from_attributes": True}
+
+
+class CartActionResponse(BaseModel):
+    message: str
+    cart: CartResponse
+
+    model_config = {"from_attributes": True}

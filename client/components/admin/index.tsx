@@ -7,14 +7,17 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
+
+// Vercel AI SDK (Realtime Chat)
 import { useChat, fetchServerSentEvents } from "@tanstack/ai-react";
+import { RealtimeChatPanel } from "./realtime-chat-panel";
+
 import { ApprovalPrompt } from "@/components/admin/approval";
 
 import { Badge } from "@/components/ui/badge";
 
 import { useEffect, useRef } from "react";
 import { useHotkey } from "@tanstack/react-hotkeys";
-import { RealtimeChatPanel } from "./realtime-chat-panel";
 import { extractImageUrl, formatJsonLike, stripMarkdownImage } from "@/lib/utils";
 
 const formSchema = z.object({
@@ -109,6 +112,8 @@ export default function AdminPage() {
         </section>
 
         <div className="mt-10 grid grid-cols-1 xl:grid-cols-[340px_1fr_360px] gap-8">
+
+          {/* First Column Send a Message */}
           <div className="rounded-3xl border border-slate-200/70 bg-white/70 backdrop-blur-xl shadow-[0_20px_50px_-30px_rgba(15,23,42,0.4)] p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900">Compose Message</h2>
@@ -166,7 +171,8 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
-
+          
+          {/* Second Column / Messages */}
           <div
             className="rounded-3xl border border-slate-200/70 bg-white/70 backdrop-blur-xl shadow-[0_20px_50px_-30px_rgba(15,23,42,0.4)] p-6 flex flex-col"
             style={{ height: 560 }}
@@ -289,7 +295,8 @@ export default function AdminPage() {
               ))}
             </div>
           </div>
-
+          
+          {/* Real time Chat */}
           <RealtimeChatPanel />
         </div>
       </div>
