@@ -1,39 +1,37 @@
 
-import { addProductToCart, checkoutCart, getProductByName } from "@/tools/server"
-import { chat, toServerSentEventsResponse, type AnyTextAdapter } from "@tanstack/ai"
-import { openaiText } from "@tanstack/ai-openai"
+import { addProductToCart, checkoutCart, getCartSummary, getProductByName, getUserOrderHistory } from "@/tools/server";
+import { chat, toServerSentEventsResponse, type AnyTextAdapter } from "@tanstack/ai";
+import { openaiText } from "@tanstack/ai-openai";
 
 export async function POST(req: Request) {
-
     if (!process.env.OPENAI_API_KEY) {
-        return new Response(
-            JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
+        return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
             status: 500,
-            headers: {
-                "Content-Type": "application.json"
-            }
-        }
-        )
+            headers: { "Content-Type": "application/json" },
+        });
     }
 
-    const { messages } = await req.json()
+    const { messages } = await req.json();
 
     try {
         const stream = chat({
             adapter: openaiText("gpt-5") as unknown as AnyTextAdapter,
             messages,
-            tools: [
-                // Search By Category,
-                // Search By Product,
-                getProductByName,
-                // Add To Cart 
-                addProductToCart,
-                // Checkout to open session
-                checkoutCart
-            ]
-        })
+            tools: [getProductByName, addProductToCart, getCartSummary, checkoutCart, getUserOrderHistory],
+            systemPrompts: [
+                "You are an ecommerce shopping assistant for a store. Your job is to help the user discover products, add items to cart, guide checkout, and answer questions about their order history. " +
+                "Be concise, helpful, and sales-focused. " +
+                "When the user asks to search, use the product search tool. " +
+                "When the user asks to add something to cart, call the add-to-cart tool with the correct product id. " +
+                "When the user asks what is in their cart, asks for a cart summary, item count, or subtotal, call the get_cart_summary tool and explain the product names, quantities, and subtotal from its result. " +
+                "When the user asks about previous orders, recent purchases, last order, or order history, use the get_user_order_history tool. " +
+                "If the user asks for checkout, use the checkout tool with their shipping details. " +
+                "If you cannot find a product or the product id is missing, ask a clarifying question instead of guessing. " +
+                "Do not invent prices, stock details, or order information if the tool did not return them. " +
+                "Prefer short, natural product recommendations with clear next steps.",]
+        });
 
-        return toServerSentEventsResponse(stream)
+        return toServerSentEventsResponse(stream);
     } catch (error) {
         return new Response(
             JSON.stringify({
@@ -45,5 +43,4 @@ export async function POST(req: Request) {
             },
         );
     }
-
 }

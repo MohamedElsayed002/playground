@@ -5,7 +5,9 @@ import {
   checkoutSessionDef,
   deleteUserDef,
   getProductByNameDef,
+  getCartSummaryDef,
   getUserDataDef,
+  getUserOrderHistoryDef,
   getUsersByNameDef,
   getUsersCountDef,
   updateUserDef,
@@ -160,6 +162,87 @@ export const addProductToCart = addProductToCartDef.server(async ({ productId }:
 
   return {
     message: product.data?.message ?? "Product successfully added to cart",
+  };
+});
+
+export const getCartSummary = getCartSummaryDef.server(async () => {
+  const accessToken = (await cookies()).get("fastapi_access")?.value;
+
+  if (!accessToken) {
+    throw new Error("User is not authenticated.");
+  }
+
+  const response = await api.GET("/api/v1/orders/cart", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.data) {
+    throw new Error("Unable to load your cart right now.");
+  }
+
+  return {
+    cart: {
+      id: response.data.id,
+      user_id: response.data.user_id,
+      subtotal: response.data.subtotal ?? null,
+      items: (response.data.items ?? []).map(({ id, quantity, product }) => ({
+        id,
+        quantity,
+        product: {
+          ...product,
+          images: product.images ?? [],
+          flash_sales: product.flash_sales ?? [],
+        },
+      })),
+    },
+  };
+});
+
+export const getUserOrderHistory = getUserOrderHistoryDef.server(async ({ limit = 5 }) => {
+  const accessToken = (await cookies()).get("fastapi_access")?.value;
+
+  if (!accessToken) {
+    throw new Error("User is not authenticated.");
+  }
+
+  const response = await api.GET("/api/v1/orders/my", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    params: {
+      query: {
+        page_size: Number(limit),
+        page: 1,
+      },
+    },
+  });
+
+  const items = (response.data?.items ?? []) as Array<{
+    id?: number;
+    total?: string;
+    status?: string | null;
+    created_at?: string | null;
+    items?: Array<{
+      product_name?: string | null;
+      quantity?: number | null;
+      price?: string | null;
+    }>;
+  }>;
+
+  return {
+    orders: items.map((order) => ({
+      id: order.id ?? 0,
+      total: order.total ?? "0.00",
+      status: order.status ?? "unknown",
+      created_at: order.created_at ?? null,
+      items: (order.items ?? []).map((item) => ({
+        product_name: item.product_name ?? "Product",
+        quantity: item.quantity ?? 1,
+        price: item.price ?? "0.00",
+      })),
+    })),
   };
 });
 

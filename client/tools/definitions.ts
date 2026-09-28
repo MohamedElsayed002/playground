@@ -206,6 +206,89 @@ export const addProductToCartDef = toolDefinition({
   })
 })
 
+export const getCartSummaryDef = toolDefinition({
+  name: "get_cart_summary",
+  description: "Get the current authenticated user's cart contents, product details, quantities, and subtotal. Use this when the user asks what is in their cart, how many items they have, or their cart subtotal.",
+  inputSchema: z.object({}),
+  outputSchema: z.object({
+    cart: z.object({
+      id: z.number(),
+      user_id: z.number(),
+      subtotal: z.string().nullable(),
+      items: z.array(
+        z.object({
+          id: z.number(),
+          quantity: z.number(),
+          product: z.object({
+            id: z.number(),
+            name: z.string(),
+            slug: z.string(),
+            description: z.string().nullable(),
+            short_description: z.string().nullable(),
+            price: z.string(),
+            compare_at_price: z.string().nullable(),
+            stock_quantity: z.number(),
+            sku: z.string().nullable(),
+            is_active: z.boolean(),
+            is_featured: z.boolean(),
+            category_id: z.number().nullable(),
+            owner_id: z.number().nullable(),
+            images: z.array(
+              z.object({
+                id: z.number(),
+                url: z.string(),
+                alt_text: z.string().nullable(),
+                is_primary: z.boolean(),
+                sort_order: z.number(),
+              }),
+            ),
+            created_at: z.string(),
+            flash_sales: z.array(
+              z.object({
+                id: z.number(),
+                product_id: z.number(),
+                starts_at: z.string(),
+                ends_at: z.string(),
+                discount_percentage: z.number(),
+                sale_quantity: z.number(),
+                remaining_quantity: z.number(),
+                status: z.string(),
+              }),
+            ),
+          }),
+        }),
+      ),
+    }),
+  }),
+});
+
+export const getUserOrderHistoryDef = toolDefinition({
+  name: "get_user_order_history",
+  description: "Get the current authenticated user's recent order history. Use this when the user asks about previous orders, past purchases, recent total spend, or order status.",
+  inputSchema: z.object({
+    limit: z.coerce.number().min(1).max(20).optional().default(5).describe("Number of recent orders to return"),
+  }),
+  outputSchema: z.object({
+    orders: z.array(
+      z.object({
+        id: z.number(),
+        total: z.string(),
+        status: z.string().nullable().optional(),
+        created_at: z.string().nullable().optional(),
+        items: z
+          .array(
+            z.object({
+              product_name: z.string().nullable().optional(),
+              quantity: z.number().nullable().optional(),
+              price: z.string().nullable().optional(),
+            }),
+          )
+          .optional(),
+      }),
+    ),
+  }),
+});
+
 
 export const checkoutSessionDef = toolDefinition({
   name: "checkout_session",
