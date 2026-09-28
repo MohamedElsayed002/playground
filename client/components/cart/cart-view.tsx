@@ -48,6 +48,9 @@ export function CartView() {
                     isCheckingRedemption={isCheckingRedemption}
                     isLoggedIn={isLoggedIn}
                 />
+
+            </div>
+            <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr] mt-5 mr-5">
                 <CartSummary
                     cart={data!}
                     redeemedSaleIds={redeemedSaleIds}
