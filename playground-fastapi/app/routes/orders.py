@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db, get_current_user, require_admin
 from app.schemas.order import OrderCreate, OrderCheckoutCreate, OrderResponse, OrderStatusUpdate
-from app.schemas.cart import CartActionResponse, CartItemCreate, CartResponse
+from app.schemas.cart import CartActionResponse, CartItemCreate, CartResponse, CartRemoveItem
 from app.schemas.common import PaginatedResponse
 from app.services import order_service
 from app.services.order_service_2 import OrderService
@@ -57,6 +57,23 @@ async def add_to_cart(
         "cart": CartResponse.model_validate(cart),
     }
 
+# @router.delete(
+#         "/cart/remove-item/{product_id}",
+#         response_model=CartRemoveItem,
+#         status_code=status.HTTP_200_OK,
+#         summary="Remove a product from the current user's cart",
+# )
+# async def remove_item_cart(
+#     product_id: int,
+#     current_user=  Depends(get_current_user),
+#     db: AsyncSession = Depends(get_db)
+# ):
+#     await order_service.remove_item(
+#         db,
+#         user_id=current_user.id,
+#         product_id=product_id,
+#     )
+#     return {"message": "Product successfully removed from cart"}
 
 @router.get(
     "/cart",
@@ -74,7 +91,8 @@ async def get_cart(
 
 @router.delete(
     "/cart/items/{product_id}",
-    response_model=CartResponse,
+    # response_model=CartResponse,
+    response_model=CartRemoveItem,
     summary="Remove a product from the current user's cart",
 )
 async def remove_from_cart(
@@ -88,7 +106,10 @@ async def remove_from_cart(
         user_id=current_user.id,
         product_id=product_id,
     )
-    return CartResponse.model_validate(cart)
+    # return CartResponse.model_validate(cart)
+    return {
+        "message": "item removed from the cart successfully"
+    }
 
 
 @router.get("/", response_model=PaginatedResponse[OrderResponse])

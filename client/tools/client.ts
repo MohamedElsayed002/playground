@@ -1,12 +1,15 @@
+import { api } from "@/lib/api/client";
 import {
   addProductToCartDef,
   checkoutSessionDef,
   getAllUsersDef,
   getCartSummaryDef,
   getProductByNameDef,
+  getProductDetails,
   getUserDataDef,
   getUserOrderHistoryDef,
   getUsersCountDef,
+  removeProductFromCartDef,
   sendEmailDef,
 } from "./definitions";
 import type { components } from "@/lib/api/schema";
@@ -163,3 +166,38 @@ export const checkoutCartTool = checkoutSessionDef.client(async (checkoutDetails
 
   return { message: data.message ?? "Your order was placed successfully." };
 });
+
+
+export const getSingleProductDetailTool = getProductDetails.client(async ({ productId }: { productId: string }) => {
+  const response = await api.GET("/api/v1/products/{product_id}", {
+    params: {
+      path: {
+        product_id: Number(productId)
+      }
+    }
+  })
+
+  if (response.error) {
+    throw new Error(`Product ${productId} was not found`)
+  }
+
+  return response.data
+})
+
+export const removeItemCartTool = removeProductFromCartDef.client(async ({ productId }: { productId: string }) => {
+  const response = await fetch('/api/small-ecommerce/add-to-cart', {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ productId }),
+  })
+
+  const data = (await response.json()) as { message?: string; error?: string };
+
+  if (!response.ok) {
+    throw new Error(data.error ?? "Failed to remove product from cart");
+  }
+
+  return { message: data.message ?? "Product successfully removed from cart" };
+})

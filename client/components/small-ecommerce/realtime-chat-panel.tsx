@@ -5,7 +5,9 @@ import {
   checkoutCartTool,
   getCartSummaryTool,
   getProductByNameTool,
+  getSingleProductDetailTool,
   getUserOrderHistoryTool,
+  removeItemCartTool,
 } from "@/tools/client";
 import { openaiRealtime } from "@tanstack/ai-openai";
 import { useRealtimeChat } from "@tanstack/ai-react";
@@ -26,12 +28,22 @@ export function RealtimeShopperChatPanel() {
   } = useRealtimeChat({
     getToken: () => fetch("/api/realtime-chat", { method: "POST" }).then((response) => response.json()),
     adapter: openaiRealtime(),
-    tools: [getUserOrderHistoryTool, getCartSummaryTool, getProductByNameTool, addToCartTool, checkoutCartTool],
+    tools: [
+      getUserOrderHistoryTool,
+      getCartSummaryTool,
+      getProductByNameTool,
+      addToCartTool,
+      checkoutCartTool,
+      getSingleProductDetailTool,
+      removeItemCartTool
+    ],
     instructions:
       "You are a friendly shopping assistant for this ecommerce store. Help customers discover products, manage their cart, checkout, and review order history. " +
       "Use get_product_by_name to search by the product name the customer says. Product results include IDs: use those IDs internally with add_product_to_cart; never ask the customer to know or provide an ID, and do not mention IDs unless asked. If there are multiple plausible matches, describe them and ask which one they mean before adding. Read the matched product name and price back before adding it. " +
+      "When a customer asks for detailed information about a specific product, use get_single_product_detail with that product's ID. If you do not know the ID, search for the product first; do not guess. " +
       "Use get_user_order_history for questions about previous orders, purchases, or order status. " +
       "Use get_cart_summary whenever the customer asks what is in the cart, how many items it has, or its subtotal. Explain the returned product names and quantities clearly; do not guess cart contents or totals. " +
+      "When a customer asks to remove a product from the cart, use remove_product_from_cart with the product ID. If they give a product name, call get_cart_summary to find its product.id; never guess or use the cart-item ID. If the match is ambiguous or the product is not in the cart, ask for clarification. Confirm removal only after the tool succeeds. " +
       "For checkout, collect the shipping address, city, country, postal code, and any notes. Summarize the details and ask the customer to explicitly confirm placing the order. Call checkout_session only after that confirmation. Never claim an order was placed unless the tool succeeds. Do not invent product, price, stock, or order details.",
     voice: "ash",
   });

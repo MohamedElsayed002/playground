@@ -18,7 +18,7 @@ export async function addCartItemAction(productId: number, quantity: number) {
     })
 
     if (result.error) {
-        // @ts-expect-error
+        // @ts-expect-error exc
         throw new Error(result.error.detail || "Failed to add product to cart")
     }
 
@@ -63,5 +63,5 @@ export async function removeItem(productId: number) {
         throw new Error("Failed remove item from cart")
     }
 
-    return result.data
+    return result.data.message
 }

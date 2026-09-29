@@ -32,3 +32,9 @@ class CartActionResponse(BaseModel):
     cart: CartResponse
 
     model_config = {"from_attributes": True}
+
+
+class CartRemoveItem(BaseModel):
+    message: str 
+
+    model_config = {"from_attributes": True}

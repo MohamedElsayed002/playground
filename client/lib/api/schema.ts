@@ -1159,6 +1159,11 @@ export interface components {
             quantity: number;
             product: components["schemas"]["ProductResponse"];
         };
+        /** CartRemoveItem */
+        CartRemoveItem: {
+            /** Message */
+            message: string;
+        };
         /** CartResponse */
         CartResponse: {
             /** Id */
@@ -2864,7 +2869,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CartResponse"];
+                    "application/json": components["schemas"]["CartRemoveItem"];
                 };
             };
             /** @description Validation Error */

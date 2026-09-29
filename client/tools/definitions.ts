@@ -305,3 +305,60 @@ export const checkoutSessionDef = toolDefinition({
     message: z.string()
   })
 })
+
+
+export const getProductDetails = toolDefinition({
+  name: "get_single_product_details",
+  description: "Get single product details by product id",
+  inputSchema: z.object({
+    productId: z.string().describe("Product ID")
+  }),
+  outputSchema: z.object({
+    id: z.number(),
+    name: z.string(),
+    slug: z.string(),
+    price: z.string(),
+    compare_at_price: z.string().nullable(),
+    stock_quantity: z.number(),
+    is_featured: z.boolean(),
+    owner_id: z.number().nullable().optional(),
+    images: z
+      .array(
+        z.object({
+          id: z.number(),
+          url: z.string().optional(),
+          alt_text: z.string().nullable(),
+          is_primary: z.boolean(),
+          sort_order: z.number(),
+        }),
+      )
+      .optional(),
+    flash_sales: z
+      .array(
+        z.object({
+          id: z.number(),
+          product_id: z.number(),
+          starts_at: z.string(),
+          ends_at: z.string(),
+          discount_percentage: z.number(),
+          sale_quantity: z.number(),
+          remaining_quantity: z.number(),
+          status: z.string(),
+        }),
+      )
+      .optional(),
+    created_at: z.string(),
+  }),
+})
+
+
+export const removeProductFromCartDef = toolDefinition({
+  name: "remove_product_from_cart",
+  description: "User can remove the product from his cart by product id",
+  inputSchema: z.object({
+    productId: z.string().describe("Product ID")
+  }),
+  outputSchema: z.object({
+    message: z.string()
+  })
+})

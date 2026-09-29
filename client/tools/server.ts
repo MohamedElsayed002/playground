@@ -11,6 +11,8 @@ import {
   getUsersByNameDef,
   getUsersCountDef,
   updateUserDef,
+  getProductDetails,
+  removeProductFromCartDef,
 } from "./definitions";
 import { api } from "@/lib/api/client";
 
@@ -283,3 +285,41 @@ export const checkoutCart = checkoutSessionDef.server(async ({
   };
 });
 
+
+export const getSingleProductDetailsServer = getProductDetails.server(async ({ productId }: { productId: string }) => {
+  const response = await api.GET('/api/v1/products/{product_id}', {
+    params: {
+      path: {
+        product_id: Number(productId)
+      }
+    }
+  })
+
+  if (!response.data) {
+    throw new Error(`Product ${productId} was not found`)
+  }
+
+  return response.data
+})
+
+
+export const deleteProductFromCartServer = removeProductFromCartDef.server(async ({ productId }: { productId: string }) => {
+  const accessToken = (await cookies()).get("fastapi_access")?.value
+
+  const response = await api.DELETE('/api/v1/orders/cart/items/{product_id}', {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+    params: {
+      path: {
+        product_id: Number(productId)
+      }
+    }
+  })
+
+  if (response.error || !response.data) {
+    throw new Error("Product not found")
+  }
+
+  return { message: "Product successfully removed from cart" }
+})

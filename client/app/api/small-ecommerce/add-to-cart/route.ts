@@ -41,3 +41,38 @@ export async function POST(req: Request) {
         );
     }
 }
+
+
+// Remove Item From Cart
+// DELETE api/small-ecommerce/add-to-cart 
+
+export async function DELETE(req: Request) {
+    const accessToken = (await cookies()).get("fastapi_access")?.value;
+
+    if (!accessToken) {
+        return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    const { productId } = await req.json()
+
+    if (!productId) {
+        return NextResponse.json({ error: "Product ID is required" }, { status: 400 })
+    }
+
+    const response = await api.DELETE("/api/v1/orders/cart/items/{product_id}", {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+            path: {
+                product_id: Number(productId)
+            }
+        }
+    })
+
+    if (response.error || !response.data) {
+        return NextResponse.json({ message: "Something went wrong !!" }, { status: 400 })
+    }
+
+    return NextResponse.json({ message: "Product successfully removed from cart" })
+}
