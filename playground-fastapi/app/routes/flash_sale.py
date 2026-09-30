@@ -7,6 +7,8 @@ from app.core.config import settings
 from app.core.dependencies import get_db
 from app.services.flash_sale import FlashSaleService
 from app.models.flash_sale import FlashSale, FlashSalePurchase, PurchaseStatus
+from app.models.order import Order, OrderStatus, PaymentStatus
+from app.models.product import Product
 from app.models.user import User
 from app.core.dependencies import get_current_user
 from app.schemas.flash_sale import CreateFlashSale, FlashSalePurchaseResponse, FlashSaleResponse,FlashSaleGetStatus
@@ -72,31 +74,72 @@ async def stripe_webhook(
                 print("Stripe webhook signature verification failed:", exc)
                 raise HTTPException(status_code=400, detail="Invalid Stripe signature")
 
-        print("Stripe webhook received:", event.to_dict())
 
         event_type = event.type
         payment_intent = event.data.object
         payment_id = getattr(payment_intent, "id", None)
 
-        if payment_id and event_type in {"payment_intent.succeeded", "payment_intent.payment_failed"}:
+        if payment_id and event_type in {
+                "payment_intent.succeeded",
+                "payment_intent.payment_failed",
+                "payment_intent.canceled",
+        }:
                 result = await db.execute(
                         select(FlashSalePurchase).where(
                                 FlashSalePurchase.payment_id == payment_id
-                        )
+                        ).with_for_update()
                 )
                 purchase = result.scalar_one_or_none()
 
-                if purchase is not None:
-                        purchase.status = (
-                                PurchaseStatus.COMPLETED
-                                if event_type == "payment_intent.succeeded"
-                                else PurchaseStatus.FAILED
-                        )
+                if purchase is not None and purchase.status == PurchaseStatus.PROCESSING:
+                        order = None
+                        if purchase.order_id is not None:
+                                order_result = await db.execute(
+                                        select(Order)
+                                        .where(Order.id == purchase.order_id)
+                                        .with_for_update()
+                                )
+                                order = order_result.scalar_one_or_none()
+
+                        if event_type == "payment_intent.succeeded":
+                                purchase.status = PurchaseStatus.COMPLETED
+                                if order is not None:
+                                        order.payment_status = PaymentStatus.PAID
+                                        order.status = OrderStatus.CONFIRMED
+                        elif event_type == "payment_intent.payment_failed":
+                                # A failed attempt can be retried on this PaymentIntent.
+                                if order is not None:
+                                        order.payment_status = PaymentStatus.FAILED
+                        else:
+                                quantity = purchase.quantity or 1
+                                sale_result = await db.execute(
+                                        select(FlashSale)
+                                        .where(FlashSale.id == purchase.flash_sale_id)
+                                        .with_for_update()
+                                )
+                                sale = sale_result.scalar_one_or_none()
+                                if sale is not None:
+                                        sale.remaining_quantity = min(
+                                                sale.sale_quantity,
+                                                sale.remaining_quantity + quantity,
+                                        )
+
+                                product_result = await db.execute(
+                                        select(Product)
+                                        .where(Product.id == purchase.product_id)
+                                        .with_for_update()
+                                )
+                                product = product_result.scalar_one_or_none()
+                                if product is not None:
+                                        product.stock_quantity += quantity
+
+                                purchase.status = PurchaseStatus.FAILED
+                                if order is not None:
+                                        order.payment_status = PaymentStatus.FAILED
+                                        order.status = OrderStatus.CANCELLED
+
                         await db.commit()
-                        print(
-                                f"Updated flash sale purchase {purchase.id} to {purchase.status.value} "
-                                f"for payment intent {payment_id}"
-                        )
+
 
         return JSONResponse({"received": True})
 

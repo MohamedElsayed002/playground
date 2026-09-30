@@ -205,15 +205,41 @@ class CheckoutService:
             if payment_ok:
                 order.payment_status = PaymentStatus.PAID
                 order.status = OrderStatus.CONFIRMED
-            else:
+            elif order.status != OrderStatus.CANCELLED:
                 # Compensation on payment failure:
-                # restore stock to keep inventory consistent.
+                # Restore product stock and any claimed flash-sale quantity.
                 for item in order.items:
-                    if item.product_id is None:
-                        continue
-                    product = await self.product_repo.get_by_id(item.product_id)
-                    if product is not None:
-                        product.stock_quantity += item.quantity
+                    if item.product_id is not None:
+                        product_result = await self.session.execute(
+                            select(Product)
+                            .where(Product.id == item.product_id)
+                            .with_for_update()
+                        )
+                        product = product_result.scalar_one_or_none()
+                        if product is not None:
+                            product.stock_quantity += item.quantity
+
+                    if item.flash_sale_id is not None and item.flash_sale_quantity > 0:
+                        sale_result = await self.session.execute(
+                            select(FlashSale)
+                            .where(FlashSale.id == item.flash_sale_id)
+                            .with_for_update()
+                        )
+                        flash_sale = sale_result.scalar_one_or_none()
+                        if flash_sale is not None:
+                            flash_sale.remaining_quantity = min(
+                                flash_sale.sale_quantity,
+                                flash_sale.remaining_quantity + item.flash_sale_quantity,
+                            )
+
+                purchase_result = await self.session.execute(
+                    select(FlashSalePurchase)
+                    .where(FlashSalePurchase.order_id == order.id)
+                    .with_for_update()
+                )
+                for purchase in purchase_result.scalars():
+                    purchase.status = PurchaseStatus.FAILED
+
                 order.payment_status = PaymentStatus.FAILED
                 order.status = OrderStatus.CANCELLED
                 await audit_checkout_step(

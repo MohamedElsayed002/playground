@@ -7,13 +7,75 @@ from sqlalchemy import select
 
 from app.core.config import settings
 from app.db.session import AsyncSessionLocal
-from app.models.flash_sale import FlashSalePurchase
+from app.models.flash_sale import FlashSale, FlashSalePurchase, PurchaseStatus
+from app.models.order import Order, OrderStatus, PaymentStatus
+from app.models.product import Product
 from app.services.inngest.client import inngest_client, logger
+
+
+async def release_failed_flash_sale_payment(ctx: inngest.Context) -> None:
+	failure_event = ctx.event.data.get("event", {})
+	purchase_data = failure_event.get("data", {})
+	purchase_id = purchase_data.get("flash_sale_purchase_id")
+	if purchase_id is None:
+		return
+
+	async with AsyncSessionLocal() as db:
+		result = await db.execute(
+			select(FlashSalePurchase)
+			.where(FlashSalePurchase.id == purchase_id)
+			.with_for_update()
+		)
+		purchase = result.scalar_one_or_none()
+		if (
+			purchase is None
+			or purchase.status != PurchaseStatus.PROCESSING
+			or purchase.payment_id is not None
+		):
+			return
+
+		quantity = purchase.quantity or 1
+		sale_result = await db.execute(
+			select(FlashSale)
+			.where(FlashSale.id == purchase.flash_sale_id)
+			.with_for_update()
+		)
+		sale = sale_result.scalar_one_or_none()
+		if sale is not None:
+			sale.remaining_quantity = min(
+				sale.sale_quantity,
+				sale.remaining_quantity + quantity,
+			)
+
+		product_result = await db.execute(
+			select(Product)
+			.where(Product.id == purchase.product_id)
+			.with_for_update()
+		)
+		product = product_result.scalar_one_or_none()
+		if product is not None:
+			product.stock_quantity += quantity
+
+		purchase.status = PurchaseStatus.FAILED
+		if purchase.order_id is not None:
+			order_result = await db.execute(
+				select(Order)
+				.where(Order.id == purchase.order_id)
+				.with_for_update()
+			)
+			order = order_result.scalar_one_or_none()
+			if order is not None:
+				order.payment_status = PaymentStatus.FAILED
+				order.status = OrderStatus.CANCELLED
+
+		await db.commit()
+
 
 @inngest_client.create_function(
 	fn_id="flash-sale-payment",
 	trigger=inngest.TriggerEvent(event="flash-sale/payment.requested"),
 	retries=3,
+	on_failure=release_failed_flash_sale_payment,
 )
 async def flash_sale_payment(ctx: inngest.Context):
 	flash_sale_purchase_id = ctx.event.data["flash_sale_purchase_id"]

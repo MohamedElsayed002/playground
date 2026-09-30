@@ -15,10 +15,13 @@ from app.models.flash_sale import FlashSale, FlashSalePurchase, PurchaseStatus
 from app.models.product import Product
 from app.models.idempotency import IdempotencyKey
 from app.models.audit_outbox import AuditOutbox
+from app.models.order import OrderItem, Order
 
 from app.schemas.flash_sale import CreateFlashSale, FlashSalePurchaseResponse, PaymentResult
 
 
+from app.services.checkout.create_checkout.checkout_service_2 import _generate_order_number
+from app.models.order import OrderStatus , PaymentStatus
 
 from app.services.audit_service import create_audit_log
 from app.services.inngest.dispatch import send_flash_sale_payment_job
@@ -96,17 +99,20 @@ class FlashSaleService:
     """
             Purchase
 
-            1. Authenticate User  ✅      
-            2. Begin Database Transaction
-            3. Select Flash Sale "Lock the Row" ✅  
-            4. Check flash if doesn't exist ✅  
-            5. Check ends/starts at and status if sale is cancelled ✅  
-            6. Check if the user redeemed or used the sale before ✅  
-            7. Check Inventory✅  
-            8. Calculate discounted price ✅  
-            9. decrement he product ✅  
-            10. Create FlashSalePurchase✅  
-            11. Commit ✅  
+            1. Authenticate User  ✅     
+            2. Idempotency check   
+            3. Begin Database Transaction
+            4. Select Flash Sale "Lock the Row" ✅  
+            5. Check flash if doesn't exist ✅  
+            6. Check ends/starts at and status if sale is cancelled ✅  
+            7. Check if the user redeemed or used the sale before ✅  
+            8. Check Inventory✅  
+            9. Calculate discounted price ✅  
+            10. decrement the product ✅  
+            11. Create FlashSalePurchase✅  
+            12. Create Order
+            13. Create Order Item Snapshot
+            14. Commit ✅  
 
                 POST /flash-sales/123/purchase
                 │
@@ -153,7 +159,7 @@ class FlashSaleService:
     ) -> FlashSalePurchase:
         async with self.session.begin_nested():
             request_path = f"/flash-sale/{flash_sale_id}/purchase"
-            print("156",request_path,flash_sale_id)
+
             result = await self.session.execute(
                 select(IdempotencyKey).where(
                     IdempotencyKey.key == idempotency_key,
@@ -163,7 +169,6 @@ class FlashSaleService:
             )
 
             existing = result.scalar_one_or_none()
-            print("166",existing)
             if existing and existing.response_body is not None:
                 await create_audit_log(
                     db=self.session,
@@ -204,15 +209,17 @@ class FlashSaleService:
                 self.session.add(new_key)
                 await self.session.flush()
 
+
+            # Flash Sale Check
             flash_sale_exist = await self.session.execute(
                 select(FlashSale).where(FlashSale.id == flash_sale_id).with_for_update()
             )
-            print("210",flash_sale_exist)
             flash_sale = flash_sale_exist.scalar_one_or_none()
 
             if not flash_sale:
                 raise BadRequestException("Flash sale not found")
 
+            # Check whether the user redeemed the coupon or not
             user_redeemed_exist = await self.session.execute(
                 select(FlashSalePurchase).where(
                     FlashSalePurchase.flash_sale_id == flash_sale_id,
@@ -225,16 +232,18 @@ class FlashSaleService:
             if user_redeemed is not None:
                 raise ConflictException("User already redeemed the discount need to pay full price")
 
+            # Calculate starts/ends at 
             now = datetime.now(timezone.utc)
             starts_at = datetime.fromisoformat(flash_sale.starts_at.replace("Z", "+00:00"))
             ends_at = datetime.fromisoformat(flash_sale.ends_at.replace("Z", "+00:00"))
 
-            # if now < starts_at or now > ends_at or flash_sale.status != "active":
-            #     raise BadRequestException("This flash sale is not currently active")
+            if now < starts_at or now > ends_at:
+                raise BadRequestException("This flash sale is not currently active")
 
             if flash_sale.remaining_quantity <= 0:
                 raise OutOfStockError("This flash sale is sold out")
 
+            # Check the product exist
             product_exist = await self.session.execute(
                 select(Product).where(
                     Product.id == flash_sale.product_id,
@@ -256,9 +265,12 @@ class FlashSaleService:
                 Decimal("1") - Decimal(flash_sale.discount_percentage) / Decimal("100")
             )
 
+            # Decrement the quantity.
+            # It is inside transaction if it failed will rollback 
             flash_sale.remaining_quantity -= 1
             product.stock_quantity -=1
 
+            # redeem the coupon
             purchase = FlashSalePurchase(
                 flash_sale_id=flash_sale.id,
                 user_id=user_id,
@@ -269,8 +281,33 @@ class FlashSaleService:
                 status=PurchaseStatus.PROCESSING,
             )
 
-            print("PURCHASEEE",purchase)
-            self.session.add(purchase)
+            order = Order(
+                order_number=_generate_order_number(),
+                user_id=user_id,
+                status=OrderStatus.PENDING,
+                payment_status=PaymentStatus.PENDING,
+                subtotal=price_paid,
+                tax=0,
+                shipping_cost=0,
+                total=price_paid,
+            )
+            self.session.add(order)
+            await self.session.flush()
+
+            purchase.order_id = order.id
+
+            order_item = OrderItem(
+                order_id=order.id,
+                product_id=flash_sale.product_id,
+                product_name=product.name,
+                quantity=1,
+                unit_price=price_paid,
+                total_price=price_paid,
+                flash_sale_id=flash_sale_id,
+                flash_sale_quantity=1
+            )
+
+            self.session.add_all([purchase, order_item])
             await self.session.flush()
             await self.session.refresh(purchase)
 
@@ -312,10 +349,6 @@ class FlashSaleService:
             flash_sale_purchase_id=purchase.id,
         )
         
-        # response_stripe = await self.charge_customer()
-        # purchase.status = response_stripe.value
-        # purchase.payment_id = "1234"
-        # await self.session.commit()
         return purchase
 
     async def get_payment_status(self, payment_id: int):
