@@ -26,3 +26,5 @@ opentelemetry-exporter-otlp-proto-grpc
 opentelemetry-exporter-otlp-proto-http
 opentelemetry-instrumentation-fastapi
 opentelemetry-instrumentation-sqlalchemy
+opentelemetry-instrumentation-httpx
+opentelemetry-instrumentation-requests

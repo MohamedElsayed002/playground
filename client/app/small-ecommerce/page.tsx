@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-  const data = await api.GET("/api/v1/products");
   const accessToken = (await cookies()).get("fastapi_access")?.value;
+  const data = await api.GET("/api/v1/products");
 
   return (
     <main className="space-y-8">

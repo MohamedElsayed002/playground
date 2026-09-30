@@ -8,29 +8,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.core.middleware import RequestLoggingMiddleware, SecurityHeadersMiddleware
-from app.exceptions.handlers import register_exception_handlers
-from app.routes import auth, users, products, orders, files, audit_logs, normalized_products, flash_sale
-from app.db.session import create_all_tables
 # from strawberry.fastapi import GraphQLRouter
 
-# from opentelemetry import trace
-# from opentelemetry.sdk.resources import Resource
-# from opentelemetry.sdk.trace import TracerProvider
-# from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor
-# from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter as OTLPGrpcSpanExporter
-# from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter as OTLPHttpSpanExporter
-# from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-# from opentelemetry.metrics import get_meter
+from opentelemetry import trace
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, SimpleSpanProcessor
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter as OTLPGrpcSpanExporter
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter as OTLPHttpSpanExporter
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.metrics import get_meter
 import inngest.fast_api
 
 import stripe 
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
-
-from app.services.inngest import inngest_client, inngest_functions
-
 
 # Logging
 logging.basicConfig(
@@ -46,37 +41,56 @@ from app.core.rate_limiter import limiter
 
 
 # Initialize OpenTelemetry 
-# trace.set_tracer_provider(
-#     TracerProvider(resource=Resource.create({"service.name": settings.APP_NAME}))
-# )
-# tracer = trace.get_tracer(__name__)
+trace.set_tracer_provider(
+    TracerProvider(resource=Resource.create(
+        {
+            "service.name": settings.APP_NAME,
+            # ""
+         }
+        ))
+)
+tracer = trace.get_tracer(__name__)
 
-# # Configure either local Jaeger gRPC or a managed OTLP/HTTP endpoint.
-# otel_headers = {
-#     key.strip(): value.strip()
-#     for item in settings.OTEL_EXPORTER_OTLP_HEADERS.split(",")
-#     if item.strip() and "=" in item
-#     for key, value in [item.split("=", 1)]
-#     for value in [unquote(value.strip())]
-# }
+# Configure either local Jaeger gRPC or a managed OTLP/HTTP endpoint.
+otel_headers = {
+    key.strip(): value.strip()
+    for item in settings.OTEL_EXPORTER_OTLP_HEADERS.split(",")
+    if item.strip() and "=" in item
+    for key, value in [item.split("=", 1)]
+    for value in [unquote(value.strip())]
+}
 
-# if settings.OTEL_EXPORTER_OTLP_PROTOCOL == "http/protobuf":
-#     otlp_exporter = OTLPHttpSpanExporter(
-#         endpoint=settings.OTEL_EXPORTER_OTLP_ENDPOINT,
-#         headers=otel_headers,
-#     )
-# else:
-#     otlp_exporter = OTLPGrpcSpanExporter(
-#         endpoint=settings.OTEL_EXPORTER_OTLP_ENDPOINT,
-#         headers=otel_headers,
-#         insecure=settings.OTEL_EXPORTER_OTLP_ENDPOINT.startswith("http://"),
-#     )
-# span_processor = (
-#     SimpleSpanProcessor(otlp_exporter)
-#     if os.getenv("VERCEL") == "1"
-#     else BatchSpanProcessor(otlp_exporter)
-# )
-# trace.get_tracer_provider().add_span_processor(span_processor)
+if settings.OTEL_EXPORTER_OTLP_PROTOCOL == "http/protobuf":
+    otlp_exporter = OTLPHttpSpanExporter(
+        endpoint=settings.OTEL_EXPORTER_OTLP_ENDPOINT,
+        headers=otel_headers,
+    )
+else:
+    otlp_exporter = OTLPGrpcSpanExporter(
+        endpoint=settings.OTEL_EXPORTER_OTLP_ENDPOINT,
+        headers=otel_headers,
+        insecure=settings.OTEL_EXPORTER_OTLP_ENDPOINT.startswith("http://"),
+    )
+span_processor = (
+    SimpleSpanProcessor(otlp_exporter)
+    if os.getenv("VERCEL") == "1"
+    else BatchSpanProcessor(otlp_exporter)
+)
+trace.get_tracer_provider().add_span_processor(span_processor)
+
+# Instrument outbound HTTP clients once for the whole process. This adds child
+# spans for supported SDK and application calls without route-level spans.
+# HTTPXClientInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+# RequestsInstrumentor().instrument(tracer_provider=trace.get_tracer_provider())
+
+# Import application modules only after the provider is ready. Importing the
+# routes loads app.db.session, which creates and instruments the SQLAlchemy
+# engine at import time.
+from app.core.middleware import RequestLoggingMiddleware, SecurityHeadersMiddleware
+from app.exceptions.handlers import register_exception_handlers
+from app.db.session import create_all_tables
+from app.routes import auth, users, products, orders, files, audit_logs, normalized_products, flash_sale
+from app.services.inngest import inngest_client, inngest_functions
 
 # Lifespan
 @asynccontextmanager
@@ -98,12 +112,12 @@ app = FastAPI(
     version=settings.OTEL_SERVICE_VERSION,
     lifespan=lifespan,
 )
-# meter = get_meter(__name__)
+meter = get_meter(__name__)
 
 # Create a custom counter metric
-# request_count = meter.create_counter(
-#     "custom_request_counter", description="Track customm request"
-# )
+request_count = meter.create_counter(
+    "custom_request_counter", description="Track customm request"
+)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -160,20 +174,20 @@ app.include_router(flash_sale.router, prefix=API_PREFIX)
 @app.get("/")
 async def root():
     # request_count.add(1)
-    return {"status": "healthy", "service": settings.APP_NAME}
+    return {"status": "FastAPI Application Playground ", "service": settings.APP_NAME,"otel-service-collector": settings.OTEL_EXPORTER_OTLP_ENDPOINT}
 
 
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthyyy"}
+    return {"status": "healthy"}
 
 
 @app.get("/testing-otel")
 async def test_opentelemetry():
-    # tracer = trace.get_tracer(__name__)
-    # request_count.add(1)
-    # with tracer.start_as_current_span("test_span"):
-    return {"message": "OpenTelemetry is working!"}
+    tracer = trace.get_tracer(__name__)
+    request_count.add(1)
+    with tracer.start_as_current_span("test_span"):
+        return {"message": "OpenTelemetry is working!"}
 
-# FastAPIInstrumentor.instrument_app(app, tracer_provider=trace.get_tracer_provider())
+FastAPIInstrumentor.instrument_app(app, tracer_provider=trace.get_tracer_provider())
