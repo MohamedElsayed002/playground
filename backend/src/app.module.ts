@@ -9,6 +9,7 @@ import {
 
 import { GraphQLModule, GqlExecutionContext } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { JwtService } from '@nestjs/jwt';
 import { join } from 'path';
 import { UserModule } from './user/user.module';
 import { ChatModule } from './chat/chat.module';
@@ -16,6 +17,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import type { JwtPayload } from './auth/auth.service';
 import { AiAgentModule } from './ai-agent/ai-agent.module';
 import { BotModule } from './bot/bot.module';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -62,16 +64,51 @@ class ThrottlerGqlGuard extends ThrottlerGuard {
       isGlobal: true,
     }),
     // MongooseModule.forRoot(process.env.MONGO_URL!),
-    GraphQLModule.forRoot<ApolloDriverConfig>({
+    GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
-      // autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
-      autoSchemaFile: true,
-      sortSchema: true,
-      subscriptions: {
-        'graphql-ws': true,
-        'subscriptions-transport-ws': true,
-      },
-      context: ({ req }: { req: any }) => ({ req }),
+      imports: [AuthModule],
+      inject: [JwtService],
+      useFactory: (jwtService: JwtService): ApolloDriverConfig => ({
+        // autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+        autoSchemaFile: true,
+        sortSchema: true,
+        subscriptions: {
+          'graphql-ws': {
+            onConnect: async ({ connectionParams, extra }) => {
+              const authorization =
+                connectionParams?.Authorization ??
+                connectionParams?.authorization;
+              const tokenMatch =
+                typeof authorization === 'string'
+                  ? authorization.match(/^Bearer\s+(.+)$/i)
+                  : null;
+
+              if (!tokenMatch) {
+                throw new Error('Unauthorized');
+              }
+
+              try {
+                const payload = await jwtService.verifyAsync<JwtPayload>(
+                  tokenMatch[1],
+                );
+                if (!payload.sub || !payload.profileId) {
+                  throw new Error('Unauthorized');
+                }
+                (extra as Record<string, unknown>).user = payload;
+              } catch {
+                throw new Error('Unauthorized');
+              }
+            },
+          },
+        },
+        context: (context: unknown) => {
+          const { req, extra } = context as {
+            req?: unknown;
+            extra?: Record<string, unknown>;
+          };
+          return { req, user: extra?.user as JwtPayload | undefined };
+        },
+      }),
     }),
     ThrottlerModule.forRoot({
       throttlers: [

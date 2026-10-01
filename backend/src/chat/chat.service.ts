@@ -67,7 +67,7 @@ export class ChatService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly geminiService: GeminiService,
-  ) {}
+  ) { }
 
   async getProfile(userId: string): Promise<Profile> {
     const row = await this.prisma.profile.findUnique({ where: { id: userId } });
@@ -228,6 +228,16 @@ export class ChatService {
       joined_at: m.joinedAt.toISOString(),
       profile: m.user ? this.toProfile(m.user) : undefined,
     }));
+  }
+
+  async isRoomMember(userId: string, roomId: string): Promise<boolean> {
+    const membership = await this.prisma.roomMember.findUnique({
+      where: {
+        roomId_userId: { roomId, userId },
+      },
+      select: { userId: true },
+    });
+    return membership !== null;
   }
 
   // Messages
@@ -464,13 +474,13 @@ export class ChatService {
       const cacheSavings =
         response.usage.cachedTokens > 0
           ? {
-              cached: response.usage.cachedTokens,
-              total: response.usage.totalTokens,
-              savingsPercentage: (
-                (response.usage.cachedTokens / response.usage.totalTokens) *
-                75
-              ).toFixed(1),
-            }
+            cached: response.usage.cachedTokens,
+            total: response.usage.totalTokens,
+            savingsPercentage: (
+              (response.usage.cachedTokens / response.usage.totalTokens) *
+              75
+            ).toFixed(1),
+          }
           : null;
 
       return {

@@ -89,7 +89,7 @@ class CheckoutService:
 
         async def audit_checkout_step(event: str, status: str, **metadata) -> None:
             await create_audit_log(
-                db=None,
+                db=self.session,
                 event=event,
                 status=status,
                 user_id=user_id,

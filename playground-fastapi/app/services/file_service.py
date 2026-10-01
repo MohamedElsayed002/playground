@@ -4,7 +4,6 @@ import logging
 
 import pdfplumber
 from fastapi import UploadFile, HTTPException, Request
-from PIL import Image, UnidentifiedImageError
 import io
 
 from app.core.config import settings
@@ -15,8 +14,6 @@ from app.services.llm_service import  extract_structured_cv_data, safe_int
 from app.schemas.analysis import CVStructuredData
 import subprocess
 import json
-import os
-import tempfile
 from sqlalchemy import select
 
 import pyclamd
@@ -24,6 +21,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.idempotency import IdempotencyKey
 from app.models.file import File
 from app.schemas.file import FileStatus
+from app.core.upload_validation import (
+    DOCUMENT_UPLOAD_TYPES,
+    IMAGE_UPLOAD_TYPES,
+    PDF_UPLOAD_TYPES,
+    validate_document_bytes,
+    validate_image_bytes,
+    validate_pdf_bytes,
+    validate_upload_metadata,
+)
 import inngest
 from app.services.audit_service import create_audit_log
 # from starlette.concurrency import run_in_threadpool
@@ -53,13 +59,6 @@ s3 = boto3.client(
 
 BUCKET_NAME = settings.BUCKET_NAME
 
-
-async def _save_upload_to_temp(upload: UploadFile) -> str:
-    temp = tempfile.NamedTemporaryFile(delete=False,suffix=".pdf")
-    content = await upload.read()
-    temp.write(content)
-    temp.close()
-    return temp.name
 
 def _safe_filename(original: str) -> str:
     """
@@ -108,23 +107,19 @@ async def upload_image(
     2. Check file size is within limit
     3. Try to actually open with Pillow (confirms it's a real image, not a renamed .exe)
     """
-    # 1. MIME type check
-    content_type = upload.content_type or ""
-    if content_type not in settings.allowed_image_types_list:
-        raise UnprocessableFileException(
-            f"Invalid image type '{content_type}'. "
-            f"Allowed: {', '.join(settings.allowed_image_types_list)}"
-        )
+    configured_types = set(settings.allowed_image_types_list)
+    allowed_types = {
+        extension: media_types
+        for extension, media_types in IMAGE_UPLOAD_TYPES.items()
+        if media_types <= configured_types
+    }
+    extension = validate_upload_metadata(upload, allowed_types, "image")
+    content_type = next(iter(allowed_types[extension]))
 
     # 2. Read with size limit
     file_bytes = await _read_upload_chunks(upload, settings.max_file_size_bytes)
 
-    # 3. Validate it's a real image using Pillow (magic byte check)
-    try:
-        img = Image.open(io.BytesIO(file_bytes))
-        img.verify()  
-    except (UnidentifiedImageError, Exception):
-        raise UnprocessableFileException("The uploaded file is not a valid image")
+    validate_image_bytes(file_bytes, extension)
 
     # Generate safe unique filename
     filename = _safe_filename(upload.filename or "image.jpg")
@@ -165,16 +160,13 @@ async def upload_document(upload: UploadFile) -> FileUploadResponse:
     """
     Upload a document (PDF, etc.) with basic validation.
     """
-    allowed_types = ["application/pdf", "application/msword",
-                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]
-
-    content_type = upload.content_type or ""
-    if content_type not in allowed_types:
-        raise UnprocessableFileException(
-            f"Invalid document type. Allowed: PDF, DOC, DOCX"
-        )
+    extension = validate_upload_metadata(
+        upload, DOCUMENT_UPLOAD_TYPES, "document"
+    )
+    content_type = next(iter(DOCUMENT_UPLOAD_TYPES[extension]))
 
     file_bytes = await _read_upload_chunks(upload, settings.max_file_size_bytes)
+    validate_document_bytes(file_bytes, extension)
 
     filename = _safe_filename(upload.filename or "document.pdf")
     # dest_dir = Path(settings.UPLOAD_DIR) / "documents"
@@ -311,86 +303,61 @@ def scan_file(file_bytes: bytes):
         raise
 
 async def extract_pdf_content(upload: UploadFile) -> PDFExtractResponse:
+    validate_upload_metadata(upload, PDF_UPLOAD_TYPES, "PDF")
+    file_bytes = await _read_upload_chunks(upload, settings.max_file_size_bytes)
+    validate_pdf_bytes(file_bytes)
+    scan_file(file_bytes)
 
-    if upload.content_type != "application/pdf":
-        raise UnprocessableFileException("Only PDF files are supported")
-
-    #  STEP 1: Save file to disk (needed for veraPDF)
-    temp_path = await _save_upload_to_temp(upload)
+    pages_content: list[PDFPageContent] = []
+    all_text_parts: list[str] = []
 
     try:
-        #  STEP 2: Validate BEFORE parsing
-        # validation = validate_pdf(temp_path)
+        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+            total_pages = len(pdf.pages)
 
-        # if not validation["is_compliant"]:
-            #  Strict mode (reject)
-            # raise UnprocessableFileException(
-            #     # "PDF is not PDF/A compliant (may contain unsafe content)"
-            # )
-            # return {
-            #     "warning": "PDF is not PDF/A compliant",
-            #     "allow": True
-            # }
+            for page_num, page in enumerate(pdf.pages, start=1):
+                text = page.extract_text() or ""
+                raw_tables = page.extract_tables() or []
 
-        with open(temp_path, "rb") as f:
-            file_bytes = f.read()
-
-            scan_file(file_bytes)
-
-        pages_content: list[PDFPageContent] = []
-        all_text_parts: list[str] = []
-
-        try:
-            with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-                total_pages = len(pdf.pages)
-
-                for page_num, page in enumerate(pdf.pages, start=1):
-                    text = page.extract_text() or ""
-                    raw_tables = page.extract_tables() or []
-
-                    tables = [
-                        [
-                            [cell if cell is not None else "" for cell in row]
-                            for row in table
-                        ]
-                        for table in raw_tables
+                tables = [
+                    [
+                        [cell if cell is not None else "" for cell in row]
+                        for row in table
                     ]
+                    for table in raw_tables
+                ]
 
-                    pages_content.append(PDFPageContent(
-                        page_number=page_num,
-                        text=text,
-                        tables=tables,
-                    ))
+                pages_content.append(PDFPageContent(
+                    page_number=page_num,
+                    text=text,
+                    tables=tables,
+                ))
 
-                    all_text_parts.append(f"--- Page {page_num} ---\n{text}")
+                all_text_parts.append(f"--- Page {page_num} ---\n{text}")
 
-        except Exception as e:
-            raise UnprocessableFileException(f"Failed to parse PDF: {str(e)}")
+    except Exception as error:
+        raise UnprocessableFileException("Failed to parse PDF") from error
 
-        full_text = "\n\n".join(all_text_parts)
+    full_text = "\n\n".join(all_text_parts)
 
-        structured_data = None
+    structured_data = None
 
-        try:
-            raw_structured = await extract_structured_cv_data(full_text)
-            structured_data = CVStructuredData(**raw_structured)
-            structured_data.years_of_experience = safe_int(
-                structured_data.years_of_experience
-            )
-        except Exception as e:
-            print("LLM extraction failed", e)
-
-        return PDFExtractResponse(
-            filename=upload.filename or "document.pdf",
-            total_pages=total_pages,
-            pages=pages_content,
-            full_text=full_text,
-            structured_data=structured_data
+    try:
+        raw_structured = await extract_structured_cv_data(full_text)
+        structured_data = CVStructuredData(**raw_structured)
+        structured_data.years_of_experience = safe_int(
+            structured_data.years_of_experience
         )
+    except Exception as error:
+        logger.warning("LLM extraction failed: %s", type(error).__name__)
 
-    finally:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+    return PDFExtractResponse(
+        filename=upload.filename or "document.pdf",
+        total_pages=total_pages,
+        pages=pages_content,
+        full_text=full_text,
+        structured_data=structured_data
+    )
 
 
 
@@ -417,15 +384,20 @@ async def upload_pdf_authenticated(
             metadata={
                 "request_id": getattr(request.state, "request_id", None) if request else None,
                 "idempotency_key": idempotency_key,
-                "original_filename": upload.filename,
-                "content_type": upload.content_type,
                 **metadata,
             },
         )
 
+    extension = validate_upload_metadata(upload, PDF_UPLOAD_TYPES, "PDF")
+    file_bytes = await _read_upload_chunks(upload, settings.max_file_size_bytes)
+    validate_pdf_bytes(file_bytes)
+    scan_file(file_bytes)
+
     await audit_upload_step(
         event="PDF_UPLOAD_RECEIVED",
         status="SUCCESS",
+        file_extension=extension,
+        size_bytes=len(file_bytes),
     )
 
     #  STEP 1: Idempotency check 
@@ -443,15 +415,6 @@ async def upload_pdf_authenticated(
         response = json.loads(existing_key.response_body)
         response["status"] = "completed"
         return response
-
-    #  STEP 2: Validate file type 
-    if upload.content_type != "application/pdf":
-        await audit_upload_step(
-            event="PDF_UPLOAD_VALIDATION_FAILED",
-            status="FAILED",
-            reason="invalid_content_type",
-        )
-        raise UnprocessableFileException("Only PDF files are supported")
 
     safe_name = _safe_filename(upload.filename or "document.pdf")
 
@@ -485,7 +448,7 @@ async def upload_pdf_authenticated(
                 current_status=existing_file.status.value,
             )
             raise UnprocessableFileException(
-                f"You already uploaded a file named '{upload.filename}'"
+                "You already uploaded a file with this generated name"
             )
     else:
         file_record = File(
@@ -505,7 +468,6 @@ async def upload_pdf_authenticated(
 
     #  STEP 4: Read file & upload to S3 
     try:
-        file_bytes = await _read_upload_chunks(upload, settings.max_file_size_bytes)
         await audit_upload_step(
             event="PDF_UPLOAD_FILE_READ",
             status="SUCCESS",
@@ -550,7 +512,7 @@ async def upload_pdf_authenticated(
             status="FAILED",
             file_id=getattr(file_record, "id", None),
             safe_filename=safe_name,
-            error=str(e),
+            error_type=type(e).__name__,
         )
         raise UnprocessableFileException(str(e))
 

@@ -16,6 +16,7 @@ from app.services.inngest.client import inngest_client, logger
     fn_id="checkout-background-jobs",
     trigger=inngest.TriggerEvent(event="checkout/background.requested"),
     retries=3,
+    # on_failed: 
 )
 async def checkout_background_jobs(ctx: inngest.Context):
     """Post-checkout async tasks (invoice email, notifications, analytics)."""

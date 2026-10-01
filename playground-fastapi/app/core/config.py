@@ -11,7 +11,7 @@ FastAPI approach -> pydantic-settings BaseSeetings
 """
 
 from functools import lru_cache 
-from pydantic import AnyUrl, field_validator 
+from pydantic import AnyUrl, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 
@@ -39,7 +39,7 @@ class Settings(BaseSettings):
 
     # FILE UPLOADS
     UPLOAD_DIR: str = "uploads"
-    MAX_FILE_SIZE_MB: int = 10 * 1024 * 1024
+    MAX_FILE_SIZE_MB: int = Field(default=10, gt=0, le=100)
     ALLOWED_IMAGE_TYPES: str = "image/jpeg,image/png,image/webp,image/gif"
 
     # CORS 

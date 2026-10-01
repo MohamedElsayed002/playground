@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta, timezone
 import logging 
 
-from fastapi import UploadFile, HTTPException, Request 
+from fastapi import UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
-from app.exceptions.handlers import UnprocessableFileException
 import boto3 
 from sqlalchemy import select 
 
@@ -17,6 +16,11 @@ from app.models.idempotency import IdempotencyKey
 import json
 
 from app.services.file_service import _read_upload_chunks, _safe_filename
+from app.core.upload_validation import (
+        CSV_UPLOAD_TYPES,
+        validate_csv_bytes,
+        validate_upload_metadata,
+)
 from app.models.report_jobs import ReportJob, JobStatus
 
 logger = logging.getLogger(__name__)
@@ -30,24 +34,6 @@ s3 = boto3.client(
 )
 BUCKET_NAME = settings.BUCKET_NAME
 
-CSV_MIME_TYPES = {
-    "text/csv",
-    "application/csv",
-    "application/vnd.ms-excel",
-    "text/plain",
-    "application/octet-stream",
-}
-
-
-def _is_csv_file(file: UploadFile) -> bool:
-    filename = (file.filename or "").lower()
-    if filename.endswith(".csv"):
-        return True
-
-    content_type = (file.content_type or "").lower()
-    return content_type in CSV_MIME_TYPES
-
-
 async def extract_csv_pipeline(
         # current_user,
         file: UploadFile,
@@ -57,6 +43,7 @@ async def extract_csv_pipeline(
         from app.services.inngest import inngest_client
 
         request_path = "/extract-csv/pipeline"
+        validate_upload_metadata(file, CSV_UPLOAD_TYPES, "CSV")
 
         # Check if the idempotency key already exists in the database
         result = await db.execute(
@@ -91,8 +78,16 @@ async def extract_csv_pipeline(
                         },
                 )
         
+        max_bytes = settings.max_file_size_bytes
+
+        if file.size is not None and file.size > max_bytes:
+            raise HTTPException(status_code=413, detail="File exceeds the maximum upload size.")
+
+        # Upload the file S3 Bucket
+        file_bytes = await _read_upload_chunks(file, max_bytes)
+        validate_csv_bytes(file_bytes)
+
         if existing_key is None:
-                # Create a new idempotency key record
                 expires_at = datetime.now(timezone.utc) + timedelta(
                         hours=settings.IDEMPOTENCY_KEY_TTL_HOURS
                 )
@@ -106,22 +101,6 @@ async def extract_csv_pipeline(
 
                 db.add(new_key)
                 await db.commit()
-
-
-
-        # Validate the extension / MIME type
-        if not _is_csv_file(file):
-            raise UnprocessableFileException(
-                f"Unsupported file type: {file.content_type or 'unknown'}. Only CSV files are allowed."
-            )
-
-        max_bytes = settings.max_file_size_bytes
-
-        if file.size is not None and file.size > max_bytes:
-            raise HTTPException(status_code=413, detail="File exceeds the maximum upload size.")
-
-        # Upload the file S3 Bucket
-        file_bytes = await _read_upload_chunks(file, max_bytes)
 
         safe_filename = _safe_filename(file.filename or "document.csv")
 

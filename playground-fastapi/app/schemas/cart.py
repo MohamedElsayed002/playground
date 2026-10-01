@@ -6,8 +6,8 @@ from app.schemas.product import ProductResponse
 
 
 class CartItemCreate(BaseModel):
-    product_id: int
-    quantity: int = Field(gt=0)
+    product_id: int = Field(gt=0)
+    quantity: int = Field(gt=0, le=100)
 
 
 class CartItemResponse(BaseModel):

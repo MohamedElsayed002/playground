@@ -5,7 +5,9 @@ import {
   Query,
   Resolver,
   Subscription,
+  Context,
 } from '@nestjs/graphql';
+import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { PubSub } from 'graphql-subscriptions';
 import { ChatService } from './chat.service';
 import { ChatGateway } from './chat.gateway';
@@ -35,7 +37,19 @@ export class ChatResolver {
   constructor(
     private readonly chatService: ChatService,
     private readonly chatGateway: ChatGateway,
-  ) {}
+  ) { }
+
+  private async assertSubscriptionAccess(
+    context: { user?: { profileId?: string } },
+    roomId: string,
+  ): Promise<void> {
+    const profileId = context.user?.profileId;
+    if (!profileId) throw new UnauthorizedException();
+
+    if (!(await this.chatService.isRoomMember(profileId, roomId))) {
+      throw new ForbiddenException('User is not a member of this room');
+    }
+  }
 
   /**
    * Get a single user profile.
@@ -254,7 +268,11 @@ export class ChatResolver {
     filter: (payload, variables) =>
       payload.messageAdded.room_id === variables.room_id,
   })
-  messageAdded(@Args('room_id', { type: () => ID }) room_id: string) {
+  async messageAdded(
+    @Args('room_id', { type: () => ID }) room_id: string,
+    @Context() context: { user?: { profileId?: string } },
+  ) {
+    await this.assertSubscriptionAccess(context, room_id);
     // asyncIterableIterator returns an async generator that yields events
     return pubSub.asyncIterableIterator(`${EVENTS.MESSAGE_ADDED}.${room_id}`);
   }
@@ -266,7 +284,11 @@ export class ChatResolver {
     filter: (payload, variables) =>
       payload.messageUpdated.room_id === variables.room_id,
   })
-  messageUpdated(@Args('room_id', { type: () => ID }) room_id: string) {
+  async messageUpdated(
+    @Args('room_id', { type: () => ID }) room_id: string,
+    @Context() context: { user?: { profileId?: string } },
+  ) {
+    await this.assertSubscriptionAccess(context, room_id);
     return pubSub.asyncIterableIterator(`${EVENTS.MESSAGE_UPDATED}.${room_id}`);
   }
 
@@ -278,7 +300,11 @@ export class ChatResolver {
     filter: (payload, variables) =>
       payload.messageRead.room_id === variables.room_id,
   })
-  messageRead(@Args('room_id', { type: () => ID }) room_id: string) {
+  async messageRead(
+    @Args('room_id', { type: () => ID }) room_id: string,
+    @Context() context: { user?: { profileId?: string } },
+  ) {
+    await this.assertSubscriptionAccess(context, room_id);
     return pubSub.asyncIterableIterator(`${EVENTS.MESSAGE_READ}.${room_id}`);
   }
 }
