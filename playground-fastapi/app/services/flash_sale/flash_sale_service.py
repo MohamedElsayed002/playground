@@ -225,12 +225,16 @@ class FlashSaleService:
                     FlashSalePurchase.flash_sale_id == flash_sale_id,
                     FlashSalePurchase.user_id == user_id
                 )
+                .with_for_update()
             )
 
             user_redeemed = user_redeemed_exist.scalar_one_or_none()
 
             if user_redeemed is not None:
                 raise ConflictException("User already redeemed the discount need to pay full price")
+
+            if flash_sale.remaining_quantity <= 0:
+                raise OutOfStockError("This flash sale is sold out")
 
             # Calculate starts/ends at 
             now = datetime.now(timezone.utc)

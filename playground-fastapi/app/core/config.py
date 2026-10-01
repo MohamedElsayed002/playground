@@ -33,9 +33,9 @@ class Settings(BaseSettings):
 
     # JWT 
     JWT_SECRET_KEY: str 
-    JWT_ALGORITHM: str = 'HS256'
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7 
+    JWT_ALGORITHM: str
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int 
 
     # FILE UPLOADS
     UPLOAD_DIR: str = "uploads"
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     AWS_SECRET_ACCESS_KEY: str 
     AWS_ACCESS_KEY_ID: str
 
-    IDEMPOTENCY_KEY_TTL_HOURS: int = 24
+    IDEMPOTENCY_KEY_TTL_HOURS: float = 0.25
 
     OPENAI_API_KEY: str
     INNGEST_SIGNING_KEY: Optional[str] = None

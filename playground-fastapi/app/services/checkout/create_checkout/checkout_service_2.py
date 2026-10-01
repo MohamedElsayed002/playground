@@ -127,7 +127,7 @@ class CheckoutService:
 
         # Step 2 Check idempotency key
         if idempotency_key is not None:
-            existing = await self.idempotency_repo.get_by_key(idempotency_key)
+            existing = await self.idempotency_repo.get_by_key(idempotency_key, user_id=user_id)
 
             if existing is not None and existing.is_complete():
                 logger.info("Already exist and ordered successfully")
@@ -352,13 +352,18 @@ class CheckoutService:
 
             if flash_sale is not None and self._flash_sale_is_active(flash_sale):
                 purchase_result = await self.session.execute(
-                    select(FlashSalePurchase).where(
+                    select(FlashSalePurchase)
+                    .where(
                         FlashSalePurchase.flash_sale_id == flash_sale.id,
                         FlashSalePurchase.user_id == user_id,
                     )
+                    .with_for_update()
                 )
                 already_redeemed = purchase_result.scalar_one_or_none() is not None
-                discounted = not already_redeemed and flash_sale.remaining_quantity > 0
+                if already_redeemed:
+                    discounted = False
+                else:
+                    discounted = flash_sale.remaining_quantity > 0
 
             discounted_quantity = 1 if discounted else 0
             sale_price = product.price

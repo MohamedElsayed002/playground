@@ -36,7 +36,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
-  ) {}
+  ) { }
 
   async register(dto: RegisterDto): Promise<AuthTokens> {
     const existingEmail = await this.prisma.userData.findUnique({
@@ -207,13 +207,8 @@ export class AuthService {
   }
 
   async refresh(rawRefreshToken: string): Promise<AuthTokens> {
-    const dotIndex = rawRefreshToken.indexOf('.');
-
-    if (dotIndex === -1) {
-      throw new UnauthorizedException('Invalid refresh token format');
-    }
-
-    const userId = rawRefreshToken.substring(0, dotIndex);
+    const payload = this.verifyRefreshToken(rawRefreshToken);
+    const userId = payload.sub;
 
     const storedTokens = await this.prisma.refreshToken.findMany({
       where: {
@@ -227,7 +222,6 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token is invalid or expired');
     }
 
-    // Find which stored hash matches the raw token
     let matched: (typeof storedTokens)[0] | null = null;
 
     for (const t of storedTokens) {
@@ -247,25 +241,51 @@ export class AuthService {
   }
 
   async logout(rawRefreshToken: string): Promise<void> {
-    const dotIndex = rawRefreshToken.indexOf('.');
-    if (dotIndex === -1) return;
-    const userId = rawRefreshToken.substring(0, dotIndex);
+    try {
+      const payload = this.verifyRefreshToken(rawRefreshToken);
+      const tokens = await this.prisma.refreshToken.findMany({
+        where: { userId: payload.sub },
+      });
 
-    const tokens = await this.prisma.refreshToken.findMany({
-      where: { userId },
-    });
-
-    for (const t of tokens) {
-      if (await bcrypt.compare(rawRefreshToken, t.tokenHash)) {
-        await this.prisma.refreshToken.delete({ where: { id: t.id } });
-        return;
+      for (const t of tokens) {
+        if (await bcrypt.compare(rawRefreshToken, t.tokenHash)) {
+          await this.prisma.refreshToken.delete({ where: { id: t.id } });
+          return;
+        }
       }
+    } catch {
+      return;
     }
   }
 
   async logoutAll(userId: string): Promise<void> {
     await this.prisma.refreshToken.deleteMany({ where: { userId } });
     this.logger.log(`All sessions cleared for user ${userId}`);
+  }
+
+  private verifyRefreshToken(rawRefreshToken: string): { sub: string } {
+    if (!rawRefreshToken || typeof rawRefreshToken !== 'string') {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    try {
+      const payload = this.jwt.verify(rawRefreshToken) as {
+        sub?: string;
+        type?: string;
+      };
+
+      if (payload.type && payload.type !== 'refresh') {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      if (!payload.sub || typeof payload.sub !== 'string') {
+        throw new UnauthorizedException('Invalid refresh token');
+      }
+
+      return { sub: payload.sub };
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 
   private async issueTokens(user: any, profile: any): Promise<AuthTokens> {
@@ -276,7 +296,14 @@ export class AuthService {
     };
     const accessToken = this.jwt.sign(payload);
 
-    const rawRefreshToken = `${user.id}.${crypto.randomBytes(64).toString('hex')}`;
+    const rawRefreshToken = this.jwt.sign(
+      {
+        sub: user.id,
+        type: 'refresh',
+        jti: crypto.randomUUID(),
+      },
+      { expiresIn: '7d' },
+    );
     const tokenHash = await bcrypt.hash(rawRefreshToken, 10);
 
     const ttlDays = parseInt('7', 10);
