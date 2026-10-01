@@ -418,7 +418,20 @@ class CheckoutService:
                     flash_sale_quantity=1,
                 ))
 
-                flash_sale.remaining_quantity -= 1
+                flash_sale_update = await self.session.execute(
+                    update(FlashSale)
+                    .where(
+                        FlashSale.id == flash_sale.id,
+                        FlashSale.remaining_quantity >= 1,
+                    )
+                    .values(remaining_quantity=FlashSale.remaining_quantity - 1)
+                    .returning(FlashSale.remaining_quantity)
+                )
+                flash_sale_remaining = flash_sale_update.scalar_one_or_none()
+                if flash_sale_remaining is None:
+                    raise OutOfStockError(f"Flash sale {flash_sale.id} sold out")
+                flash_sale.remaining_quantity = flash_sale_remaining
+
                 self.session.add(FlashSalePurchase(
                     flash_sale_id=flash_sale.id,
                     user_id=user_id,

@@ -3,7 +3,7 @@ from decimal import Decimal
 from random import choice
 from uuid import uuid4
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -269,10 +269,33 @@ class FlashSaleService:
                 Decimal("1") - Decimal(flash_sale.discount_percentage) / Decimal("100")
             )
 
-            # Decrement the quantity.
-            # It is inside transaction if it failed will rollback 
-            flash_sale.remaining_quantity -= 1
-            product.stock_quantity -=1
+            flash_sale_update = await self.session.execute(
+                update(FlashSale)
+                .where(
+                    FlashSale.id == flash_sale.id,
+                    FlashSale.remaining_quantity >= 1,
+                )
+                .values(remaining_quantity=FlashSale.remaining_quantity - 1)
+                .returning(FlashSale.remaining_quantity)
+            )
+            flash_sale_remaining = flash_sale_update.scalar_one_or_none()
+            if flash_sale_remaining is None:
+                raise OutOfStockError("This flash sale is sold out")
+            flash_sale.remaining_quantity = flash_sale_remaining
+
+            product_update = await self.session.execute(
+                update(Product)
+                .where(
+                    Product.id == product.id,
+                    Product.stock_quantity >= 1,
+                )
+                .values(stock_quantity=Product.stock_quantity - 1)
+                .returning(Product.stock_quantity)
+            )
+            product_remaining = product_update.scalar_one_or_none()
+            if product_remaining is None:
+                raise OutOfStockError("Product out of the stock. Sorry :'( ")
+            product.stock_quantity = product_remaining
 
             # redeem the coupon
             purchase = FlashSalePurchase(
