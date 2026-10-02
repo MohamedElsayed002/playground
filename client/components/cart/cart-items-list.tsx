@@ -26,7 +26,7 @@ export function CartItemsList({
     isLoggedIn,
 }: { cart: CartItem } & CartPricingProps) {
 
-    const { mutate, isPending, isError } = useRemoveItemCart()
+    const { mutate, isPending } = useRemoveItemCart()
 
     if (!cart || cart.items?.length === 0) {
         return (

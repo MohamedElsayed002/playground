@@ -16,6 +16,7 @@ import { LoginDto, RefreshDto, RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { AuthGuard } from '@nestjs/passport';
 import type { AuthTokens } from './auth.service';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 
 type AuthAuditRequest = {
   auditContext?: {
@@ -67,6 +68,8 @@ export class AuthController {
   }
 
   @Post('login')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({default: {limit: 5, ttl: 60000 * 15}})
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: LoginDto, @Req() req: AuthAuditRequest) {
     const tokens = await this.authService.login(dto);

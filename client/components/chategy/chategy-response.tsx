@@ -56,7 +56,7 @@ export function ChategyResponsePanel({ response }: Props) {
       </pre>
 
       <p className="mt-2">
-        {/* @ts-ignore */}
+        {/* @ts-ignore*/}
         {response && response.data.analysis}
       </p>
     </div>
