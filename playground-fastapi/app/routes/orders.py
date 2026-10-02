@@ -57,23 +57,6 @@ async def add_to_cart(
         "cart": CartResponse.model_validate(cart),
     }
 
-# @router.delete(
-#         "/cart/remove-item/{product_id}",
-#         response_model=CartRemoveItem,
-#         status_code=status.HTTP_200_OK,
-#         summary="Remove a product from the current user's cart",
-# )
-# async def remove_item_cart(
-#     product_id: int,
-#     current_user=  Depends(get_current_user),
-#     db: AsyncSession = Depends(get_db)
-# ):
-#     await order_service.remove_item(
-#         db,
-#         user_id=current_user.id,
-#         product_id=product_id,
-#     )
-#     return {"message": "Product successfully removed from cart"}
 
 @router.get(
     "/cart",

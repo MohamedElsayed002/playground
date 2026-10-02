@@ -125,9 +125,9 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         payload.requesting_user_id,
       );
       this.server.to(payload.room_id).emit('message_updated', message);
-      return { sucess: true };
+      return { success: true };
     } catch (error) {
-      client.emit('error', { event: 'edit_message', message: error.messaage });
+      client.emit('error', { event: 'edit_message', message: error.message });
       throw new WsException(error.message);
     }
   }
@@ -199,7 +199,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     } catch (error) {
       return {
         success: false,
-        message: error.messsage,
+        message: error.message,
       };
     }
   }
