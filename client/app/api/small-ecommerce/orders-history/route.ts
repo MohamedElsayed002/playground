@@ -1,6 +1,7 @@
 import { api } from "@/lib/api/client";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { getApiErrorMessage, getApiErrorStatus } from "@/lib/action-result";
 
 export async function GET() {
   const accessToken = (await cookies()).get("fastapi_access")?.value;
@@ -18,13 +19,26 @@ export async function GET() {
       },
     });
 
+    if (response.error) {
+      return NextResponse.json(
+        {
+          error: getApiErrorMessage(
+            response.error,
+            "Unable to load order history",
+            response.response.status,
+          ),
+        },
+        { status: getApiErrorStatus(response) },
+      );
+    }
+
     return NextResponse.json({
       orders: response.data?.items ?? [],
     });
-  } catch (error) {
+  } catch {
     return Response.json(
       {
-        error: error instanceof Error ? error.message : "Unable to load order history",
+        error: "Unable to load order history right now. Please try again.",
       },
       { status: 500 },
     );

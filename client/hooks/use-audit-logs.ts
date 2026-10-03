@@ -3,6 +3,7 @@ import { apiFetch } from "@/lib/api";
 import { api } from "@/lib/api/client";
 import type { PaginatedAuditLogs } from "@/types/audit-log";
 import type { components } from "@/lib/api/schema";
+import { requestApiData } from "@/lib/action-result";
 
 type FastApiAuditLog = components["schemas"]["AuditLogResponse"];
 type AuditSource = "nestjs" | "fastapi";
@@ -44,7 +45,7 @@ const fetchFastAPIAuditLogs = async (params: {
   const userIdAsNumber = params.user_id ? Number(params.user_id) : null;
 
   try {
-    const { data, error } = await api.GET("/api/v1/audit-logs/", {
+    const data = await requestApiData(() => api.GET("/api/v1/audit-logs/", {
       params: {
         query: {
           page: params.page,
@@ -54,12 +55,7 @@ const fetchFastAPIAuditLogs = async (params: {
           user_id: Number.isNaN(userIdAsNumber) ? undefined : (userIdAsNumber ?? undefined),
         },
       },
-    });
-
-    if (error || !data) {
-      console.error("[FastAPI Audit Logs] API error:", error);
-      throw error ?? new Error("Failed to fetch FastAPI audit logs");
-    }
+    }), "Unable to load audit logs right now.");
 
     return {
       ...data,

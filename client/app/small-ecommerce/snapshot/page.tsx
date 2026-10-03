@@ -4,6 +4,7 @@ import OrderList from "@/components/snapshot/OrderList";
 import type { components } from "@/lib/api/schema";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getApiErrorMessage } from "@/lib/action-result";
 export const metadata: Metadata = {
   title: "SnapShot",
 };
@@ -14,23 +15,35 @@ export default async function Page() {
   const accessToken = (await cookies()).get("fastapi_access")?.value;
 
   if (!accessToken) redirect("/auth/login-fastapi");
-  const data = await api.GET("/api/v1/orders/my", {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    params: {
-      query: {
-        page_size: 10,
-        page: 1,
-      },
-    },
-  });
+  let orders: Order[] = [];
+  let loadError: string | null = null;
 
-  const orders = data.data?.items || [];
-  const total = data?.data?.items.reduce(
-    (acc: number, order: Order) => acc + parseFloat(order.total),
-    0,
-  );
+  try {
+    const response = await api.GET("/api/v1/orders/my", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      params: {
+        query: {
+          page_size: 10,
+          page: 1,
+        },
+      },
+    });
+
+    if (response.error) {
+      loadError = getApiErrorMessage(
+        response.error,
+        "Unable to load your order history right now.",
+        response.response.status,
+      );
+    } else {
+      orders = response.data?.items ?? [];
+    }
+  } catch {
+    loadError = "Unable to load your order history right now. Please try again.";
+  }
+  const total = orders.reduce((acc, order) => acc + parseFloat(order.total), 0);
 
   return (
     <div className="min-h-screen py-8">
@@ -43,7 +56,13 @@ export default async function Page() {
         </header>
 
         <main className="mt-6">
-          <OrderList orders={orders} />
+          {loadError ? (
+            <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-700">
+              {loadError}
+            </p>
+          ) : (
+            <OrderList orders={orders} />
+          )}
         </main>
       </div>
     </div>

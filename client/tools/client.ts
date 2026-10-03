@@ -13,6 +13,7 @@ import {
   sendEmailDef,
 } from "./definitions";
 import type { components } from "@/lib/api/schema";
+import { requestApiData } from "@/lib/action-result";
 
 type Product = components["schemas"]["ProductListResponse"];
 
@@ -164,19 +165,17 @@ export const checkoutCartTool = checkoutSessionDef.client(async (checkoutDetails
 
 export const getSingleProductDetailTool = getProductDetails.client(
   async ({ productId }: { productId: string }) => {
-    const response = await api.GET("/api/v1/products/{product_id}", {
-      params: {
-        path: {
-          product_id: Number(productId),
-        },
-      },
-    });
-
-    if (response.error) {
-      throw new Error(`Product ${productId} was not found`);
-    }
-
-    return response.data;
+    return requestApiData(
+      () =>
+        api.GET("/api/v1/products/{product_id}", {
+          params: {
+            path: {
+              product_id: Number(productId),
+            },
+          },
+        }),
+      `Product ${productId} was not found.`,
+    );
   },
 );
 

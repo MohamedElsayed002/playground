@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { sileo } from "sileo";
 import { useAuthStoreFastAPI } from "@/store/auth-fastapi.store";
+import { unwrapActionResult } from "@/lib/action-result";
 
 type AddCartItemVariables = {
   productId: number;
@@ -21,8 +22,8 @@ export const useAddProductCard = () => {
 
   const { mutate, error, isPending } = useMutation({
     mutationKey: ["add-cart-item"],
-    mutationFn: ({ productId, quantity }: AddCartItemVariables) =>
-      addCartItemAction(productId, quantity),
+    mutationFn: async ({ productId, quantity }: AddCartItemVariables) =>
+      unwrapActionResult(await addCartItemAction(productId, quantity)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-cart"] });
       sileo.success({
@@ -45,7 +46,8 @@ export const useClaimDiscount = () => {
   const [purchaseId, setPurchaseId] = useState<number | null>(null);
 
   const { mutate, isPending } = useMutation({
-    mutationFn: ({ flashSaleId }: { flashSaleId: number }) => redeemFlashSale(flashSaleId),
+    mutationFn: async ({ flashSaleId }: { flashSaleId: number }) =>
+      unwrapActionResult(await redeemFlashSale(flashSaleId)),
     onSuccess: (data) => {
       setPurchaseId(data.id);
       sileo.success({
@@ -60,7 +62,8 @@ export const useClaimDiscount = () => {
 
   const paymentQuery = useQuery({
     queryKey: ["flash-sale-payment-status", purchaseId],
-    queryFn: () => getFlashSalePaymentStatus(String(purchaseId)),
+    queryFn: async () =>
+      unwrapActionResult(await getFlashSalePaymentStatus(String(purchaseId))),
     enabled: purchaseId !== null,
     refetchInterval: (query) => {
       const payment = query.state.data;
@@ -96,10 +99,14 @@ export const useCheckUser = (flashSaleId: number | number[] | null) => {
     queryKey: ["user-redeemed", flashSaleIds],
     queryFn: async () => {
       if (Array.isArray(flashSaleId)) {
-        return Promise.all(flashSaleIds.map((id) => checkWhetherUserRedeemed(id)));
+        return Promise.all(
+          flashSaleIds.map(async (id) =>
+            unwrapActionResult(await checkWhetherUserRedeemed(id)),
+          ),
+        );
       }
 
-      return checkWhetherUserRedeemed(flashSaleIds[0]);
+      return unwrapActionResult(await checkWhetherUserRedeemed(flashSaleIds[0]));
     },
     enabled: isLoggedIn && flashSaleIds.length > 0,
   });
@@ -122,12 +129,16 @@ export const useRemoveItemCart = () => {
 
   const { mutate, isError, isPending } = useMutation({
     mutationKey: ["remove-product"],
-    mutationFn: ({ productId }: { productId: number }) => removeItem(productId),
+    mutationFn: async ({ productId }: { productId: number }) =>
+      unwrapActionResult(await removeItem(productId)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-cart"] });
       sileo.success({
         title: "Product removed successfully",
       });
+    },
+    onError: (error) => {
+      sileo.error({ title: error.message || "Unable to remove product from cart" });
     },
   });
 

@@ -16,6 +16,7 @@ import { sileo } from "sileo";
 import { disconnectSocket } from "@/lib/socket";
 import { api } from "@/lib/api/client";
 import { useAuthStoreFastAPI } from "@/store/auth-fastapi.store";
+import { requestApiData, unwrapActionResult } from "@/lib/action-result";
 
 export function useRegister() {
   const setSession = useAuthStore((s) => s.setSession);
@@ -54,7 +55,7 @@ export function useRegisterFastAPI() {
       formData.set("first_name", data.first_name);
       formData.set("last_name", data.last_name);
       formData.set("username", data.username);
-      return registerFastAPIAction(formData);
+      return unwrapActionResult(await registerFastAPIAction(formData));
     },
     onSuccess: (data) => {
       sileo.success({
@@ -91,23 +92,23 @@ export function useLogin() {
 }
 
 async function fetchFastAPIMe(accessToken: string) {
-  const response = await api.GET("/api/v1/auth/me", {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    cache: "no-store",
-  });
-
-  if (response.error) {
-    return null;
-  }
+  const profile = await requestApiData(
+    () =>
+      api.GET("/api/v1/auth/me", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        cache: "no-store",
+      }),
+    "Unable to load your profile. Please try again.",
+  );
 
   return {
-    id: String(response.data.id),
-    userId: String(response.data.id),
-    username: response.data.username,
-    email: response.data.email,
-    avatarUrl: response.data.avatar_url ?? null,
+    id: String(profile.id),
+    userId: String(profile.id),
+    username: profile.username,
+    email: profile.email,
+    avatarUrl: profile.avatar_url ?? null,
   };
 }
 
@@ -120,7 +121,7 @@ export function useLoginFastAPI() {
       const formData = new FormData();
       formData.set("email", data.email);
       formData.set("password", data.password);
-      return loginFastAPIAction(formData);
+      return unwrapActionResult(await loginFastAPIAction(formData));
     },
     onSuccess: async (data) => {
       const tokens = {
@@ -130,9 +131,6 @@ export function useLoginFastAPI() {
       const profile = await fetchFastAPIMe(tokens.access_token);
       setSession(profile, tokens);
       router.push("/");
-    },
-    onError: (error) => {
-      console.log(error.message, error.cause);
     },
   });
 }

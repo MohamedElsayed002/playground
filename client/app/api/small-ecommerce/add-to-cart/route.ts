@@ -1,6 +1,7 @@
 import { api } from "@/lib/api/client";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { getApiErrorMessage, getApiErrorStatus } from "@/lib/action-result";
 
 export async function POST(req: Request) {
   const accessToken = (await cookies()).get("fastapi_access")?.value;
@@ -27,6 +28,19 @@ export async function POST(req: Request) {
       },
     });
 
+    if (response.error) {
+      return NextResponse.json(
+        {
+          error: getApiErrorMessage(
+            response.error,
+            "Failed to add product to cart",
+            response.response.status,
+          ),
+        },
+        { status: getApiErrorStatus(response) },
+      );
+    }
+
     if (!response.data) {
       return NextResponse.json({ error: "Failed to add product to cart" }, { status: 502 });
     }
@@ -34,9 +48,9 @@ export async function POST(req: Request) {
     return NextResponse.json({
       message: response.data.message ?? "Product successfully added to cart",
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to add product to cart" },
+      { error: "Could not add product to cart. Please try again." },
       { status: 500 },
     );
   }
@@ -52,26 +66,43 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
-  const { productId } = await req.json();
+  try {
+    const { productId } = await req.json();
 
-  if (!productId) {
-    return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
-  }
+    if (!productId || !Number.isInteger(Number(productId)) || Number(productId) <= 0) {
+      return NextResponse.json({ error: "A valid productId is required" }, { status: 400 });
+    }
 
-  const response = await api.DELETE("/api/v1/orders/cart/items/{product_id}", {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    params: {
-      path: {
-        product_id: Number(productId),
+    const response = await api.DELETE("/api/v1/orders/cart/items/{product_id}", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
       },
-    },
-  });
+      params: {
+        path: {
+          product_id: Number(productId),
+        },
+      },
+    });
 
-  if (response.error || !response.data) {
-    return NextResponse.json({ message: "Something went wrong !!" }, { status: 400 });
+    if (response.error) {
+      return NextResponse.json(
+        {
+          error: getApiErrorMessage(
+            response.error,
+            "Failed to remove product from cart",
+            response.response.status,
+          ),
+        },
+        { status: getApiErrorStatus(response) },
+      );
+    }
+
+    if (!response.data) {
+      return NextResponse.json({ error: "Failed to remove product from cart" }, { status: 502 });
+    }
+
+    return NextResponse.json({ message: response.data.message });
+  } catch {
+    return NextResponse.json({ error: "Unable to remove product from cart" }, { status: 500 });
   }
-
-  return NextResponse.json({ message: "Product successfully removed from cart" });
 }

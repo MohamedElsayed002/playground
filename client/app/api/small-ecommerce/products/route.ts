@@ -1,5 +1,6 @@
 import { api } from "@/lib/api/client";
 import { NextResponse } from "next/server";
+import { getApiErrorMessage, getApiErrorStatus } from "@/lib/action-result";
 
 export async function GET(request: Request) {
   const search = new URL(request.url).searchParams.get("search")?.trim();
@@ -19,14 +20,27 @@ export async function GET(request: Request) {
       },
     });
 
+    if (response.error) {
+      return NextResponse.json(
+        {
+          error: getApiErrorMessage(
+            response.error,
+            "Unable to search products",
+            response.response.status,
+          ),
+        },
+        { status: getApiErrorStatus(response) },
+      );
+    }
+
     if (!response.data) {
       return NextResponse.json({ error: "Unable to search products" }, { status: 502 });
     }
 
     return NextResponse.json({ products: response.data.items });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unable to search products" },
+      { error: "Unable to search products right now. Please try again." },
       { status: 500 },
     );
   }

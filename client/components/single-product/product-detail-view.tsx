@@ -4,13 +4,14 @@ import { ProductGallery } from "./product-gallery";
 
 interface ProductDetailViewProps {
   product: ProductDetail | null;
+  error?: string;
 }
 
-export function ProductDetailView({ product }: ProductDetailViewProps) {
+export function ProductDetailView({ product, error }: ProductDetailViewProps) {
   if (!product) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-600">
-        Product not found.
+        {error ?? "Product not found."}
       </div>
     );
   }

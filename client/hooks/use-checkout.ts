@@ -1,5 +1,6 @@
 import { checkout } from "@/actions/checkout";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { unwrapActionResult } from "@/lib/action-result";
 
 type CheckoutVariables = {
   notes: string;
@@ -27,20 +28,14 @@ export const useCheckout = () => {
       shipping_country,
       shipping_postal_code,
     }: CheckoutVariables) => {
-      const result = await checkout(
+      return unwrapActionResult(await checkout(
         notes,
         shipping_address_line1,
         shipping_address_line2,
         shipping_city,
         shipping_country,
         shipping_postal_code,
-      );
-
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      return result.data;
+      ));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

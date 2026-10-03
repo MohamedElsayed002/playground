@@ -7,7 +7,7 @@ import { CartSummary } from "./cart-summary";
 import { Skeleton } from "../ui/skeleton";
 
 export function CartView() {
-  const { data, isLoading } = useGetUserCart();
+  const { data, isLoading, error } = useGetUserCart();
   const flashSaleIds =
     data?.items?.flatMap((item) => item.product.flash_sales?.map((sale) => sale.id) ?? []) ?? [];
   const {
@@ -32,6 +32,16 @@ export function CartView() {
     );
   }
 
+  if (error || !data) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-700">
+          {error instanceof Error ? error.message : "Unable to load your cart. Please try again."}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto min-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6">
@@ -43,7 +53,7 @@ export function CartView() {
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
         <CartItemsList
-          cart={data!}
+          cart={data}
           redeemedSaleIds={redeemedSaleIds}
           isCheckingRedemption={isCheckingRedemption}
           isLoggedIn={isLoggedIn}
@@ -51,7 +61,7 @@ export function CartView() {
       </div>
       <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr] mt-5 mr-5">
         <CartSummary
-          cart={data!}
+          cart={data}
           redeemedSaleIds={redeemedSaleIds}
           isCheckingRedemption={isCheckingRedemption}
           isLoggedIn={isLoggedIn}

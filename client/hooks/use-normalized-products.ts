@@ -5,6 +5,7 @@ import type {
   ProductSortField,
   SortOrder,
 } from "@/types/extract-csv-pipeline";
+import { requestApiData } from "@/lib/action-result";
 
 type UseNormalizedProductsParams = {
   jobId: string;
@@ -38,7 +39,8 @@ export function useNormalizedProducts({
     ],
     enabled: Boolean(jobId),
     queryFn: async () => {
-      const { data, error } = await api.GET("/api/v1/jobs/{job_id}/products", {
+      return requestApiData<NormalizedProductListResponse>(
+        () => api.GET("/api/v1/jobs/{job_id}/products", {
         params: {
           path: { job_id: jobId },
           query: {
@@ -50,13 +52,9 @@ export function useNormalizedProducts({
             sort_order: sortOrder,
           },
         },
-      });
-
-      if (error || !data) {
-        throw error ?? new Error("Failed to fetch normalized products");
-      }
-
-      return data;
+        }),
+        "Unable to load normalized products right now.",
+      );
     },
   });
 }

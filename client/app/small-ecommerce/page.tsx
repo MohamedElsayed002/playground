@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { ShoppingBag, Sparkles, TrendingUp } from "lucide-react";
 import { ProductsGrid } from "./products-grid";
 import { cookies } from "next/headers";
+import { getApiErrorMessage } from "@/lib/action-result";
+import type { components } from "@/lib/api/schema";
 
 export const metadata: Metadata = {
   title: "Small E-commerce",
@@ -12,7 +14,23 @@ export const metadata: Metadata = {
 
 export default async function Page() {
   const accessToken = (await cookies()).get("fastapi_access")?.value;
-  const data = await api.GET("/api/v1/products");
+  let products: components["schemas"]["ProductListResponse"][] = [];
+  let loadError: string | null = null;
+
+  try {
+    const response = await api.GET("/api/v1/products");
+    if (response.error) {
+      loadError = getApiErrorMessage(
+        response.error,
+        "Unable to load products right now.",
+        response.response.status,
+      );
+    } else {
+      products = response.data?.items ?? [];
+    }
+  } catch {
+    loadError = "Unable to load products right now. Please try again.";
+  }
 
   return (
     <main className="space-y-8">
@@ -60,7 +78,7 @@ export default async function Page() {
             <h2 className="mt-1 text-2xl font-semibold text-slate-900">
               Featured products
               <span className="ml-2 text-base font-medium text-slate-500">
-                ({data.data?.items.length ?? 0})
+                ({products.length})
               </span>
             </h2>
           </div>
@@ -71,7 +89,13 @@ export default async function Page() {
         </div>
 
         <div className="mt-6">
-          <ProductsGrid products={data.data?.items || []} />
+          {loadError ? (
+            <p role="alert" className="rounded-xl bg-red-50 p-4 text-red-700">
+              {loadError}
+            </p>
+          ) : (
+            <ProductsGrid products={products} />
+          )}
         </div>
       </section>
     </main>

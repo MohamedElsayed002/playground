@@ -5,6 +5,12 @@ import { cookies } from "next/headers";
 import { API_URL, authApi } from "@/lib/api";
 import type { AuthTokens, AuthTokensFastAPI } from "@/types";
 import { api } from "@/lib/api/client";
+import {
+  actionFailure,
+  actionSuccess,
+  getApiErrorMessage,
+  type ActionResult,
+} from "@/lib/action-result";
 
 const ACCESS_COOKIE = "chat_access";
 const REFRESH_COOKIE = "chat_refresh";
@@ -83,20 +89,18 @@ export async function registerFastAPIAction(formData: FormData) {
     });
 
     if (response.error) {
-      const rawError = response.error as {
-        message?: string;
-        errors?: Array<{ msg?: string; loc?: string[] }>;
-      };
-      const errMessage =
-        rawError?.message && rawError.message !== "Error"
-          ? rawError.message
-          : (rawError?.errors?.[0]?.msg ?? "Login failed");
-      throw new Error(errMessage);
+      return actionFailure(
+        getApiErrorMessage(
+          response.error,
+          "Unable to create your account. Please try again.",
+          response.response.status,
+        ),
+      );
     }
 
-    return response.data;
-  } catch (error) {
-    throw new Error(error instanceof Error ? error.message : "Error");
+    return actionSuccess(response.data);
+  } catch {
+    return actionFailure("Unable to create your account. Please try again.");
   }
 }
 
@@ -114,42 +118,42 @@ export async function loginAction(formData: FormData) {
   }
 }
 
-export async function loginFastAPIAction(formData: FormData) {
+export async function loginFastAPIAction(
+  formData: FormData,
+): Promise<ActionResult<AuthTokensFastAPI>> {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
   if (!email || !password) {
-    throw new Error("Email and password are required");
+    return actionFailure("Email and password are required");
   }
 
-  const response = await api.POST("/api/v1/auth/login", {
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: {
-      username: email,
-      password,
-      scope: "",
-    },
-    bodySerializer(body) {
-      return new URLSearchParams(body as Record<string, string>);
-    },
-  });
+  try {
+    const response = await api.POST("/api/v1/auth/login", {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: {
+        username: email,
+        password,
+        scope: "",
+      },
+      bodySerializer(body) {
+        return new URLSearchParams(body as Record<string, string>);
+      },
+    });
 
-  if (response.error) {
-    const rawError = response.error as {
-      message?: string;
-      errors?: Array<{ msg?: string; loc?: string[] }>;
-    };
-    const errMessage =
-      rawError?.message && rawError.message !== "Error"
-        ? rawError.message
-        : (rawError?.errors?.[0]?.msg ?? "Login failed");
-    throw new Error(errMessage);
+    if (response.error) {
+      return actionFailure(
+        getApiErrorMessage(response.error, "Login failed. Please try again.", response.response.status),
+      );
+    }
+
+    await saveTokensFastAPICookies(response.data);
+    return actionSuccess(response.data);
+  } catch {
+    return actionFailure("Unable to log in right now. Please try again.");
   }
-
-  await saveTokensFastAPICookies(response.data);
-  return response.data;
 }
 
 export async function saveOAuthTokensAction(tokens: AuthTokens) {
@@ -195,11 +199,22 @@ export async function logoutFastAPIAction() {
   const { accessToken, refreshToken } = await getFastAPITokensFromCookies();
 
   if (accessToken) {
-    await api.POST("/api/v1/auth/logout", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    try {
+      const response = await api.POST("/api/v1/auth/logout", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      if (response.error) {
+        console.error(
+          "FastAPI logout failed:",
+          // @ts-expect-error accept unknown type for response.error
+          getApiErrorMessage(response.error, "Logout failed", response.response.status),
+        );
+      }
+    } catch (error) {
+      console.error("FastAPI logout request failed:", error);
+    }
   }
 
   if (refreshToken) {

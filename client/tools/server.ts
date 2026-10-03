@@ -15,6 +15,7 @@ import {
   removeProductFromCartDef,
 } from "./definitions";
 import { api } from "@/lib/api/client";
+import { requestApiData } from "@/lib/action-result";
 
 import { cookies } from "next/headers";
 
@@ -122,16 +123,20 @@ export const getTotalUsers = getUsersCountDef.server(async () => {
 //  Small E-commerce
 
 export const getProductByName = getProductByNameDef.server(async ({ name }) => {
-  const products = await api.GET("/api/v1/products", {
-    params: {
-      query: {
-        search: name,
-      },
-    },
-  });
+  const products = await requestApiData(
+    () =>
+      api.GET("/api/v1/products", {
+        params: {
+          query: {
+            search: name,
+          },
+        },
+      }),
+    "Unable to search products right now.",
+  );
 
   return {
-    products: products.data?.items ?? [],
+    products: products.items ?? [],
   };
 });
 
@@ -148,19 +153,24 @@ export const getProductByName = getProductByNameDef.server(async ({ name }) => {
 export const addProductToCart = addProductToCartDef.server(
   async ({ productId }: { productId: string }) => {
     const accessToken = (await cookies()).get("fastapi_access")?.value;
+    if (!accessToken) throw new Error("Please log in to add items to your cart.");
 
-    const product = await api.POST("/api/v1/orders/cart/items", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: {
-        product_id: Number(productId),
-        quantity: 1,
-      },
-    });
+    const product = await requestApiData(
+      () =>
+        api.POST("/api/v1/orders/cart/items", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: {
+            product_id: Number(productId),
+            quantity: 1,
+          },
+        }),
+      "Failed to add product to cart.",
+    );
 
     return {
-      message: product.data?.message ?? "Product successfully added to cart",
+      message: product.message ?? "Product successfully added to cart",
     };
   },
 );
@@ -172,22 +182,22 @@ export const getCartSummary = getCartSummaryDef.server(async () => {
     throw new Error("User is not authenticated.");
   }
 
-  const response = await api.GET("/api/v1/orders/cart", {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!response.data) {
-    throw new Error("Unable to load your cart right now.");
-  }
+  const cart = await requestApiData(
+    () =>
+      api.GET("/api/v1/orders/cart", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }),
+    "Unable to load your cart right now.",
+  );
 
   return {
     cart: {
-      id: response.data.id,
-      user_id: response.data.user_id,
-      subtotal: response.data.subtotal ?? null,
-      items: (response.data.items ?? []).map(({ id, quantity, product }) => ({
+      id: cart.id,
+      user_id: cart.user_id,
+      subtotal: cart.subtotal ?? null,
+      items: (cart.items ?? []).map(({ id, quantity, product }) => ({
         id,
         quantity,
         product: {
@@ -207,19 +217,23 @@ export const getUserOrderHistory = getUserOrderHistoryDef.server(async ({ limit 
     throw new Error("User is not authenticated.");
   }
 
-  const response = await api.GET("/api/v1/orders/my", {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    params: {
-      query: {
-        page_size: Number(limit),
-        page: 1,
-      },
-    },
-  });
+  const orderHistory = await requestApiData(
+    () =>
+      api.GET("/api/v1/orders/my", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: {
+          query: {
+            page_size: Number(limit),
+            page: 1,
+          },
+        },
+      }),
+    "Unable to load your order history right now.",
+  );
 
-  const items = (response.data?.items ?? []) as Array<{
+  const items = (orderHistory.items ?? []) as Array<{
     id?: number;
     total?: string;
     status?: string | null;
@@ -264,19 +278,24 @@ export const checkoutCart = checkoutSessionDef.server(
   }) => {
     const accessToken = (await cookies()).get("fastapi_access")?.value;
 
-    await api.POST("/api/v1/orders/testing-route", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: {
-        notes,
-        shipping_address_line1,
-        shipping_address_line2,
-        shipping_city,
-        shipping_country,
-        shipping_postal_code,
-      },
-    });
+    if (!accessToken) throw new Error("Please log in before checking out.");
+    await requestApiData(
+      () =>
+        api.POST("/api/v1/orders/testing-route", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: {
+            notes,
+            shipping_address_line1,
+            shipping_address_line2,
+            shipping_city,
+            shipping_country,
+            shipping_postal_code,
+          },
+        }),
+      "Checkout failed. Please try again.",
+    );
 
     return {
       message: "ALL GOOD",
@@ -286,19 +305,17 @@ export const checkoutCart = checkoutSessionDef.server(
 
 export const getSingleProductDetailsServer = getProductDetails.server(
   async ({ productId }: { productId: string }) => {
-    const response = await api.GET("/api/v1/products/{product_id}", {
-      params: {
-        path: {
-          product_id: Number(productId),
-        },
-      },
-    });
-
-    if (!response.data) {
-      throw new Error(`Product ${productId} was not found`);
-    }
-
-    return response.data;
+    return requestApiData(
+      () =>
+        api.GET("/api/v1/products/{product_id}", {
+          params: {
+            path: {
+              product_id: Number(productId),
+            },
+          },
+        }),
+      `Product ${productId} was not found.`,
+    );
   },
 );
 
@@ -306,20 +323,21 @@ export const deleteProductFromCartServer = removeProductFromCartDef.server(
   async ({ productId }: { productId: string }) => {
     const accessToken = (await cookies()).get("fastapi_access")?.value;
 
-    const response = await api.DELETE("/api/v1/orders/cart/items/{product_id}", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-      params: {
-        path: {
-          product_id: Number(productId),
-        },
-      },
-    });
-
-    if (response.error || !response.data) {
-      throw new Error("Product not found");
-    }
+    if (!accessToken) throw new Error("Please log in to update your cart.");
+    await requestApiData(
+      () =>
+        api.DELETE("/api/v1/orders/cart/items/{product_id}", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          params: {
+            path: {
+              product_id: Number(productId),
+            },
+          },
+        }),
+      "Product could not be removed from your cart.",
+    );
 
     return { message: "Product successfully removed from cart" };
   },
