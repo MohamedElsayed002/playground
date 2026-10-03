@@ -36,7 +36,7 @@ export interface AuthTokens {
 export interface AuthTokensFastAPI {
   access_token: string;
   refresh_token: string;
-  token_type: string
+  token_type: string;
 }
 
 // GraphQL Models

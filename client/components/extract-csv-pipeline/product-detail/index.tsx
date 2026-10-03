@@ -36,7 +36,10 @@ export default function ProductDetailView({ jobId, productId }: ProductDetailVie
       description="View normalized product data saved from your CSV extraction job."
       breadcrumbs={[
         { label: "Extract CSV Pipeline", href: "/extract-csv-pipeline" },
-        { label: "Normalized Products", href: `/extract-csv-pipeline/normalized-products/${jobId}` },
+        {
+          label: "Normalized Products",
+          href: `/extract-csv-pipeline/normalized-products/${jobId}`,
+        },
         { label: product?.product_name ?? "Product" },
       ]}
       actions={
@@ -72,7 +75,9 @@ export default function ProductDetailView({ jobId, productId }: ProductDetailVie
                   </div>
                   <div>
                     <CardTitle className="text-2xl">{product.product_name}</CardTitle>
-                    <p className="mt-1 font-mono text-sm text-muted-foreground">{product.product_id}</p>
+                    <p className="mt-1 font-mono text-sm text-muted-foreground">
+                      {product.product_id}
+                    </p>
                   </div>
                 </div>
                 <ProductActions jobId={jobId} product={product} />
@@ -85,15 +90,27 @@ export default function ProductDetailView({ jobId, productId }: ProductDetailVie
               <DetailItem label="Quantity" value={product.quantity} />
               <DetailItem
                 label="Last Restock Date"
-                value={product.last_restock_date ? format(new Date(product.last_restock_date), "PPP") : "—"}
+                value={
+                  product.last_restock_date
+                    ? format(new Date(product.last_restock_date), "PPP")
+                    : "—"
+                }
               />
-              <DetailItem label="Internal ID" value={<span className="font-mono text-sm">{product.id}</span>} />
-              <DetailItem label="Job ID" value={<span className="break-all font-mono text-sm">{product.job_id}</span>} />
+              <DetailItem
+                label="Internal ID"
+                value={<span className="font-mono text-sm">{product.id}</span>}
+              />
+              <DetailItem
+                label="Job ID"
+                value={<span className="break-all font-mono text-sm">{product.job_id}</span>}
+              />
             </CardContent>
           </Card>
         </div>
       ) : (
-        <div className="rounded-xl border bg-background/80 p-6 text-muted-foreground">Product not found.</div>
+        <div className="rounded-xl border bg-background/80 p-6 text-muted-foreground">
+          Product not found.
+        </div>
       )}
     </PageShell>
   );

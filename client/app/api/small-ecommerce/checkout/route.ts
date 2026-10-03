@@ -6,32 +6,35 @@ import type { components } from "@/lib/api/schema";
 type CheckoutDetails = components["schemas"]["OrderCheckoutCreate"];
 
 export async function POST(request: Request) {
-    const accessToken = (await cookies()).get("fastapi_access")?.value;
+  const accessToken = (await cookies()).get("fastapi_access")?.value;
 
-    if (!accessToken) {
-        return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  if (!accessToken) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  try {
+    const checkoutDetails = (await request.json()) as CheckoutDetails;
+    const response = await api.POST("/api/v1/orders/testing-route", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: checkoutDetails,
+    });
+
+    if (!response.data) {
+      return NextResponse.json(
+        { error: "Checkout failed. Please check your cart and try again." },
+        { status: 502 },
+      );
     }
 
-    try {
-        const checkoutDetails = (await request.json()) as CheckoutDetails;
-        const response = await api.POST("/api/v1/orders/testing-route", {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: checkoutDetails,
-        });
-
-        if (!response.data) {
-            return NextResponse.json({ error: "Checkout failed. Please check your cart and try again." }, { status: 502 });
-        }
-
-        return NextResponse.json({
-            message: `Order ${response.data.order_number} was placed successfully.`,
-        });
-    } catch (error) {
-        return NextResponse.json(
-            { error: error instanceof Error ? error.message : "Checkout failed" },
-            { status: 500 },
-        );
-    }
+    return NextResponse.json({
+      message: `Order ${response.data.order_number} was placed successfully.`,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Checkout failed" },
+      { status: 500 },
+    );
+  }
 }

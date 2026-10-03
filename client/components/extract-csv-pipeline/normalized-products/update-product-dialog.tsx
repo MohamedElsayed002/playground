@@ -86,7 +86,9 @@ export function UpdateNormalizedProductDialog({
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Edit product</DialogTitle>
-          <DialogDescription>Update the necessary fields without leaving this page.</DialogDescription>
+          <DialogDescription>
+            Update the necessary fields without leaving this page.
+          </DialogDescription>
         </DialogHeader>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
@@ -97,7 +99,12 @@ export function UpdateNormalizedProductDialog({
               {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
               Save changes
             </Button>
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={isPending}
+            >
               Cancel
             </Button>
           </DialogFooter>

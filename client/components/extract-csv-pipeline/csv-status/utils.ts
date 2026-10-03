@@ -53,14 +53,32 @@ export function getStepState(job: JobStatusResponse | undefined, index: number) 
 
 export function buildAnalytics(job?: JobStatusResponse): ReportMetric[] {
   return [
-    { label: "Total rows", value: formatCount(job?.total_rows), hint: "Rows detected in the source file" },
+    {
+      label: "Total rows",
+      value: formatCount(job?.total_rows),
+      hint: "Rows detected in the source file",
+    },
     { label: "Valid rows", value: formatCount(job?.valid_rows), hint: "Rows ready for ingestion" },
-    { label: "Invalid rows", value: formatCount(job?.invalid_rows), hint: "Rows that need attention" },
-    { label: "Ingested rows", value: formatCount(job?.ingested_rows), hint: "Rows saved into the report" },
-    { label: "Quality score", value: `${formatOptionalCount(job?.quality_score)}%`, hint: "Validation score for this file" },
+    {
+      label: "Invalid rows",
+      value: formatCount(job?.invalid_rows),
+      hint: "Rows that need attention",
+    },
+    {
+      label: "Ingested rows",
+      value: formatCount(job?.ingested_rows),
+      hint: "Rows saved into the report",
+    },
+    {
+      label: "Quality score",
+      value: `${formatOptionalCount(job?.quality_score)}%`,
+      hint: "Validation score for this file",
+    },
     {
       label: "Issues found",
-      value: formatCount((job?.invalid_price ?? 0) + (job?.invalid_quantity ?? 0) + (job?.invalid_dates ?? 0)),
+      value: formatCount(
+        (job?.invalid_price ?? 0) + (job?.invalid_quantity ?? 0) + (job?.invalid_dates ?? 0),
+      ),
       hint: "Price, quantity, and date checks",
     },
   ];

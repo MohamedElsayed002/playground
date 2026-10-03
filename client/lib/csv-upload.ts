@@ -1,15 +1,11 @@
 import { API_BASE_URL } from "@/lib/api/client";
-import { ExtractCSVResponse } from "@/types/extract-csv-pipeline"
+import { ExtractCSVResponse } from "@/types/extract-csv-pipeline";
 
 export function createIdempotencyKeyForFile(): string {
   return crypto.randomUUID();
 }
 
-
-export async function uploadCsvPipeline(
-  file: File,
-  idempotencyKey: string,
-) {
+export async function uploadCsvPipeline(file: File, idempotencyKey: string) {
   const formData = new FormData();
   formData.append("file", file);
 
@@ -21,17 +17,14 @@ export async function uploadCsvPipeline(
     body: formData,
   });
 
+  const data: ExtractCSVResponse = await response.json();
 
-  const data: ExtractCSVResponse   = await response.json()
-
-  if(!data.success || data.status === "failed") {
+  if (!data.success || data.status === "failed") {
     // @ts-expect-error message or error may be present in the response
-    throw new Error(data.message || data.error)
+    throw new Error(data.message || data.error);
   }
   return { data, status: response.status };
 }
-
-
 
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

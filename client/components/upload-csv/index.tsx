@@ -94,14 +94,17 @@ export function UploadFile() {
       if (response.status === 202 || result.status === "processing") {
         sileo.info({
           title: "Upload already in progress",
-          description: result.message ?? "This file is already being processed with the same idempotency key.",
+          description:
+            result.message ?? "This file is already being processed with the same idempotency key.",
         });
         return;
       }
 
       sileo.success({
         title: "Upload started",
-        description: result.job_id ? "Job is processing." : result.message ?? "Your CSV is being processed.",
+        description: result.job_id
+          ? "Job is processing."
+          : (result.message ?? "Your CSV is being processed."),
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to upload file";
@@ -134,8 +137,8 @@ export function UploadFile() {
             <div>
               <CardTitle className="text-2xl">Upload CSV File</CardTitle>
               <CardDescription className="mt-1 max-w-lg">
-                Drop your inventory CSV here. The same idempotency key is reused for retries so duplicate
-                uploads are safely ignored.
+                Drop your inventory CSV here. The same idempotency key is reused for retries so
+                duplicate uploads are safely ignored.
               </CardDescription>
             </div>
           </div>
@@ -153,11 +156,17 @@ export function UploadFile() {
           <Card className="border-amber-200/70 bg-amber-50/60">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Required columns</CardTitle>
-              <CardDescription>Include these fields in the CSV to avoid validation errors.</CardDescription>
+              <CardDescription>
+                Include these fields in the CSV to avoid validation errors.
+              </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
               {REQUIRED_COLUMNS.map((column) => (
-                <Badge key={column} variant="secondary" className="rounded-full px-3 py-1 font-mono text-xs">
+                <Badge
+                  key={column}
+                  variant="secondary"
+                  className="rounded-full px-3 py-1 font-mono text-xs"
+                >
                   {column}
                 </Badge>
               ))}
@@ -201,10 +210,18 @@ export function UploadFile() {
                 </div>
                 <div className="min-w-0">
                   <p className="truncate font-medium">{selectedFile.name}</p>
-                  <p className="text-sm text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatFileSize(selectedFile.size)}
+                  </p>
                 </div>
               </div>
-              <Button type="button" variant="ghost" size="icon" onClick={clearFile} disabled={isPending}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={clearFile}
+                disabled={isPending}
+              >
                 <X className="size-4" />
               </Button>
             </div>
@@ -216,9 +233,12 @@ export function UploadFile() {
                 <ShieldCheck className="mt-0.5 size-5 shrink-0 text-blue-600" />
                 <div className="min-w-0 flex-1 space-y-2">
                   <div>
-                    <p className="text-sm font-medium text-blue-900">Idempotency key locked for this file</p>
+                    <p className="text-sm font-medium text-blue-900">
+                      Idempotency key locked for this file
+                    </p>
                     <p className="text-xs text-blue-700/80">
-                      Retries and double-clicks reuse this key. Change the file to generate a new one.
+                      Retries and double-clicks reuse this key. Change the file to generate a new
+                      one.
                     </p>
                   </div>
                 </div>

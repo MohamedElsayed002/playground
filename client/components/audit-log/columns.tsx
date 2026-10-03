@@ -17,14 +17,20 @@ export const columns: ColumnDef<AuditLogItem>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Timestamp" />,
     cell: ({ row }) => {
       const date = new Date(row.getValue("created_at"));
-      return <span className="text-muted-foreground whitespace-nowrap">{format(date, "PPP p")}</span>;
+      return (
+        <span className="text-muted-foreground whitespace-nowrap">{format(date, "PPP p")}</span>
+      );
     },
   },
   {
     accessorKey: "event",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Event" />,
     cell: ({ row }) => {
-      return <span className="font-medium uppercase text-xs tracking-wider">{row.getValue("event")}</span>;
+      return (
+        <span className="font-medium uppercase text-xs tracking-wider">
+          {row.getValue("event")}
+        </span>
+      );
     },
   },
   {
@@ -33,7 +39,9 @@ export const columns: ColumnDef<AuditLogItem>[] = [
     cell: ({ row }) => {
       const userId = row.getValue("user_id");
       return userId ? (
-        <Badge variant="outline" className="text-white">{String(userId)}</Badge>
+        <Badge variant="outline" className="text-white">
+          {String(userId)}
+        </Badge>
       ) : (
         <span className="text-muted-foreground italic">System</span>
       );
@@ -46,7 +54,14 @@ export const columns: ColumnDef<AuditLogItem>[] = [
       const status = row.getValue("status") as string;
       const isSuccess = status.toLowerCase() === "success" || status.toLowerCase() === "completed";
       return (
-        <Badge variant={isSuccess ? "default" : "destructive"} className={isSuccess ? "bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20" : ""}>
+        <Badge
+          variant={isSuccess ? "default" : "destructive"}
+          className={
+            isSuccess
+              ? "bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20"
+              : ""
+          }
+        >
           {status}
         </Badge>
       );

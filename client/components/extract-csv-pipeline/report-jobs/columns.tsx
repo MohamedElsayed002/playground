@@ -48,7 +48,9 @@ export const reportJobColumns: ColumnDef<ReportJob>[] = [
     header: "Invalid",
     cell: ({ row }) => {
       const invalidRows = row.getValue("invalid_rows") as number;
-      return <span className={invalidRows > 0 ? "font-medium text-red-600" : ""}>{invalidRows}</span>;
+      return (
+        <span className={invalidRows > 0 ? "font-medium text-red-600" : ""}>{invalidRows}</span>
+      );
     },
   },
   {
@@ -56,7 +58,9 @@ export const reportJobColumns: ColumnDef<ReportJob>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Created" />,
     cell: ({ row }) => {
       const date = new Date(row.getValue("created_at"));
-      return <span className="whitespace-nowrap text-muted-foreground">{format(date, "PP p")}</span>;
+      return (
+        <span className="whitespace-nowrap text-muted-foreground">{format(date, "PP p")}</span>
+      );
     },
   },
   {

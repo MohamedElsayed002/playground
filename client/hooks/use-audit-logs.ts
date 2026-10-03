@@ -24,8 +24,8 @@ const fetchNestJSAuditLogs = async (params: {
 
   try {
     const data = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audit-logs?${query.toString()}`);
-    const json = await data.json()
-    console.log('json',json)
+    const json = await data.json();
+    console.log("json", json);
     return json as PaginatedAuditLogs;
   } catch (error) {
     console.error("[NestJS Audit Logs] Fetch failed:", error);
@@ -51,7 +51,7 @@ const fetchFastAPIAuditLogs = async (params: {
           page_size: params.page_size,
           event: params.event ?? undefined,
           status: params.status ?? undefined,
-          user_id: Number.isNaN(userIdAsNumber) ? undefined : userIdAsNumber ?? undefined,
+          user_id: Number.isNaN(userIdAsNumber) ? undefined : (userIdAsNumber ?? undefined),
         },
       },
     });

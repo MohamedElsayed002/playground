@@ -63,18 +63,29 @@ export function CreateNormalizedProductDialog({ jobId }: CreateNormalizedProduct
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Add new normalized product</DialogTitle>
-          <DialogDescription>Fill in the details below to create a new report row.</DialogDescription>
+          <DialogDescription>
+            Fill in the details below to create a new report row.
+          </DialogDescription>
         </DialogHeader>
 
         <form className="space-y-6" onSubmit={handleSubmit}>
-          <ProductFormFields register={form.register} errors={form.formState.errors} showProductId />
+          <ProductFormFields
+            register={form.register}
+            errors={form.formState.errors}
+            showProductId
+          />
 
           <DialogFooter>
             <Button type="submit" disabled={createProduct.isPending}>
               {createProduct.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
               Create product
             </Button>
-            <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={createProduct.isPending}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              disabled={createProduct.isPending}
+            >
               Cancel
             </Button>
           </DialogFooter>

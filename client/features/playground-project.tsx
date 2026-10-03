@@ -62,13 +62,12 @@ export default function PlaygroundProject() {
           What lives in the repo
         </h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-          Same mental model as shipping a small product: backend (nestjs, fastapi) contracts, a client that consumes
-          them, and experiments that don&apos;t belong in production—but still follow clear
-          structure.
+          Same mental model as shipping a small product: backend (nestjs, fastapi) contracts, a
+          client that consumes them, and experiments that don&apos;t belong in production—but still
+          follow clear structure.
         </p>
 
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-
           {/* First */}
           <div className="rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950">
             <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
@@ -94,13 +93,13 @@ export default function PlaygroundProject() {
           </div>
 
           {/* Third */}
-            <div className="rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950">
+          <div className="rounded-2xl border bg-white p-6 shadow-sm dark:bg-zinc-950">
             <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
               FastAPI E-commerce & PDF Parser
             </p>
             <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-              Production ready e-commerce API, Advanced PDF processing pipeline, Background job orchestration,
-              Handles 10k+ concurrent users, transactions
+              Production ready e-commerce API, Advanced PDF processing pipeline, Background job
+              orchestration, Handles 10k+ concurrent users, transactions
             </p>
           </div>
 

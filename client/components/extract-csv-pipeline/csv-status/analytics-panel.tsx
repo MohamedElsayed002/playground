@@ -17,13 +17,18 @@ export function AnalyticsPanel({ job }: { job?: JobStatusResponse }) {
           <BarChart3 className="size-5 text-amber-600" />
           Report analytics
         </CardTitle>
-        <CardDescription>These are the metrics the user can review before opening the report data.</CardDescription>
+        <CardDescription>
+          These are the metrics the user can review before opening the report data.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {complete ? (
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {analytics.map((item) => (
-              <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+              <div
+                key={item.label}
+                className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4"
+              >
                 <p className="text-sm text-muted-foreground">{item.label}</p>
                 <p className="mt-2 text-3xl font-bold tracking-tight">{item.value}</p>
                 <p className="mt-1 text-sm text-muted-foreground">{item.hint}</p>

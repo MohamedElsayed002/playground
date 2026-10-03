@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import Link from "next/link";
 import { ArrowUpRight, Cable, GitPullRequestArrow, Radio, Waves } from "lucide-react";
@@ -104,13 +104,12 @@ const examples = [
 ];
 
 export function APIsAndRealtime() {
-
-  const sectionRef = useRef<HTMLElement>(null)
+  const sectionRef = useRef<HTMLElement>(null);
   // const { showTags } = useScrollState()
 
   useEffect(() => {
-    const section = sectionRef.current
-    if (!section) return
+    const section = sectionRef.current;
+    if (!section) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -122,23 +121,23 @@ export function APIsAndRealtime() {
       },
       {
         threshold: 0.3,
-      }
+      },
     );
 
-    observer.observe(section)
+    observer.observe(section);
 
     // Handle hash on page load
     const hash = window.location.hash.substring(1); // Remove # prefix
     if (hash === "api-realtime") {
       // Use requestAnimationFrame to ensure DOM is ready
       requestAnimationFrame(() => {
-        section.scrollIntoView({ behavior: "smooth" })
-      })
+        section.scrollIntoView({ behavior: "smooth" });
+      });
     }
 
     return () => {
-      observer.unobserve(section)
-    }
+      observer.unobserve(section);
+    };
   }, []);
 
   return (

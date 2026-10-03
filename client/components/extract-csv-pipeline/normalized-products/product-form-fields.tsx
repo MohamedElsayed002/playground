@@ -19,7 +19,15 @@ function FieldError({ message }: { message?: string }) {
   return <p className="text-sm text-red-600">{message}</p>;
 }
 
-function FieldShell({ label, children, error }: { label: string; children: React.ReactNode; error?: string }) {
+function FieldShell({
+  label,
+  children,
+  error,
+}: {
+  label: string;
+  children: React.ReactNode;
+  error?: string;
+}) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
@@ -29,7 +37,11 @@ function FieldShell({ label, children, error }: { label: string; children: React
   );
 }
 
-export function ProductFormFields({ register, errors, showProductId = false }: ProductFormFieldsProps) {
+export function ProductFormFields({
+  register,
+  errors,
+  showProductId = false,
+}: ProductFormFieldsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {showProductId ? (

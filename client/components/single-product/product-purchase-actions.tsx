@@ -1,101 +1,101 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
-import { useAddProductCard, useClaimDiscount } from "@/hooks/use-add-product-card"
-import type { ProductFlashSale } from "@/types/products"
+import { useAddProductCard, useClaimDiscount } from "@/hooks/use-add-product-card";
+import type { ProductFlashSale } from "@/types/products";
 
-import { FlashSaleDiscountButton } from "./flash-sale-discount-button"
-import { FlashSalePaymentDialog } from "./flash-sale-payment-dialog"
-import { ProductPurchaseFullPrice } from "./product-purchase-full-price"
+import { FlashSaleDiscountButton } from "./flash-sale-discount-button";
+import { FlashSalePaymentDialog } from "./flash-sale-payment-dialog";
+import { ProductPurchaseFullPrice } from "./product-purchase-full-price";
 
 interface ProductPurchaseActionsProps {
-    productId: number
-    flashSale?: ProductFlashSale
-    isLoggedIn: boolean
-    hasRedeemed: boolean
-    isCheckingRedemption: boolean
-    disabled: boolean
+  productId: number;
+  flashSale?: ProductFlashSale;
+  isLoggedIn: boolean;
+  hasRedeemed: boolean;
+  isCheckingRedemption: boolean;
+  disabled: boolean;
 }
 
 export function ProductPurchaseActions({
-    productId,
-    flashSale,
-    isLoggedIn,
-    hasRedeemed,
-    isCheckingRedemption,
-    disabled,
+  productId,
+  flashSale,
+  isLoggedIn,
+  hasRedeemed,
+  isCheckingRedemption,
+  disabled,
 }: ProductPurchaseActionsProps) {
-    const { mutate: mutateAddToCart, isPending: loadingAddToCart } = useAddProductCard()
-    const router = useRouter()
-    const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
+  const { mutate: mutateAddToCart, isPending: loadingAddToCart } = useAddProductCard();
+  const router = useRouter();
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
 
-    const {
-        mutate: mutateClaimDiscount,
-        isPending: loadingClaimDiscount,
-        isPaymentPending,
-        isPaymentReady,
-        payment,
-        paymentError,
-    } = useClaimDiscount()
+  const {
+    mutate: mutateClaimDiscount,
+    isPending: loadingClaimDiscount,
+    isPaymentPending,
+    isPaymentReady,
+    payment,
+    paymentError,
+  } = useClaimDiscount();
 
-    const canClaimDiscount = Boolean(flashSale && (!isLoggedIn || !hasRedeemed))
-    const clientSecret = payment?.stripe_client_secret ?? null
+  const canClaimDiscount = Boolean(flashSale && (!isLoggedIn || !hasRedeemed));
+  const clientSecret = payment?.stripe_client_secret ?? null;
 
-    useEffect(() => {
-        if (isPaymentReady && clientSecret) {
-            const timer = window.setTimeout(() => {
-                setIsPaymentDialogOpen(true)
-            }, 0)
+  useEffect(() => {
+    if (isPaymentReady && clientSecret) {
+      const timer = window.setTimeout(() => {
+        setIsPaymentDialogOpen(true);
+      }, 0);
 
-            return () => window.clearTimeout(timer)
-        }
-    }, [clientSecret, isPaymentReady])
+      return () => window.clearTimeout(timer);
+    }
+  }, [clientSecret, isPaymentReady]);
 
-    function handleStartDiscountCheckout() {
-        if (isPaymentReady && clientSecret) {
-            setIsPaymentDialogOpen(true)
-            return
-        }
-
-        mutateClaimDiscount({ flashSaleId: flashSale?.id ?? 0 })
+  function handleStartDiscountCheckout() {
+    if (isPaymentReady && clientSecret) {
+      setIsPaymentDialogOpen(true);
+      return;
     }
 
-    if (canClaimDiscount && flashSale) {
-        return (
-            <>
-                <FlashSaleDiscountButton
-                    flashSale={flashSale}
-                    disabled={disabled}
-                    loadingClaimDiscount={loadingClaimDiscount}
-                    isPaymentPending={isPaymentPending}
-                    isPaymentReady={isPaymentReady}
-                    isCheckingRedemption={isCheckingRedemption}
-                    paymentError={paymentError}
-                    clientSecret={clientSecret}
-                    onStartCheckout={handleStartDiscountCheckout}
-                />
+    mutateClaimDiscount({ flashSaleId: flashSale?.id ?? 0 });
+  }
 
-                <FlashSalePaymentDialog
-                    clientSecret={clientSecret}
-                    isOpen={isPaymentDialogOpen}
-                    onOpenChange={setIsPaymentDialogOpen}
-                    onSuccess={() => {
-                        setIsPaymentDialogOpen(false)
-                        router.refresh()
-                    }}
-                />
-            </>
-        )
-    }
-
+  if (canClaimDiscount && flashSale) {
     return (
-        <ProductPurchaseFullPrice
-            disabled={disabled}
-            loadingAddToCart={loadingAddToCart}
-            isCheckingRedemption={isCheckingRedemption}
-            onAddToCart={() => mutateAddToCart({ productId, quantity: 1 })}
+      <>
+        <FlashSaleDiscountButton
+          flashSale={flashSale}
+          disabled={disabled}
+          loadingClaimDiscount={loadingClaimDiscount}
+          isPaymentPending={isPaymentPending}
+          isPaymentReady={isPaymentReady}
+          isCheckingRedemption={isCheckingRedemption}
+          paymentError={paymentError}
+          clientSecret={clientSecret}
+          onStartCheckout={handleStartDiscountCheckout}
         />
-    )
+
+        <FlashSalePaymentDialog
+          clientSecret={clientSecret}
+          isOpen={isPaymentDialogOpen}
+          onOpenChange={setIsPaymentDialogOpen}
+          onSuccess={() => {
+            setIsPaymentDialogOpen(false);
+            router.refresh();
+          }}
+        />
+      </>
+    );
+  }
+
+  return (
+    <ProductPurchaseFullPrice
+      disabled={disabled}
+      loadingAddToCart={loadingAddToCart}
+      isCheckingRedemption={isCheckingRedemption}
+      onAddToCart={() => mutateAddToCart({ productId, quantity: 1 })}
+    />
+  );
 }

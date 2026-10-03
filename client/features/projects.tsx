@@ -4,52 +4,59 @@ import { ArrowRight } from "lucide-react";
 import { HoverPrefetchLink } from "@/components/nextjs-docs/hover-prefetch-link";
 import { useRef, useEffect } from "react";
 
-
 export function Projects() {
-
-  const divElement = useRef<HTMLDivElement>(null)
+  const divElement = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const section = divElement.current
-    if(!section) return 
+    const section = divElement.current;
+    if (!section) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if(entry.isIntersecting) {
-            window.history.replaceState(null,"","#projects")
+          if (entry.isIntersecting) {
+            window.history.replaceState(null, "", "#projects");
           }
-        })
+        });
       },
       {
-        rootMargin:"0px",
+        rootMargin: "0px",
         // scrollMargin: "0px",
-        threshold: 0.5
-      }
-    )
+        threshold: 0.5,
+      },
+    );
 
-    observer.observe(section)
+    observer.observe(section);
 
-    const hash = window.location.hash.substring(1)
-    if(hash === "projects") {
+    const hash = window.location.hash.substring(1);
+    if (hash === "projects") {
       requestAnimationFrame(() => {
-        section.scrollIntoView({behavior: "smooth"})
-      })
+        section.scrollIntoView({ behavior: "smooth" });
+      });
     }
 
     return () => {
-      observer.unobserve(section)
-    }
-  },[])
+      observer.unobserve(section);
+    };
+  }, []);
 
   return (
     <div ref={divElement} id="projects">
       <h2 className="text-3xl font-semibold mb-4 md:text-left text-center">Projects</h2>
       <p className="text-gray-400 -mt-2 mb-5">
-        My Projects & my stack used in them <br/>
-        For more projects you can find it in my portfolio website <span><a href="https://mohammad-elsayed-portfolio.vercel.app" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">here</a></span>
-        
-        </p>
+        My Projects & my stack used in them <br />
+        For more projects you can find it in my portfolio website{" "}
+        <span>
+          <a
+            href="https://mohammad-elsayed-portfolio.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:underline"
+          >
+            here
+          </a>
+        </span>
+      </p>
       <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 lg:gap-38">
         <div className="w-full md:w-[371px]  h-[188px] text-black bg-white rounded-4xl p-5 flex flex-col justify-between">
           <h1 className="text-lg lg:text-3xl font-medium leading-tight mb-1">CareerCast AI</h1>

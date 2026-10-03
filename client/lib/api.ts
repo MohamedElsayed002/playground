@@ -1,7 +1,7 @@
 import type { AuthTokens } from "@/types";
 
 /** Browser: public URL. Server (e.g. Docker): use INTERNAL_API_URL so fetches reach the backend service. */
-export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001");
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 const TOKEN_KEY = "chat_access_token";
 const REFRESH_KEY = "chat_refresh_token";
@@ -16,7 +16,7 @@ export const tokenStorage = {
   },
   clearTokens: () => {
     (localStorage.removeItem(TOKEN_KEY), localStorage.removeItem(REFRESH_KEY));
-  }
+  },
 };
 
 // Fetch Wrapper
@@ -35,7 +35,6 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
       ...options.headers,
     },
   });
-
 
   if (res.status === 401) {
     const refreshToken = tokenStorage.getRefresh();

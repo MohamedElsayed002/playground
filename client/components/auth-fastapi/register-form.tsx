@@ -191,7 +191,12 @@ export function RegisterForm() {
         </CardContent>
         <CardFooter>
           <Field orientation="vertical">
-            <Button disabled={register.isPending} className="w-full bg-[radial-gradient(circle_at_top,_#dc2626_0%,_#450a0a_40%,_#020617_100%)] hover:opacity-80" type="submit" form="register-playground">
+            <Button
+              disabled={register.isPending}
+              className="w-full bg-[radial-gradient(circle_at_top,_#dc2626_0%,_#450a0a_40%,_#020617_100%)] hover:opacity-80"
+              type="submit"
+              form="register-playground"
+            >
               Register
             </Button>
             <span>

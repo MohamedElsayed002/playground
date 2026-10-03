@@ -9,7 +9,9 @@ export const metadata: Metadata = {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading report jobs...</div>}>
+    <Suspense
+      fallback={<div className="p-6 text-sm text-muted-foreground">Loading report jobs...</div>}
+    >
       <ReportJobsView />
     </Suspense>
   );

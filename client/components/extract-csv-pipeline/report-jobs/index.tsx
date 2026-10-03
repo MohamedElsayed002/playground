@@ -47,7 +47,9 @@ export default function ReportJobsView() {
         </Card>
         <Card className="bg-background/80 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">On This Page</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              On This Page
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{jobs.length}</p>
@@ -58,9 +60,7 @@ export default function ReportJobsView() {
             <CardTitle className="text-sm font-medium text-muted-foreground">User ID</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm font-semibold text-gray-500">
-              I hard coded the userId
-            </p>
+            <p className="text-sm font-semibold text-gray-500">I hard coded the userId</p>
           </CardContent>
         </Card>
       </div>

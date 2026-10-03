@@ -1,4 +1,4 @@
-import "server-only"
+import "server-only";
 import prisma from "@/lib/db";
 import {
   addProductToCartDef,
@@ -119,8 +119,6 @@ export const getTotalUsers = getUsersCountDef.server(async () => {
   };
 });
 
-
-
 //  Small E-commerce
 
 export const getProductByName = getProductByNameDef.server(async ({ name }) => {
@@ -137,7 +135,6 @@ export const getProductByName = getProductByNameDef.server(async ({ name }) => {
   };
 });
 
-
 // export const getCategoryByName = getCategoryByNameDef.server(async ({name}) => {
 //   const category = await api.GET('/api/v1/categories',{
 //     params: {
@@ -148,24 +145,25 @@ export const getProductByName = getProductByNameDef.server(async ({ name }) => {
 //   })
 // })
 
-export const addProductToCart = addProductToCartDef.server(async ({ productId }: { productId: string }) => {
+export const addProductToCart = addProductToCartDef.server(
+  async ({ productId }: { productId: string }) => {
+    const accessToken = (await cookies()).get("fastapi_access")?.value;
 
-  const accessToken = (await cookies()).get("fastapi_access")?.value
+    const product = await api.POST("/api/v1/orders/cart/items", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: {
+        product_id: Number(productId),
+        quantity: 1,
+      },
+    });
 
-  const product = await api.POST("/api/v1/orders/cart/items", {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: {
-      product_id: Number(productId),
-      quantity: 1,
-    },
-  });
-
-  return {
-    message: product.data?.message ?? "Product successfully added to cart",
-  };
-});
+    return {
+      message: product.data?.message ?? "Product successfully added to cart",
+    };
+  },
+);
 
 export const getCartSummary = getCartSummaryDef.server(async () => {
   const accessToken = (await cookies()).get("fastapi_access")?.value;
@@ -248,78 +246,81 @@ export const getUserOrderHistory = getUserOrderHistoryDef.server(async ({ limit 
   };
 });
 
+export const checkoutCart = checkoutSessionDef.server(
+  async ({
+    shipping_address_line1,
+    shipping_address_line2,
+    notes,
+    shipping_city,
+    shipping_country,
+    shipping_postal_code,
+  }: {
+    shipping_address_line1: string;
+    shipping_address_line2?: string;
+    notes: string;
+    shipping_city: string;
+    shipping_country: string;
+    shipping_postal_code: string;
+  }) => {
+    const accessToken = (await cookies()).get("fastapi_access")?.value;
 
-export const checkoutCart = checkoutSessionDef.server(async ({
-  shipping_address_line1,
-  shipping_address_line2,
-  notes,
-  shipping_city,
-  shipping_country,
-  shipping_postal_code,
-}: {
-  shipping_address_line1: string;
-  shipping_address_line2?: string;
-  notes: string;
-  shipping_city: string;
-  shipping_country: string;
-  shipping_postal_code: string;
-}) => {
-  const accessToken = (await cookies()).get("fastapi_access")?.value;
+    await api.POST("/api/v1/orders/testing-route", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: {
+        notes,
+        shipping_address_line1,
+        shipping_address_line2,
+        shipping_city,
+        shipping_country,
+        shipping_postal_code,
+      },
+    });
 
-  await api.POST("/api/v1/orders/testing-route", {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: {
-      notes,
-      shipping_address_line1,
-      shipping_address_line2,
-      shipping_city,
-      shipping_country,
-      shipping_postal_code,
-    },
-  });
+    return {
+      message: "ALL GOOD",
+    };
+  },
+);
 
-  return {
-    message: "ALL GOOD",
-  };
-});
+export const getSingleProductDetailsServer = getProductDetails.server(
+  async ({ productId }: { productId: string }) => {
+    const response = await api.GET("/api/v1/products/{product_id}", {
+      params: {
+        path: {
+          product_id: Number(productId),
+        },
+      },
+    });
 
-
-export const getSingleProductDetailsServer = getProductDetails.server(async ({ productId }: { productId: string }) => {
-  const response = await api.GET('/api/v1/products/{product_id}', {
-    params: {
-      path: {
-        product_id: Number(productId)
-      }
+    if (!response.data) {
+      throw new Error(`Product ${productId} was not found`);
     }
-  })
 
-  if (!response.data) {
-    throw new Error(`Product ${productId} was not found`)
-  }
+    return response.data;
+  },
+);
 
-  return response.data
-})
+export const deleteProductFromCartServer = removeProductFromCartDef.server(
+  async ({ productId }: { productId: string }) => {
+    const accessToken = (await cookies()).get("fastapi_access")?.value;
 
+    const response = await api.DELETE("/api/v1/orders/cart/items/{product_id}", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      params: {
+        path: {
+          product_id: Number(productId),
+        },
+      },
+    });
 
-export const deleteProductFromCartServer = removeProductFromCartDef.server(async ({ productId }: { productId: string }) => {
-  const accessToken = (await cookies()).get("fastapi_access")?.value
-
-  const response = await api.DELETE('/api/v1/orders/cart/items/{product_id}', {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-    params: {
-      path: {
-        product_id: Number(productId)
-      }
+    if (response.error || !response.data) {
+      throw new Error("Product not found");
     }
-  })
 
-  if (response.error || !response.data) {
-    throw new Error("Product not found")
-  }
-
-  return { message: "Product successfully removed from cart" }
-})
+    return { message: "Product successfully removed from cart" };
+  },
+);

@@ -4,7 +4,6 @@ import { useSingleUser } from "@/hooks/use-users";
 import { Skeleton } from "../ui/skeleton";
 import { Button } from "../ui/button";
 
-
 export default function SingleUser({ userId }: { userId: string }) {
   // const params = useParams<{ userId: string }>()
   const { data: user, isLoading, error, refetch } = useSingleUser(userId);

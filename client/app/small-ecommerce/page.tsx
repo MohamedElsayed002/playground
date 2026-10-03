@@ -28,8 +28,8 @@ export default async function Page() {
                 Shop smarter.
               </h1>
               <p className="mt-3 max-w-xl text-sm text-slate-600 md:text-base">
-                Discover what fits your lifestyle with quick product insights, smart recommendations,
-                and a smoother shopping flow.
+                Discover what fits your lifestyle with quick product insights, smart
+                recommendations, and a smoother shopping flow.
               </p>
             </div>
           </div>

@@ -8,26 +8,25 @@ export type NormalizedProductListResponse = components["schemas"]["ProductReport
 export type ProductSortField = "price" | "product_name" | "category";
 export type SortOrder = "asc" | "desc";
 
-
 type ExtractCSVSuccessfully = {
-    success: true
-    job_id?: string
-    status: string
-    file_name?: string
-    message?: string
-    idempotency_key?: string
-    current_step?: string
-}
+  success: true;
+  job_id?: string;
+  status: string;
+  file_name?: string;
+  message?: string;
+  idempotency_key?: string;
+  current_step?: string;
+};
 
 type ExtractCSVError = {
-    success: false
-    status_code: number
-    error_code: string
-    message: string
-    path: string
-    request_id: string
-    error?: string
-    errors: any
-}
+  success: false;
+  status_code: number;
+  error_code: string;
+  message: string;
+  path: string;
+  request_id: string;
+  error?: string;
+  errors: any;
+};
 
-export type ExtractCSVResponse = ExtractCSVSuccessfully | ExtractCSVError
+export type ExtractCSVResponse = ExtractCSVSuccessfully | ExtractCSVError;

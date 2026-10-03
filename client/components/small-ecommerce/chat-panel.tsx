@@ -81,7 +81,6 @@ export function SmallEcommerceChatPanel() {
           <p className="text-[10px] uppercase tracking-[0.25em] text-slate-500">AI shopper</p>
           <h2 className="mt-1 text-lg font-semibold text-slate-900">Ask the assistant</h2>
         </div>
-
       </div>
 
       <div className="p-5">
@@ -134,10 +133,11 @@ export function SmallEcommerceChatPanel() {
             messages.map((message) => (
               <div
                 key={message.id}
-                className={`rounded-2xl border p-3 text-sm ${message.role === "assistant"
-                  ? "border-blue-100 bg-blue-50 text-blue-900"
-                  : "border-slate-200 bg-slate-50 text-slate-800"
-                  }`}
+                className={`rounded-2xl border p-3 text-sm ${
+                  message.role === "assistant"
+                    ? "border-blue-100 bg-blue-50 text-blue-900"
+                    : "border-slate-200 bg-slate-50 text-slate-800"
+                }`}
               >
                 <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] opacity-70">
                   {message.role === "assistant" ? "Assistant" : "You"}

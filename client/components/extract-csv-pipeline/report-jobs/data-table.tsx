@@ -83,7 +83,9 @@ export function ReportJobsDataTable<TData, TValue>({
               Array.from({ length: 6 }).map((_, index) => (
                 <TableRow key={`report-job-skeleton-${index}`}>
                   {columns.map((column, columnIndex) => (
-                    <TableCell key={`report-job-skeleton-cell-${index}-${column.id ?? columnIndex}`}>
+                    <TableCell
+                      key={`report-job-skeleton-cell-${index}-${column.id ?? columnIndex}`}
+                    >
                       <Skeleton className="h-5 w-full max-w-[160px]" />
                     </TableCell>
                   ))}
@@ -101,7 +103,10 @@ export function ReportJobsDataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
                   No report jobs found.
                 </TableCell>
               </TableRow>

@@ -123,7 +123,6 @@ export const getUsersByNameDef = toolDefinition({
   }),
 });
 
-
 // Small E-commerce
 
 export const getProductByNameDef = toolDefinition({
@@ -174,12 +173,11 @@ export const getProductByNameDef = toolDefinition({
   }),
 });
 
-
 export const getCategoryByNameDef = toolDefinition({
   name: "get_category_by_name",
   description: "Get the categories by name",
   inputSchema: z.object({
-    name: z.string().describe("Get the category by name")
+    name: z.string().describe("Get the category by name"),
   }),
   outputSchema: z.array(
     z.object({
@@ -189,26 +187,26 @@ export const getCategoryByNameDef = toolDefinition({
       description: z.string(),
       image_url: z.string(),
       parent_id: z.any().optional(),
-      created_at: z.date()
-    })
-  )
-})
-
+      created_at: z.date(),
+    }),
+  ),
+});
 
 export const addProductToCartDef = toolDefinition({
   name: "add_product_to_cart",
   description: "Add the product to user's cart by product id",
   inputSchema: z.object({
-    productId: z.string()
+    productId: z.string(),
   }),
   outputSchema: z.object({
-    message: z.string()
-  })
-})
+    message: z.string(),
+  }),
+});
 
 export const getCartSummaryDef = toolDefinition({
   name: "get_cart_summary",
-  description: "Get the current authenticated user's cart contents, product details, quantities, and subtotal. Use this when the user asks what is in their cart, how many items they have, or their cart subtotal.",
+  description:
+    "Get the current authenticated user's cart contents, product details, quantities, and subtotal. Use this when the user asks what is in their cart, how many items they have, or their cart subtotal.",
   inputSchema: z.object({}),
   outputSchema: z.object({
     cart: z.object({
@@ -264,9 +262,16 @@ export const getCartSummaryDef = toolDefinition({
 
 export const getUserOrderHistoryDef = toolDefinition({
   name: "get_user_order_history",
-  description: "Get the current authenticated user's recent order history. Use this when the user asks about previous orders, past purchases, recent total spend, or order status.",
+  description:
+    "Get the current authenticated user's recent order history. Use this when the user asks about previous orders, past purchases, recent total spend, or order status.",
   inputSchema: z.object({
-    limit: z.coerce.number().min(1).max(20).optional().default(5).describe("Number of recent orders to return"),
+    limit: z.coerce
+      .number()
+      .min(1)
+      .max(20)
+      .optional()
+      .default(5)
+      .describe("Number of recent orders to return"),
   }),
   outputSchema: z.object({
     orders: z.array(
@@ -289,7 +294,6 @@ export const getUserOrderHistoryDef = toolDefinition({
   }),
 });
 
-
 export const checkoutSessionDef = toolDefinition({
   name: "checkout_session",
   description: "User can checkout out and get the products in his cart",
@@ -299,19 +303,18 @@ export const checkoutSessionDef = toolDefinition({
     shipping_address_line2: z.string().describe("user's address 2").optional(),
     shipping_city: z.string().describe("user's city living in"),
     shipping_country: z.string().describe("user's country living in"),
-    shipping_postal_code: z.string().describe("user's house postal code")
+    shipping_postal_code: z.string().describe("user's house postal code"),
   }),
   outputSchema: z.object({
-    message: z.string()
-  })
-})
-
+    message: z.string(),
+  }),
+});
 
 export const getProductDetails = toolDefinition({
   name: "get_single_product_details",
   description: "Get single product details by product id",
   inputSchema: z.object({
-    productId: z.string().describe("Product ID")
+    productId: z.string().describe("Product ID"),
   }),
   outputSchema: z.object({
     id: z.number(),
@@ -349,16 +352,15 @@ export const getProductDetails = toolDefinition({
       .optional(),
     created_at: z.string(),
   }),
-})
-
+});
 
 export const removeProductFromCartDef = toolDefinition({
   name: "remove_product_from_cart",
   description: "User can remove the product from his cart by product id",
   inputSchema: z.object({
-    productId: z.string().describe("Product ID")
+    productId: z.string().describe("Product ID"),
   }),
   outputSchema: z.object({
-    message: z.string()
-  })
-})
+    message: z.string(),
+  }),
+});

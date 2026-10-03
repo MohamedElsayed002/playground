@@ -15,7 +15,11 @@ export default async function Page({ params }: PageProps) {
   const { id } = await params;
 
   return (
-    <Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading normalized products...</div>}>
+    <Suspense
+      fallback={
+        <div className="p-6 text-sm text-muted-foreground">Loading normalized products...</div>
+      }
+    >
       <NormalizedProductsView jobId={id} />
     </Suspense>
   );

@@ -209,7 +209,10 @@ export function NormalizedProductsDataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
                   No normalized products found.
                 </TableCell>
               </TableRow>

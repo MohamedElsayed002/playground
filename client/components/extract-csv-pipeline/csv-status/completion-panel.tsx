@@ -23,7 +23,9 @@ export function CompletionPanel({ job }: CompletionPanelProps) {
           </div>
           <div>
             <h3 className="text-lg font-semibold">
-              {complete ? "Your report is ready to explore" : "We'll unlock the report after completion"}
+              {complete
+                ? "Your report is ready to explore"
+                : "We'll unlock the report after completion"}
             </h3>
             <p className="mt-1 max-w-2xl text-sm text-white/70">
               {complete

@@ -73,8 +73,6 @@ export const sendEmailClient = sendEmailDef.client(async ({ to, subject, text, h
   return data;
 });
 
-
-
 // Small E-commerce
 
 export const getProductByNameTool = getProductByNameDef.client(async ({ name }) => {
@@ -89,16 +87,14 @@ export const getProductByNameTool = getProductByNameDef.client(async ({ name }) 
 });
 
 export const getUserOrderHistoryTool = getUserOrderHistoryDef.client(async () => {
-
   const response = await fetch(`/api/small-ecommerce/orders-history`);
 
   if (!response.ok) {
     throw new Error("Unable to load your order history right now.");
   }
 
-  const data = await response.json()
-  return data
-
+  const data = await response.json();
+  return data;
 });
 
 export const getCartSummaryTool = getCartSummaryDef.client(async () => {
@@ -129,7 +125,6 @@ export const getCartSummaryTool = getCartSummaryDef.client(async () => {
     },
   };
 });
-
 
 export const addToCartTool = addProductToCartDef.client(async ({ productId }) => {
   const response = await fetch("/api/small-ecommerce/add-to-cart", {
@@ -167,37 +162,40 @@ export const checkoutCartTool = checkoutSessionDef.client(async (checkoutDetails
   return { message: data.message ?? "Your order was placed successfully." };
 });
 
+export const getSingleProductDetailTool = getProductDetails.client(
+  async ({ productId }: { productId: string }) => {
+    const response = await api.GET("/api/v1/products/{product_id}", {
+      params: {
+        path: {
+          product_id: Number(productId),
+        },
+      },
+    });
 
-export const getSingleProductDetailTool = getProductDetails.client(async ({ productId }: { productId: string }) => {
-  const response = await api.GET("/api/v1/products/{product_id}", {
-    params: {
-      path: {
-        product_id: Number(productId)
-      }
+    if (response.error) {
+      throw new Error(`Product ${productId} was not found`);
     }
-  })
 
-  if (response.error) {
-    throw new Error(`Product ${productId} was not found`)
-  }
+    return response.data;
+  },
+);
 
-  return response.data
-})
+export const removeItemCartTool = removeProductFromCartDef.client(
+  async ({ productId }: { productId: string }) => {
+    const response = await fetch("/api/small-ecommerce/add-to-cart", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ productId }),
+    });
 
-export const removeItemCartTool = removeProductFromCartDef.client(async ({ productId }: { productId: string }) => {
-  const response = await fetch('/api/small-ecommerce/add-to-cart', {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ productId }),
-  })
+    const data = (await response.json()) as { message?: string; error?: string };
 
-  const data = (await response.json()) as { message?: string; error?: string };
+    if (!response.ok) {
+      throw new Error(data.error ?? "Failed to remove product from cart");
+    }
 
-  if (!response.ok) {
-    throw new Error(data.error ?? "Failed to remove product from cart");
-  }
-
-  return { message: data.message ?? "Product successfully removed from cart" };
-})
+    return { message: data.message ?? "Product successfully removed from cart" };
+  },
+);

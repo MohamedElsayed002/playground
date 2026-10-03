@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import Link from "next/link";
 import { ArrowUpRight, Braces, Database, GitBranchPlus, ShieldCheck } from "lucide-react";
@@ -92,7 +92,7 @@ export function NoSQLVSSQL() {
       },
       {
         threshold: 0.3, // Trigger when 30% of section is visible
-      }
+      },
     );
 
     observer.observe(section);

@@ -69,7 +69,9 @@ export default function NormalizedProductsView({ jobId }: NormalizedProductsView
         </Card>
         <Card className="bg-background/80 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Products</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Products
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{totalItems}</p>

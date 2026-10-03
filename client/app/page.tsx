@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import { DotPattern } from "@/components/layouts/dot-pattern";
-import { APIsAndRealtime, Chat, LiveStream, NoSQLVSSQL, Performance, RouteCards, Tables } from "@/features";
+import {
+  APIsAndRealtime,
+  LiveStream,
+  NoSQLVSSQL,
+  Performance,
+  RouteCards,
+  Tables,
+} from "@/features";
 import { UserBadge } from "@/components/users/user-badge";
 import { Projects } from "@/features/projects";
 import { Audit } from "@/features/audit";
@@ -11,23 +18,6 @@ export const metadata: Metadata = {
 };
 
 export default async function RootPage() {
-  // const { data, error } = await api.POST("/api/v1/auth/login", {
-  //   body: {
-  //     username: "mohamed@gmail.com",
-  //     password: "01093588197Mm!",
-  //     scope: "",
-  //   },
-
-  //   headers: {
-  //     "Content-Type": "application/x-www-form-urlencoded",
-  //   },
-
-  //   bodySerializer(body) {
-  //     return new URLSearchParams(body as Record<string, string>);
-  //   },
-  // });
-  //   console.log(data,error)
-
   return (
     <DotPattern className="min-h-screen bg-[radial-gradient(circle_at_top,_#065f46_0%,_#022c22_40%,_#020617_100%)]">
       <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-10 text-white sm:px-6 lg:px-8">
@@ -46,11 +36,6 @@ export default async function RootPage() {
             <div className="grid w-full grid-cols-1 md:grid-cols-[1fr_auto_1fr] md:items-stretch md:gap-x-8">
               {/* Tables Card */}
               <Tables />
-
-              <div className="my-8 h-px w-full bg-white/40 md:my-0 md:h-full md:min-h-px md:w-px md:justify-self-center" />
-
-              {/* Chat Card */}
-              <Chat />
             </div>
             <div className="my-8 h-px w-full bg-white/40" />
 
@@ -62,7 +47,7 @@ export default async function RootPage() {
             <Projects />
             <div className="my-8 h-px w-full bg-white/40" />
 
-            <Audit/>
+            <Audit />
             <div className="my-8 h-px w-full bg-white/40" />
 
             <NoSQLVSSQL />

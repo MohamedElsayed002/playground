@@ -31,12 +31,19 @@ export function DataTablePagination<TData>({ table }: DataTablePaginationProps<T
               table.setPageSize(Number(value));
             }}
           >
-            <SelectTrigger aria-label="Rows per page" className="h-8 w-[70px] bg-white/5 border-white/10 text-white">
+            <SelectTrigger
+              aria-label="Rows per page"
+              className="h-8 w-[70px] bg-white/5 border-white/10 text-white"
+            >
               <SelectValue placeholder={table.getState().pagination.pageSize} />
             </SelectTrigger>
             <SelectContent side="top" className="bg-zinc-900 border-white/10 text-white">
               {[10, 20, 25, 30, 40, 50].map((pageSize) => (
-                <SelectItem key={pageSize} value={`${pageSize}`} className="hover:bg-white/10 focus:bg-white/10">
+                <SelectItem
+                  key={pageSize}
+                  value={`${pageSize}`}
+                  className="hover:bg-white/10 focus:bg-white/10"
+                >
                   {pageSize}
                 </SelectItem>
               ))}

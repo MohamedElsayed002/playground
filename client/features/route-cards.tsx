@@ -33,10 +33,9 @@ const flowImages = [
   {
     title: "Flash Sale flow",
     description: "A visual walkthrough of the redeem flash sale process",
-    src: "/flash-sale.png"
-  }
+    src: "/flash-sale.png",
+  },
 ];
-
 
 function RouteCard({
   title,
@@ -75,10 +74,14 @@ function RouteCard({
         </div>
 
         <div className="flex items-end justify-between gap-4">
-
           <div />
           {href ? (
-            <Button asChild variant="outline" size="icon-lg" className="size-12 border-white/20 bg-white text-black hover:bg-white/90">
+            <Button
+              asChild
+              variant="outline"
+              size="icon-lg"
+              className="size-12 border-white/20 bg-white text-black hover:bg-white/90"
+            >
               <Link href={href} aria-label={`Open ${title}`}>
                 <span className="sr-only">{`Open ${title}`}</span>
                 <ArrowRight className="size-5" />
@@ -108,10 +111,29 @@ export function RouteCards() {
         <div>
           <h2 className="text-3xl font-semibold">Quick routes</h2>
           <p className="mt-2 text-sm leading-7 text-white/70">
-            These are some of the biggest routes I&apos;ve worked on, and they taught me a lot about building reliable systems. I learned how to think about ACID transactions, request and response timing, and what should stay in the response versus what belongs in the background. I also learned how to optimize CPU usage for heavier traffic, how to handle batch jobs, rollbacks, and idempotency, and how to make APIs feel predictable for both users and developers.
+            These are some of the biggest routes I&apos;ve worked on, and they taught me a lot about
+            building reliable systems. I learned how to think about ACID transactions, request and
+            response timing, and what should stay in the response versus what belongs in the
+            background. I also learned how to optimize CPU usage for heavier traffic, how to handle
+            batch jobs, rollbacks, and idempotency, and how to make APIs feel predictable for both
+            users and developers.
           </p>
           <p className="mt-3 text-sm leading-7 text-white/70">
-            I&apos;m still growing in this space, especially around caching, Redis, and scaling patterns. I&apos;m also reading <span className="underline text-blue-500"><a href="https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/" target="_blank" rel="noopener noreferrer">Designing Data Intensive Applications </a></span> and trying to apply those ideas in my own projects. I&apos;m using Inngest in the background for long-running work, and I&apos;m building the full flow from backend services in NestJS and FastAPI all the way into the Next.js client so the experience feels connected end to end.
+            I&apos;m still growing in this space, especially around caching, Redis, and scaling
+            patterns. I&apos;m also reading{" "}
+            <span className="underline text-blue-500">
+              <a
+                href="https://www.oreilly.com/library/view/designing-data-intensive-applications/9781491903063/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Designing Data Intensive Applications{" "}
+              </a>
+            </span>{" "}
+            and trying to apply those ideas in my own projects. I&apos;m using Inngest in the
+            background for long-running work, and I&apos;m building the full flow from backend
+            services in NestJS and FastAPI all the way into the Next.js client so the experience
+            feels connected end to end.
           </p>
 
           <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -124,7 +146,13 @@ export function RouteCards() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="h-14 w-14 overflow-hidden rounded-xl border border-white/10 bg-black/10">
-                        <Image src={image.src} alt={image.title} width={56} height={56} className="h-full w-full object-cover" />
+                        <Image
+                          src={image.src}
+                          alt={image.title}
+                          width={56}
+                          height={56}
+                          className="h-full w-full object-cover"
+                        />
                       </div>
                       <div>
                         <p className="text-sm font-medium text-white">{image.title}</p>
@@ -139,7 +167,13 @@ export function RouteCards() {
                     <DialogDescription>{image.description}</DialogDescription>
                   </DialogHeader>
                   <div className="mt-2 overflow-hidden rounded-2xl border border-white/10 bg-black/10">
-                    <Image src={image.src} alt={image.title} width={1400} height={900} className="w-full object-contain" />
+                    <Image
+                      src={image.src}
+                      alt={image.title}
+                      width={1400}
+                      height={900}
+                      className="w-full object-contain"
+                    />
                   </div>
                 </DialogContent>
               </Dialog>
@@ -176,5 +210,3 @@ export function RouteCards() {
     </section>
   );
 }
-
-

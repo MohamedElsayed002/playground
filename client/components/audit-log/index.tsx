@@ -65,7 +65,9 @@ export default function AuditLogsTable({ source }: AuditLogsTableProps) {
         <div className="flex items-start gap-3 bg-blue-500/10 border border-blue-500/20 p-4 rounded-2xl max-w-sm backdrop-blur-md">
           <AlertCircle className="h-5 w-5 text-blue-400 shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-sm font-bold text-blue-400 uppercase tracking-tight">Public Access Enabled</h4>
+            <h4 className="text-sm font-bold text-blue-400 uppercase tracking-tight">
+              Public Access Enabled
+            </h4>
             <p className="text-xs text-blue-300/80 mt-1 leading-relaxed">
               Source: {source === "nestjs" ? "NestJS" : "FastAPI"}.
             </p>
@@ -75,10 +77,17 @@ export default function AuditLogsTable({ source }: AuditLogsTableProps) {
 
       {error ? (
         <div className="bg-destructive/10 border border-destructive/20 p-8 rounded-2xl text-center">
-          <p className="text-destructive font-medium">Failed to load audit logs. Please try again later.</p>
+          <p className="text-destructive font-medium">
+            Failed to load audit logs. Please try again later.
+          </p>
         </div>
       ) : (
-        <DataTable columns={columns} data={logs} pageCount={pageCount} isLoading={isLoading || isDebouncing} />
+        <DataTable
+          columns={columns}
+          data={logs}
+          pageCount={pageCount}
+          isLoading={isLoading || isDebouncing}
+        />
       )}
     </div>
   );

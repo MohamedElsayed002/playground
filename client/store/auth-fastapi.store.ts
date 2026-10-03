@@ -4,7 +4,10 @@ import type { AuthProfile } from "@/types";
 interface AuthFastAPIState {
   profile: AuthProfile | null;
   isLoggedIn: boolean;
-  setSession: (profile: AuthProfile | null, tokens: { access_token: string; refresh_token: string }) => void;
+  setSession: (
+    profile: AuthProfile | null,
+    tokens: { access_token: string; refresh_token: string },
+  ) => void;
   clearSession: () => void;
 }
 

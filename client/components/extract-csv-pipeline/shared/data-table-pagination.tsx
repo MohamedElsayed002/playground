@@ -24,7 +24,8 @@ export function DataTablePagination<TData>({ table, totalItems }: DataTablePagin
   return (
     <div className="flex flex-col gap-3 px-2 sm:flex-row sm:items-center sm:justify-between">
       <div className="text-sm text-muted-foreground">
-        {rowCount} total row(s) · showing page {pageIndex + 1} of {Math.max(table.getPageCount(), 1)}
+        {rowCount} total row(s) · showing page {pageIndex + 1} of{" "}
+        {Math.max(table.getPageCount(), 1)}
       </div>
 
       <div className="flex flex-wrap items-center gap-4">

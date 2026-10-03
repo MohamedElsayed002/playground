@@ -210,7 +210,10 @@ export function DataTable<TData, TValue>({
               Array.from({ length: 8 }).map((_, index) => (
                 <TableRow key={`skeleton-row-${index}`} className="border-white/5">
                   {columns.map((column, columnIndex) => (
-                    <TableCell key={`skeleton-cell-${index}-${column.id ?? columnIndex}`} className="py-4">
+                    <TableCell
+                      key={`skeleton-cell-${index}-${column.id ?? columnIndex}`}
+                      className="py-4"
+                    >
                       <Skeleton className="h-5 w-full max-w-[180px] bg-white/10" />
                     </TableCell>
                   ))}
@@ -232,7 +235,10 @@ export function DataTable<TData, TValue>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center text-muted-foreground"
+                >
                   No audit logs found.
                 </TableCell>
               </TableRow>

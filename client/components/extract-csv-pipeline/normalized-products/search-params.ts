@@ -1,7 +1,17 @@
-import { parseAsIndex, parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
+import {
+  parseAsIndex,
+  parseAsInteger,
+  parseAsString,
+  parseAsStringLiteral,
+  useQueryStates,
+} from "nuqs";
 import type { ProductSortField, SortOrder } from "@/types/extract-csv-pipeline";
 
-const sortFields = ["price", "product_name", "category"] as const satisfies readonly ProductSortField[];
+const sortFields = [
+  "price",
+  "product_name",
+  "category",
+] as const satisfies readonly ProductSortField[];
 const sortOrders = ["asc", "desc"] as const satisfies readonly SortOrder[];
 
 export const normalizedProductsParsers = {

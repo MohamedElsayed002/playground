@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-
   const accessToken = (await cookies()).get("fastapi_access")?.value;
 
   try {
@@ -20,9 +19,8 @@ export async function GET() {
     });
 
     return NextResponse.json({
-      orders: response.data?.items ?? []
-    })
-
+      orders: response.data?.items ?? [],
+    });
   } catch (error) {
     return Response.json(
       {

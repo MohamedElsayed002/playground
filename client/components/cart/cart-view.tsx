@@ -1,63 +1,62 @@
-"use client"
+"use client";
 
-import { useCheckUser } from "@/hooks/use-add-product-card"
-import { useGetUserCart } from "@/hooks/use-get-user-cart"
-import { CartItemsList } from "./cart-items-list"
-import { CartSummary } from "./cart-summary"
-import { Skeleton } from "../ui/skeleton"
-
-
+import { useCheckUser } from "@/hooks/use-add-product-card";
+import { useGetUserCart } from "@/hooks/use-get-user-cart";
+import { CartItemsList } from "./cart-items-list";
+import { CartSummary } from "./cart-summary";
+import { Skeleton } from "../ui/skeleton";
 
 export function CartView() {
+  const { data, isLoading } = useGetUserCart();
+  const flashSaleIds =
+    data?.items?.flatMap((item) => item.product.flash_sales?.map((sale) => sale.id) ?? []) ?? [];
+  const {
+    redeemedSaleIds,
+    isPending: isCheckingRedemption,
+    isLoggedIn,
+  } = useCheckUser(flashSaleIds);
 
-    const { data, isLoading } = useGetUserCart()
-    const flashSaleIds = data?.items?.flatMap((item) => item.product.flash_sales?.map((sale) => sale.id) ?? []) ?? []
-    const {
-        redeemedSaleIds,
-        isPending: isCheckingRedemption,
-        isLoggedIn,
-    } = useCheckUser(flashSaleIds)
-
-    if (isLoading) {
-        return (
-            <div className="mx-auto min-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-semibold text-slate-900">Your cart is Loading</h1>
-                    <p className="mt-2 text-slate-600">Please wait while we fetch your cart items.</p>
-                </div>
-
-                <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
-                    <Skeleton className="h-80 w-full bg-gray-300" />
-                    <Skeleton className="h-40 w-full bg-gray-300" />
-                </div>
-            </div>
-        )
-    }
-
+  if (isLoading) {
     return (
-        <div className="mx-auto min-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-            <div className="mb-6">
-                <h1 className="text-3xl font-semibold text-slate-900">Your cart</h1>
-                <p className="mt-2 text-slate-600">Review your selected products and totals before checkout.</p>
-            </div>
-
-            <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
-                <CartItemsList
-                    cart={data!}
-                    redeemedSaleIds={redeemedSaleIds}
-                    isCheckingRedemption={isCheckingRedemption}
-                    isLoggedIn={isLoggedIn}
-                />
-
-            </div>
-            <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr] mt-5 mr-5">
-                <CartSummary
-                    cart={data!}
-                    redeemedSaleIds={redeemedSaleIds}
-                    isCheckingRedemption={isCheckingRedemption}
-                    isLoggedIn={isLoggedIn}
-                />
-            </div>
+      <div className="mx-auto min-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <h1 className="text-3xl font-semibold text-slate-900">Your cart is Loading</h1>
+          <p className="mt-2 text-slate-600">Please wait while we fetch your cart items.</p>
         </div>
-    )
+
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
+          <Skeleton className="h-80 w-full bg-gray-300" />
+          <Skeleton className="h-40 w-full bg-gray-300" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto min-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="mb-6">
+        <h1 className="text-3xl font-semibold text-slate-900">Your cart</h1>
+        <p className="mt-2 text-slate-600">
+          Review your selected products and totals before checkout.
+        </p>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr]">
+        <CartItemsList
+          cart={data!}
+          redeemedSaleIds={redeemedSaleIds}
+          isCheckingRedemption={isCheckingRedemption}
+          isLoggedIn={isLoggedIn}
+        />
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[1.4fr_0.6fr] mt-5 mr-5">
+        <CartSummary
+          cart={data!}
+          redeemedSaleIds={redeemedSaleIds}
+          isCheckingRedemption={isCheckingRedemption}
+          isLoggedIn={isLoggedIn}
+        />
+      </div>
+    </div>
+  );
 }

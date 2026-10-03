@@ -114,7 +114,12 @@ export function LoginForm() {
         </CardContent>
         <CardFooter>
           <Field orientation="vertical">
-            <Button disabled={login.isPending} className="w-full bg-[radial-gradient(circle_at_top,_#dc2626_0%,_#450a0a_40%,_#020617_100%)] hover:opacity-80" type="submit" form="login-playground">
+            <Button
+              disabled={login.isPending}
+              className="w-full bg-[radial-gradient(circle_at_top,_#dc2626_0%,_#450a0a_40%,_#020617_100%)] hover:opacity-80"
+              type="submit"
+              form="login-playground"
+            >
               Login
             </Button>
             <p>

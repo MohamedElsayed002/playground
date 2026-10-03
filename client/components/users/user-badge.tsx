@@ -15,21 +15,21 @@ function signInWithGoogle() {
 }
 
 export function UserBadge() {
-  const profile = useAuthStore((state) => state.profile);
-  const profileFastAPI = useAuthStoreFastAPI((state) => state.profile)
-  const userLogout = useLogout();
-  const userLogoutFastAPI = useLogoutFastAPI()
+  // const profile = useAuthStore((state) => state.profile);
+  const profileFastAPI = useAuthStoreFastAPI((state) => state.profile);
+  // const userLogout = useLogout();
+  const userLogoutFastAPI = useLogoutFastAPI();
 
-  if (!profile && !profileFastAPI) {
+  if (!profileFastAPI) {
     return (
       <div className="flex mt-4 gap-3 ">
-        <Button asChild>
+        {/* <Button asChild>
           <Link href="/auth/login-nestjs">Login (NestJS) </Link>
-        </Button>
+        </Button> */}
         <Button asChild>
-          <Link href="/auth/login-fastapi">Login (FastAPI) </Link>
+          <Link href="/auth/login-fastapi">Login</Link>
         </Button>
-        <Button
+        {/* <Button
           variant="secondary"
           className="flex items-center gap-2"
           type="button"
@@ -37,30 +37,30 @@ export function UserBadge() {
         >
           <Image src="/providers/google.svg" width={20} priority height={20} alt="Google" />
           Continue with Google
-        </Button>
+        </Button> */}
       </div>
     );
   }
 
   return (
     <div className="flex items-center gap-3">
-      <h1 className="italic text-3xl mt-2">Hello, {profile?.username || profileFastAPI?.username}</h1>
-      {
+      <h1 className="italic text-3xl mt-2">Hello, {profileFastAPI?.username}</h1>
+      {/* {
         profile && <HoverCard>
           <HoverCardTrigger onClick={() => userLogout.mutate()}>
             <DoorOpen />
           </HoverCardTrigger>
           <HoverCardContent>Logout, I&apos;ll miss you (NestJS)</HoverCardContent>
         </HoverCard>
-      }
-      {
-        profileFastAPI && <HoverCard>
+      } */}
+      {profileFastAPI && (
+        <HoverCard>
           <HoverCardTrigger onClick={() => userLogoutFastAPI.mutate()}>
             <DoorOpen />
           </HoverCardTrigger>
           <HoverCardContent>Logout, I&apos;ll miss you (FastAPI)</HoverCardContent>
         </HoverCard>
-      }
+      )}
     </div>
   );
 }

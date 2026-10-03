@@ -16,7 +16,6 @@ import { useEffect, useRef } from "react";
 export function RealtimeShopperChatPanel() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-
   const {
     status,
     mode,
@@ -26,7 +25,8 @@ export function RealtimeShopperChatPanel() {
     pendingUserTranscript,
     pendingAssistantTranscript,
   } = useRealtimeChat({
-    getToken: () => fetch("/api/realtime-chat", { method: "POST" }).then((response) => response.json()),
+    getToken: () =>
+      fetch("/api/realtime-chat", { method: "POST" }).then((response) => response.json()),
     adapter: openaiRealtime(),
     tools: [
       getUserOrderHistoryTool,
@@ -35,7 +35,7 @@ export function RealtimeShopperChatPanel() {
       addToCartTool,
       checkoutCartTool,
       getSingleProductDetailTool,
-      removeItemCartTool
+      removeItemCartTool,
     ],
     instructions:
       "You are a friendly shopping assistant for this ecommerce store. Help customers discover products, manage their cart, checkout, and review order history. " +
@@ -64,12 +64,13 @@ export function RealtimeShopperChatPanel() {
           <h2 className="mt-1 text-lg font-semibold text-slate-900">Realtime conversation</h2>
         </div>
         <span
-          className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${isConnecting
-            ? "bg-amber-100 text-amber-700"
-            : isActive
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-slate-100 text-slate-500"
-            }`}
+          className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
+            isConnecting
+              ? "bg-amber-100 text-amber-700"
+              : isActive
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-slate-100 text-slate-500"
+          }`}
         >
           {statusLabel}
         </span>
@@ -91,10 +92,11 @@ export function RealtimeShopperChatPanel() {
           type="button"
           onClick={isActive ? disconnect : connect}
           disabled={isConnecting}
-          className={`shrink-0 rounded-full border px-4 py-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${isActive
-            ? "border-red-200 text-red-700 hover:bg-red-50"
-            : "border-slate-300 text-slate-800 hover:bg-slate-100"
-            }`}
+          className={`shrink-0 rounded-full border px-4 py-2 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+            isActive
+              ? "border-red-200 text-red-700 hover:bg-red-50"
+              : "border-slate-300 text-slate-800 hover:bg-slate-100"
+          }`}
         >
           {isConnecting ? "Connecting..." : isActive ? "End conversation" : "Start voice chat"}
         </button>
@@ -108,7 +110,11 @@ export function RealtimeShopperChatPanel() {
             {messages.map((message) => {
               const text = message.parts
                 .map((part) =>
-                  part.type === "text" ? part.content : part.type === "audio" ? part.transcript : "",
+                  part.type === "text"
+                    ? part.content
+                    : part.type === "audio"
+                      ? part.transcript
+                      : "",
                 )
                 .filter(Boolean)
                 .join(" ");
@@ -118,10 +124,11 @@ export function RealtimeShopperChatPanel() {
               return (
                 <div
                   key={message.id}
-                  className={`max-w-[88%] rounded-2xl border px-3 py-2 text-sm ${isUser
-                    ? "ml-auto border-blue-100 bg-blue-50 text-blue-900"
-                    : "border-slate-200 bg-white text-slate-800"
-                    }`}
+                  className={`max-w-[88%] rounded-2xl border px-3 py-2 text-sm ${
+                    isUser
+                      ? "ml-auto border-blue-100 bg-blue-50 text-blue-900"
+                      : "border-slate-200 bg-white text-slate-800"
+                  }`}
                 >
                   <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider opacity-60">
                     {isUser ? "You" : "Assistant"}

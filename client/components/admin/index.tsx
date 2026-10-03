@@ -112,7 +112,6 @@ export default function AdminPage() {
         </section>
 
         <div className="mt-10 grid grid-cols-1 xl:grid-cols-[340px_1fr_360px] gap-8">
-
           {/* First Column Send a Message */}
           <div className="rounded-3xl border border-slate-200/70 bg-white/70 backdrop-blur-xl shadow-[0_20px_50px_-30px_rgba(15,23,42,0.4)] p-6">
             <div className="flex items-center justify-between">
@@ -171,7 +170,7 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
-          
+
           {/* Second Column / Messages */}
           <div
             className="rounded-3xl border border-slate-200/70 bg-white/70 backdrop-blur-xl shadow-[0_20px_50px_-30px_rgba(15,23,42,0.4)] p-6 flex flex-col"
@@ -295,7 +294,7 @@ export default function AdminPage() {
               ))}
             </div>
           </div>
-          
+
           {/* Real time Chat */}
           <RealtimeChatPanel />
         </div>

@@ -9,7 +9,7 @@ type UseReportJobsParams = {
 
 export function useReportJobs({ limit, offset }: UseReportJobsParams) {
   return useQuery<ReportJobListResponse>({
-    queryKey: ["report-jobs",limit, offset],
+    queryKey: ["report-jobs", limit, offset],
     enabled: 3 > 0,
     queryFn: async () => {
       const { data, error } = await api.GET("/api/v1/users/{user_id}/report-jobs", {

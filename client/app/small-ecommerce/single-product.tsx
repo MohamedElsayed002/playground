@@ -69,17 +69,17 @@ export const SingleProduct = ({ item }: { item: Product }) => {
     now === null
       ? undefined
       : item.flash_sales?.find((sale) => {
-        const startsAt = Date.parse(sale.starts_at);
-        const endsAt = Date.parse(sale.ends_at);
+          const startsAt = Date.parse(sale.starts_at);
+          const endsAt = Date.parse(sale.ends_at);
 
-        return (
-          Number.isFinite(startsAt) &&
-          Number.isFinite(endsAt) &&
-          startsAt <= now &&
-          now <= endsAt &&
-          sale.remaining_quantity > 0
-        );
-      });
+          return (
+            Number.isFinite(startsAt) &&
+            Number.isFinite(endsAt) &&
+            startsAt <= now &&
+            now <= endsAt &&
+            sale.remaining_quantity > 0
+          );
+        });
 
   const regularPrice = Number(item.price);
   const salePrice = activeFlashSale
@@ -137,7 +137,9 @@ export const SingleProduct = ({ item }: { item: Product }) => {
 
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className={`text-2xl font-bold ${activeFlashSale ? "text-rose-600" : "text-slate-900"}`}>
+              <p
+                className={`text-2xl font-bold ${activeFlashSale ? "text-rose-600" : "text-slate-900"}`}
+              >
                 ${salePrice.toFixed(2)}
               </p>
               {activeFlashSale ? (

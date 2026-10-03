@@ -62,13 +62,7 @@ function StatusStepCard({
   );
 }
 
-export function StatusPanel({
-  job,
-  isFetching,
-}: {
-  job?: JobStatusResponse;
-  isFetching: boolean;
-}) {
+export function StatusPanel({ job, isFetching }: { job?: JobStatusResponse; isFetching: boolean }) {
   const progress = job?.progress ?? 0;
   const complete = isJobComplete(job);
 
@@ -103,19 +97,24 @@ export function StatusPanel({
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge status={job.status ?? "processing"} />
               <StatusBadge status={job.ingestion_status ?? "pending"} />
-              {isFetching ? <span className="text-xs text-muted-foreground">Refreshing...</span> : null}
+              {isFetching ? (
+                <span className="text-xs text-muted-foreground">Refreshing...</span>
+              ) : null}
             </div>
             <CardTitle className="text-2xl md:text-3xl">
               {complete ? "Your report is ready" : "Your report is being prepared"}
             </CardTitle>
             <CardDescription className="max-w-2xl text-base">
-              We are processing <span className="font-medium text-foreground">{job.original_filename}</span> and turning
-              it into a readable report with clean analytics.
+              We are processing{" "}
+              <span className="font-medium text-foreground">{job.original_filename}</span> and
+              turning it into a readable report with clean analytics.
             </CardDescription>
           </div>
           <div className="rounded-2xl border border-amber-200 bg-white/80 px-4 py-3 text-sm shadow-sm">
             <p className="text-muted-foreground">Current step</p>
-            <p className="font-semibold capitalize">{job.current_step?.replaceAll("_", " ") ?? "processing"}</p>
+            <p className="font-semibold capitalize">
+              {job.current_step?.replaceAll("_", " ") ?? "processing"}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">{formatPercent(progress)} complete</p>
           </div>
         </div>

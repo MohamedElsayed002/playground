@@ -26,7 +26,12 @@ export const CSVStatus = ({ statusId }: { statusId: string }) => {
         return 1000;
       }
 
-      if (job.status === "completed" || job.status === "failed" || job.progress >= 100 || job.current_step === "completed") {
+      if (
+        job.status === "completed" ||
+        job.status === "failed" ||
+        job.progress >= 100 ||
+        job.current_step === "completed"
+      ) {
         return false;
       }
 
