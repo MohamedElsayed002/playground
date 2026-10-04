@@ -19,6 +19,8 @@ from app.repositories.order import OrderRepository
 from app.repositories.product import ProductRepository
 from app.schemas.order import OrderCheckoutCreate, OrderResponse
 from app.services.audit_service import create_audit_log
+from app.services.inngest import send_checkout_background_jobs
+
 
 from decimal import Decimal
 
@@ -130,7 +132,6 @@ class CheckoutService:
             existing = await self.idempotency_repo.get_by_key(idempotency_key, user_id=user_id)
 
             if existing is not None and existing.is_complete():
-                logger.info("Already exist and ordered successfully")
                 await audit_checkout_step(
                     event="CHECKOUT_2_IDEMPOTENT_HIT",
                     status="SUCCESS",
@@ -186,109 +187,17 @@ class CheckoutService:
             )
             raise
 
-        # Step 10 Outside transaction: process payment with external provider
-        payment_ok = await self._process_payment()
-        await audit_checkout_step(
-            event="CHECKOUT_2_PAYMENT_RESULT",
-            status="SUCCESS" if payment_ok else "FAILED",
-            order_id=response.id,
-            payment_ok=payment_ok,
-            amount=str(response.total),
-        )
-
-        # Step 11~12 Finalize order status in a second short transaction
-        order = await self.order_repo.get_with_items(response.id)
-        if order is None:
-            raise NotFoundException("Order not found after checkout")
-
-        try:
-            if payment_ok:
-                order.payment_status = PaymentStatus.PAID
-                order.status = OrderStatus.CONFIRMED
-            else:
-                # Compensation on payment failure:
-                # Restore product stock and any claimed flash-sale quantity.
-                if order.status != OrderStatus.CANCELLED:
-                    for item in order.items:
-                        if item.product_id is not None:
-                            product_result = await self.session.execute(
-                                select(Product)
-                                .where(Product.id == item.product_id)
-                                .with_for_update()
-                            )
-                            product = product_result.scalar_one_or_none()
-                            if product is not None:
-                                product.stock_quantity += item.quantity
-
-                        if item.flash_sale_id is not None and item.flash_sale_quantity > 0:
-                            sale_result = await self.session.execute(
-                                select(FlashSale)
-                                .where(FlashSale.id == item.flash_sale_id)
-                                .with_for_update()
-                            )
-                            flash_sale = sale_result.scalar_one_or_none()
-                            if flash_sale is not None:
-                                flash_sale.remaining_quantity = min(
-                                    flash_sale.sale_quantity,
-                                    flash_sale.remaining_quantity + item.flash_sale_quantity,
-                                )
-
-                    purchase_result = await self.session.execute(
-                        select(FlashSalePurchase)
-                        .where(FlashSalePurchase.order_id == order.id)
-                        .with_for_update()
-                    )
-                    for purchase in purchase_result.scalars():
-                        purchase.status = PurchaseStatus.FAILED
-
-                    await audit_checkout_step(
-                        event="CHECKOUT_2_COMPENSATION_APPLIED",
-                        status="SUCCESS",
-                        order_id=order.id,
-                        compensation="stock_restored",
-                    )
-
-                order.payment_status = PaymentStatus.FAILED
-                order.status = OrderStatus.CANCELLED
-
-            if idem_record is not None:
-                await self.idempotency_repo.complete(
-                    idem_record,
-                    response_body=OrderResponse.model_validate(order).model_dump_json(),
-                    status_code=201 if payment_ok else 402,
-                )
-
-            await self.session.commit()
-            await audit_checkout_step(
-                event="CHECKOUT_2_FINALIZED",
-                status="SUCCESS",
-                order_id=order.id,
-                order_status=order.status.value,
-                payment_status=order.payment_status.value,
-            )
-        except Exception:
-            await self.session.rollback()
-            await audit_checkout_step(
-                event="CHECKOUT_2_FINALIZATION_FAILED",
-                status="FAILED",
-                order_id=getattr(order, "id", None),
-                checkout_error="Final order status update failed",
-            )
-            raise
-
-        # Step 12 Return final response
-        final_order = await self.order_repo.get_with_items(order.id)
+        final_order = await self.order_repo.get_with_items(response.id)
         if final_order is None:
             await audit_checkout_step(
                 event="CHECKOUT_2_FINAL_ORDER_NOT_FOUND",
                 status="FAILED",
-                order_id=order.id,
+                order_id=response.id,
             )
             raise NotFoundException("Order not found")
 
         # Step 13 Trigger background jobs (email, invoice, analytics, alerts).
         try:
-            from app.services.inngest import send_checkout_background_jobs
 
             await send_checkout_background_jobs(
                 order_id=final_order.id,
@@ -303,12 +212,25 @@ class CheckoutService:
                 order_id=final_order.id,
             )
         except Exception:
-            # Non-critical path: checkout already succeeded, do not fail response.
             await audit_checkout_step(
                 event="CHECKOUT_2_BACKGROUND_JOBS_DISPATCH_FAILED",
                 status="FAILED",
                 order_id=final_order.id,
             )
+
+        # Cache the pending response so an idempotent replay does not create a
+        # second order while Stripe is still processing payment setup.
+        if idem_record is not None:
+            try:
+                await self.idempotency_repo.complete(
+                    idem_record,
+                    response_body=OrderResponse.model_validate(final_order).model_dump_json(),
+                    status_code=201,
+                )
+                await self.session.commit()
+            except Exception:
+                await self.session.rollback()
+                raise
 
         return OrderResponse.model_validate(final_order)
     
@@ -504,7 +426,3 @@ class CheckoutService:
             and starts_at <= now <= ends_at
             and flash_sale.remaining_quantity > 0
         )
-
-    # I added Stripe in redeem-coupon 
-    async def _process_payment(self) -> bool:
-        return True

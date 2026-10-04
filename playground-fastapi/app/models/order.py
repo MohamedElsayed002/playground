@@ -38,6 +38,8 @@ class Order(Base):
     payment_status: Mapped[PaymentStatus] = mapped_column(
         SAEnum(PaymentStatus), default=PaymentStatus.PENDING, nullable=False
     )
+    payment_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    stripe_secret_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     subtotal: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     shipping_cost: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0"))

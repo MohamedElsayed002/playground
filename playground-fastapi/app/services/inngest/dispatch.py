@@ -37,3 +37,16 @@ async def send_flash_sale_payment_job(
             },
         )
     )
+
+
+async def send_order_payment_succeeded_job(
+    order_id: int,
+    stripe_event_id: str,
+) -> None:
+    await inngest_client.send(
+        inngest.Event(
+            id=f"order-payment-succeeded-{order_id}",
+            name="order/payment.succeeded",
+            data={"order_id": order_id, "stripe_event_id": stripe_event_id},
+        )
+    )

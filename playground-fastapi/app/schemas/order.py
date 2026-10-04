@@ -72,6 +72,14 @@ class OrderStatusUpdate(BaseModel):
     payment_status: PaymentStatus | None = None
 
 
+class OrderPaymentStatusResponse(BaseModel):
+    order_id: int
+    order_status: OrderStatus
+    payment_status: PaymentStatus
+    payment_ready: bool
+    stripe_client_secret: str | None = None
+
+
 class OrderResponse(BaseModel):
     id: int
     order_number: str

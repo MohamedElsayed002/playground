@@ -12,6 +12,8 @@ from app.models.product import Product
 from app.models.user import User
 from app.core.dependencies import get_current_user
 from app.schemas.flash_sale import CreateFlashSale, FlashSalePurchaseResponse, FlashSaleResponse,FlashSaleGetStatus
+from app.services.inngest.dispatch import send_order_payment_succeeded_job
+from sqlalchemy.orm import selectinload
 
 import stripe
 import uuid
@@ -84,6 +86,104 @@ async def stripe_webhook(
                 "payment_intent.payment_failed",
                 "payment_intent.canceled",
         }:
+                order_event_type = event_type
+                order_result = await db.execute(
+                        select(Order)
+                        .options(selectinload(Order.items))
+                        .where(Order.payment_id == payment_id)
+                        .with_for_update()
+                )
+                checkout_order = order_result.scalar_one_or_none()
+
+                if checkout_order is not None:
+                        if event_type == "payment_intent.payment_failed":
+                                # Only normal order checkouts are terminal on a
+                                # failed attempt. Flash sale payments retain their
+                                # existing retry behavior below.
+                                await db.rollback()
+                                try:
+                                        canceled_intent = stripe.PaymentIntent.cancel(payment_id)
+                                except stripe.error.StripeError:
+                                        canceled_intent = stripe.PaymentIntent.retrieve(payment_id)
+                                if canceled_intent.status == "succeeded":
+                                        order_event_type = "payment_intent.succeeded"
+                                elif canceled_intent.status == "canceled":
+                                        order_event_type = "payment_intent.canceled"
+                                else:
+                                        raise HTTPException(
+                                                status_code=503,
+                                                detail="Payment cancellation is not confirmed; retry webhook processing",
+                                        )
+
+                                order_result = await db.execute(
+                                        select(Order)
+                                        .options(selectinload(Order.items))
+                                        .where(Order.payment_id == payment_id)
+                                        .with_for_update()
+                                )
+                                checkout_order = order_result.scalar_one_or_none()
+                                if checkout_order is None:
+                                        await db.rollback()
+                                        return JSONResponse({"received": True})
+
+                        if order_event_type == "payment_intent.succeeded":
+                                if checkout_order.payment_status == PaymentStatus.PENDING:
+                                        checkout_order.payment_status = PaymentStatus.PAID
+                                        checkout_order.status = OrderStatus.CONFIRMED
+                                        await db.commit()
+                                else:
+                                        await db.rollback()
+
+                                # Dispatch on every success webhook. Inngest event
+                                # ID is stable per order, so Stripe retries recover
+                                # a failed dispatch without duplicating the invoice.
+                                await send_order_payment_succeeded_job(
+                                        order_id=checkout_order.id,
+                                        stripe_event_id=str(event.id),
+                                )
+                                return JSONResponse({"received": True})
+
+                        if order_event_type == "payment_intent.canceled":
+                                if checkout_order.payment_status == PaymentStatus.PENDING:
+                                        for item in checkout_order.items:
+                                                if item.product_id is not None:
+                                                        product_result = await db.execute(
+                                                                select(Product)
+                                                                .where(Product.id == item.product_id)
+                                                                .with_for_update()
+                                                        )
+                                                        product = product_result.scalar_one_or_none()
+                                                        if product is not None:
+                                                                product.stock_quantity += item.quantity
+
+                                                if item.flash_sale_id is not None and item.flash_sale_quantity > 0:
+                                                        sale_result = await db.execute(
+                                                                select(FlashSale)
+                                                                .where(FlashSale.id == item.flash_sale_id)
+                                                                .with_for_update()
+                                                        )
+                                                        sale = sale_result.scalar_one_or_none()
+                                                        if sale is not None:
+                                                                sale.remaining_quantity = min(
+                                                                        sale.sale_quantity,
+                                                                        sale.remaining_quantity + item.flash_sale_quantity,
+                                                                )
+
+                                        purchase_result = await db.execute(
+                                                select(FlashSalePurchase)
+                                                .where(FlashSalePurchase.order_id == checkout_order.id)
+                                                .with_for_update()
+                                        )
+                                        for purchase in purchase_result.scalars():
+                                                purchase.status = PurchaseStatus.FAILED
+
+                                        checkout_order.payment_status = PaymentStatus.FAILED
+                                        checkout_order.status = OrderStatus.CANCELLED
+                                        await db.commit()
+                                else:
+                                        await db.rollback()
+                                return JSONResponse({"received": True})
+
                 result = await db.execute(
                         select(FlashSalePurchase).where(
                                 FlashSalePurchase.payment_id == payment_id
@@ -101,13 +201,12 @@ async def stripe_webhook(
                                 )
                                 order = order_result.scalar_one_or_none()
 
-                        if event_type == "payment_intent.succeeded":
+                        if order_event_type == "payment_intent.succeeded":
                                 purchase.status = PurchaseStatus.COMPLETED
                                 if order is not None:
                                         order.payment_status = PaymentStatus.PAID
                                         order.status = OrderStatus.CONFIRMED
-                        elif event_type == "payment_intent.payment_failed":
-                                # A failed attempt can be retried on this PaymentIntent.
+                        elif order_event_type == "payment_intent.payment_failed":
                                 if order is not None:
                                         order.payment_status = PaymentStatus.FAILED
                         else:

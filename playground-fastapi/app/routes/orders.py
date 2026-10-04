@@ -1,13 +1,22 @@
 from fastapi import APIRouter, Depends, Query, status, Header
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db, get_current_user, require_admin
-from app.schemas.order import OrderCreate, OrderCheckoutCreate, OrderResponse, OrderStatusUpdate
+from app.schemas.order import (
+    OrderCreate,
+    OrderCheckoutCreate,
+    OrderResponse,
+    OrderStatusUpdate,
+    OrderPaymentStatusResponse,
+)
 from app.schemas.cart import CartActionResponse, CartItemCreate, CartResponse, CartRemoveItem
 from app.schemas.common import PaginatedResponse
 from app.services import order_service
 from app.services.order_service_2 import OrderService
 from app.models.user import User
+from app.models.order import Order, PaymentStatus
+from app.exceptions.handlers import NotFoundException
 from app.services.checkout.create_checkout import CheckoutService
 import uuid
 router = APIRouter(prefix="/orders", tags=["Orders"])
@@ -109,8 +118,8 @@ async def get_my_orders(
 
 
 # Checkout Route 
-@router.post('/testing-route', response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
-async def testing_route(
+@router.post('/checkout', response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
+async def checkout(
     data: OrderCheckoutCreate,
     current_user= Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
@@ -152,6 +161,31 @@ async def get_order(
     Admins can see any order via the admin endpoint below.
     """
     return await order_service.get_order(db, order_id, user_id=current_user.id)
+
+
+@router.get("/{order_id}/payment-status", response_model=OrderPaymentStatusResponse)
+async def get_order_payment_status(
+    order_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return payment readiness and the client secret to the owning customer."""
+    result = await db.execute(
+        select(Order).where(Order.id == order_id, Order.user_id == current_user.id)
+    )
+    order = result.scalar_one_or_none()
+    if order is None:
+        raise NotFoundException("Order", order_id)
+
+    is_pending = order.payment_status == PaymentStatus.PENDING
+    client_secret = order.stripe_secret_key if is_pending else None
+    return OrderPaymentStatusResponse(
+        order_id=order.id,
+        order_status=order.status,
+        payment_status=order.payment_status,
+        payment_ready=bool(client_secret),
+        stripe_client_secret=client_secret,
+    )
 
 
 @router.post("/{order_id}/cancel", response_model=OrderResponse)
