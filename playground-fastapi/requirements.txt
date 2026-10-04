@@ -1,4 +1,5 @@
 fastapi
+httpx
 uvicorn[standard]
 sqlalchemy
 asyncpg
@@ -20,3 +21,6 @@ openai
 resend
 stripe
 workos
+pytest
+pytest-asyncio
+aiosqlite

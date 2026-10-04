@@ -87,19 +87,18 @@ async def extract_csv_pipeline(
         file_bytes = await _read_upload_chunks(file, max_bytes)
         validate_csv_bytes(file_bytes)
 
+        # Claim the idempotency key only after validating the complete upload.
+        # Invalid files must not leave a key stuck in the processing state.
         if existing_key is None:
                 expires_at = datetime.now(timezone.utc) + timedelta(
                         hours=settings.IDEMPOTENCY_KEY_TTL_HOURS
                 )
-
-                new_key = IdempotencyKey(
+                db.add(IdempotencyKey(
                         key=idempotency_key,
                         user_id=1,
                         request_path=request_path,
                         expires_at=expires_at,
-                )
-
-                db.add(new_key)
+                ))
                 await db.commit()
 
         safe_filename = _safe_filename(file.filename or "document.csv")

@@ -32,7 +32,7 @@ export function ExtractPdfPipeline() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const { mutateAsync } = usePDFUpload();
+  const { mutateAsync, isPending } = usePDFUpload();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -175,7 +175,7 @@ export function ExtractPdfPipeline() {
                 {/* <p className="text-sm font-medium text-foreground">Ready when you are</p> */}
                 {/* <p className="text-sm text-muted-foreground">The upload UI is prepared for your backend integration.</p> */}
               </div>
-              <Button type="submit" className="bg-orange-600 text-white hover:bg-orange-700">
+              <Button disabled={isPending} type="submit" className="bg-orange-600 text-white hover:bg-orange-700">
                 Extract PDF
               </Button>
             </div>

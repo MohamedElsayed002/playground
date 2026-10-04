@@ -22,8 +22,6 @@ from sqlalchemy.schema import CreateColumn
 
 from app.core.config import settings
 
-from opentelemetry import trace
-# from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 
 engine = create_async_engine(
     settings.DATABASE_URL,
@@ -33,10 +31,6 @@ engine = create_async_engine(
     pool_pre_ping=True
 )
 
-# SQLAlchemyInstrumentor().instrument(
-#     engine=engine.sync_engine,
-#     tracer_provider=trace.get_tracer_provider(),
-# )
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,

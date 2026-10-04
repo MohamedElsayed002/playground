@@ -20,9 +20,6 @@ services:
       - "8001:8001"
     env_file:
       - ./playground-fastapi/.env
-    depends_on:
-      otel-collector:
-        condition: service_started
     develop:
       watch:
         - action: rebuild
