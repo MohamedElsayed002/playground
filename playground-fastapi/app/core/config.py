@@ -68,6 +68,9 @@ class Settings(BaseSettings):
     STRIPE_WEBHOOK_SECRET: str 
 
 
+    DISCORD_ORDER_WEBHOOK_URL: str 
+
+
 
     # Pydantic-settings config: reads from .env file
     model_config = SettingsConfigDict(env_file=".env",case_sensitive=True)

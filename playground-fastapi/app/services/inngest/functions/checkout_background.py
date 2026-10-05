@@ -5,13 +5,14 @@ import stripe
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
+import httpx
+
 from app.core.config import settings
 from app.db.session import AsyncSessionLocal
 from app.models.order import Order, OrderStatus, PaymentStatus
 from app.models.user import User
 from app.services.audit_service import create_audit_log
 from app.services.inngest.client import inngest_client, logger
-
 
 @inngest_client.create_function(
     fn_id="checkout-create-payment-intent",
@@ -152,7 +153,8 @@ async def send_paid_order_invoice(ctx: inngest.Context):
             f"<p>Subtotal: ${invoice['subtotal']}</p><p>Tax: ${invoice['tax']}</p>"
             f"<p>Shipping: ${invoice['shipping_cost']}</p><p>Total: ${invoice['total']}</p>"
         )
-        sender = "billing@yourdomain.com" if settings.APP_ENV == "production" else "onboarding@resend.dev"
+        sender = "mohammadelsayed002@gmail.com"
+
         try:
             response = resend.Emails.send({
                 "from": sender,
@@ -168,6 +170,45 @@ async def send_paid_order_invoice(ctx: inngest.Context):
             raise
 
     email_result = await ctx.step.run("checkout-send-paid-invoice-email", send_invoice_email)
+
+    async def send_order_to_discord():
+
+        items = "\n".join(
+            f"- {item['name']} x {item['qty']} - ${item['line_total']}"
+            for item in invoice["items"]
+        )
+        embed = {
+            "title": f"Paid order {invoice['order_number']}",
+            "description": items or "No line items",
+            "color": 0x2ECC71,
+            "fields": [
+                {"name": "Customer", "value": invoice["customer_name"], "inline": True},
+                {"name": "Email", "value": invoice["to_email"], "inline": True},
+                {"name": "Subtotal", "value": f"${invoice['subtotal']}", "inline": True},
+                {"name": "Tax", "value": f"${invoice['tax']}", "inline": True},
+                {"name": "Shipping", "value": f"${invoice['shipping_cost']}", "inline": True},
+                {"name": "Total", "value": f"${invoice['total']}", "inline": True},
+                {
+                    "name": "Ship to",
+                    "value": ", ".join(
+                        part for part in (invoice["shipping_city"], invoice["shipping_country"])
+                        if part
+                    ) or "Not provided",
+                    "inline": True,
+                },
+            ],
+        }
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                settings.DISCORD_ORDER_WEBHOOK_URL,
+                json={"embeds": [embed]},
+            )
+            response.raise_for_status()
+        return {"discord_sent": True}
+
+    discord_result = await ctx.step.run(
+        "checkout-send-paid-order-to-discord", send_order_to_discord
+    )
 
     async def audit_email_result():
         await create_audit_log(
@@ -185,4 +226,9 @@ async def send_paid_order_invoice(ctx: inngest.Context):
         return {"audited": True}
 
     await ctx.step.run("checkout-audit-paid-invoice-email", audit_email_result)
-    return {"status": "completed", "order_id": order_id, "email_result": email_result}
+    return {
+        "status": "completed",
+        "order_id": order_id,
+        "email_result": email_result,
+        "discord_result": discord_result,
+    }
