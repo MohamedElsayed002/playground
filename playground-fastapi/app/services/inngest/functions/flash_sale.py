@@ -1,5 +1,6 @@
 import asyncio
 from decimal import Decimal
+from datetime import datetime, timezone
 
 import inngest
 import stripe
@@ -103,6 +104,7 @@ async def flash_sale_payment(ctx: inngest.Context):
 				"user_id": purchase.user_id,
 				"price_paid": str(purchase.price_paid),
 				"status": purchase.status.value,
+				"order_id": purchase.order_id,
 			}
 
 	purchase_data = await ctx.step.run("get-flash-sale-purchase", get_flash_sale_purchase)
@@ -111,6 +113,22 @@ async def flash_sale_payment(ctx: inngest.Context):
 	async def create_payment_intent():
 		if not settings.STRIPE_SECRET_KEY:
 			raise ValueError("STRIPE_SECRET_KEY is not configured")
+		if purchase_data["status"] != PurchaseStatus.PROCESSING.value:
+			return {"status": "purchase_not_processing"}
+
+		if purchase_data["order_id"] is not None:
+			async with AsyncSessionLocal() as db:
+				order_result = await db.execute(
+					select(Order).where(Order.id == purchase_data["order_id"])
+				)
+				order = order_result.scalar_one_or_none()
+				if (
+					order is None
+					or order.status != OrderStatus.PENDING
+					or order.payment_status != PaymentStatus.PENDING
+					or order.expires_at <= datetime.now(timezone.utc)
+				):
+					return {"status": "order_expired"}
 
 		# stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -134,13 +152,37 @@ async def flash_sale_payment(ctx: inngest.Context):
 			result = await db.execute(
 				select(FlashSalePurchase).where(
 					FlashSalePurchase.id == flash_sale_purchase_id
-				)
+				).with_for_update()
 			)
 			purchase = result.scalar_one_or_none()
 			if purchase is None:
 				raise ValueError(
 					f"Flash sale purchase {flash_sale_purchase_id} not found"
 				)
+
+			order = None
+			if purchase.order_id is not None:
+				order_result = await db.execute(
+					select(Order)
+					.where(Order.id == purchase.order_id)
+					.with_for_update()
+				)
+				order = order_result.scalar_one_or_none()
+
+			if (
+				purchase.status != PurchaseStatus.PROCESSING
+				or (
+					order is not None
+					and (
+						order.status != OrderStatus.PENDING
+						or order.payment_status != PaymentStatus.PENDING
+						or order.expires_at <= datetime.now(timezone.utc)
+					)
+				)
+			):
+				await db.rollback()
+				await asyncio.to_thread(stripe.PaymentIntent.cancel, intent.id)
+				return {"status": "order_expired"}
 
 			purchase.payment_id = intent.id
 			purchase.stripe_client_secret = intent.client_secret
@@ -149,6 +191,12 @@ async def flash_sale_payment(ctx: inngest.Context):
 		return {"clientSecret": intent.client_secret, "payment_id": intent.id}
 
 	stripe_payment = await ctx.step.run("create-stripe-payment-intent", create_payment_intent)
+	if "clientSecret" not in stripe_payment:
+		return {
+			"flash_sale_purchase_id": flash_sale_purchase_id,
+			**purchase_data,
+			**stripe_payment,
+		}
 
 	return {
 		"flash_sale_purchase_id": flash_sale_purchase_id,

@@ -1,7 +1,7 @@
 import math 
 import uuid 
 from decimal import Decimal 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -221,6 +221,7 @@ async def create_order(db: AsyncSession, user_id: int, data: OrderCheckoutCreate
         shipping_country=data.shipping_country,
         shipping_postal_code=data.shipping_postal_code,
         notes=data.notes,
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=30),
     )
     db.add(order)
     await db.flush()

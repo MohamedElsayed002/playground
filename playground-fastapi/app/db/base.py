@@ -1,15 +1,3 @@
-"""
-app/db/base.py 
-
-The SQLAlchemy declarative base that all models inherit from.
-
-NestJS/TypeORM equivalent -> Entity base class @Entity() decorator 
-FastAPI/SQL approach -> All models extend DeclartiveBase 
-
-The `Base` class is also imported by alembic/env.py so Alembic knows
-which models to include in auto-generated migrations
-"""
-
 from datetime import datetime, timezone 
 from sqlalchemy import DateTime, func 
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column 

@@ -1,6 +1,6 @@
 import json 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -338,6 +338,7 @@ class CheckoutService:
             shipping_country=request.shipping_country,
             shipping_postal_code=request.shipping_postal_code,
             notes=request.notes,
+            expires_at=datetime.now(timezone.utc) + timedelta(minutes=30),
         )
         self.order_repo.add(order)
         await self.session.flush()

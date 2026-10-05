@@ -1,21 +1,23 @@
 from decimal import Decimal
 import enum
 
-from sqlalchemy import String, Numeric, Integer, ForeignKey, Text, Enum as SAEnum
+from sqlalchemy import String, Numeric, Integer, ForeignKey, Text, Enum as SAEnum, DateTime, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from datetime import datetime
 
-
+# I don't use this all status though 
 class OrderStatus(str, enum.Enum):
     """Order lifecycle states."""
-    PENDING = "pending"           # Just placed, payment not confirmed
-    CONFIRMED = "confirmed"       # Payment confirmed
-    PROCESSING = "processing"     # Being packed
-    SHIPPED = "shipped"           # Out for delivery
-    DELIVERED = "delivered"       # Successfully delivered
-    CANCELLED = "cancelled"       # Cancelled by user or admin
+    PENDING = "pending"          
+    CONFIRMED = "confirmed"     
+    PROCESSING = "processing"    
+    SHIPPED = "shipped"          
+    DELIVERED = "delivered"      
+    CANCELLED = "cancelled"     
     REFUNDED = "refunded"         # Money returned
+    EXPIRED = "expired"
 
 
 class PaymentStatus(str, enum.Enum):
@@ -23,10 +25,14 @@ class PaymentStatus(str, enum.Enum):
     PAID = "paid"
     FAILED = "failed"
     REFUNDED = "refunded"
+    EXPIRED = "expired"
 
 
 class Order(Base):
     __tablename__ = "orders"
+    __table_args__ = (
+        Index("ix_orders_pending_expiration", "status", "payment_status", "expires_at"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
@@ -54,12 +60,15 @@ class Order(Base):
 
     notes: Mapped[str | None] = mapped_column(Text)  # Customer notes
 
-    # ── Foreign Keys
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False
+    )
+
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
     )
 
-    # ── Relationships
     user: Mapped["User"] = relationship(  # type: ignore # noqa: F821
         "User", back_populates="orders", lazy="selectin"
     )
@@ -73,24 +82,16 @@ class Order(Base):
 
 
 class OrderItem(Base):
-    """
-    A single line item in an order.
-    We SNAPSHOT the price at purchase time — if the product price changes
-    later, the order history remains accurate.
-    """
     __tablename__ = "order_items"
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    # Price snapshot — critical to store what the customer actually paid
     unit_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
 
-    # Product name snapshot too (product might be deleted later)
     product_name: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    # ── Foreign Keys ──────────────────────────────────────────────────────────
     order_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("orders.id", ondelete="CASCADE"), nullable=False
     )
@@ -106,8 +107,7 @@ class OrderItem(Base):
         Integer, nullable=False, default=0
     )
 
-    # ── Relationships ─────────────────────────────────────────────────────────
     order: Mapped["Order"] = relationship("Order", back_populates="items")
-    product: Mapped["Product | None"] = relationship(  # type: ignore # noqa: F821
+    product: Mapped["Product | None"] = relationship( 
         "Product", back_populates="order_items", lazy="selectin"
     )

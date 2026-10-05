@@ -317,6 +317,7 @@ class FlashSaleService:
                 tax=0,
                 shipping_cost=0,
                 total=price_paid,
+                expires_at=datetime.now(timezone.utc) + timedelta(minutes=30),
             )
             self.session.add(order)
             await self.session.flush()
