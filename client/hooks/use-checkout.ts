@@ -1,6 +1,9 @@
-import { checkout } from "@/actions/checkout";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+"use client"
+
+import { checkCheckoutStatus, checkout } from "@/actions/checkout";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { unwrapActionResult } from "@/lib/action-result";
+import { useState } from "react";
 
 type CheckoutVariables = {
   notes: string;
@@ -13,6 +16,7 @@ type CheckoutVariables = {
 
 export const useCheckout = () => {
   const queryClient = useQueryClient();
+  const [orderId,setOrderId] = useState<number | null>(null)
 
   const {
     mutate: checkoutMutate,
@@ -37,16 +41,36 @@ export const useCheckout = () => {
         shipping_postal_code,
       ));
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      setOrderId(data.id)
       queryClient.invalidateQueries({
         queryKey: ["user-orders"],
       });
     },
   });
 
+  const paymentQuery = useQuery({
+    queryKey: ["checkout-payment-status",orderId],
+    queryFn: async () => {
+      if(!orderId) return
+      const response = await checkCheckoutStatus(`${orderId}`)
+      return response
+    },
+    enabled: orderId !== null,
+    refetchInterval: (query) => {
+      const order_keys = query.state.data
+
+      return order_keys?.stripe_client_secret ? false : 5000
+    },
+    refetchIntervalInBackground: true,
+    retry: true
+  })
+
   return {
     checkoutMutate,
     isPending,
     error,
+    payment: paymentQuery.data,
+    paymentLoading: paymentQuery.isLoading
   };
 };

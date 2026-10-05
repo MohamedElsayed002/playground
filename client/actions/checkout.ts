@@ -14,7 +14,7 @@ const checkoutRequest = async (
   shipping_country: string,
   shipping_postal_code: string,
 ) => {
-  const response = await api.POST("/api/v1/orders/testing-route", {
+  const response = await api.POST("/api/v1/orders/checkout", {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
@@ -72,3 +72,22 @@ export const checkout = async (
     return actionFailure("Checkout failed. Please try again.");
   }
 };
+
+
+
+export const checkCheckoutStatus = async (order_id: string) => {
+  const accessToken = (await cookies()).get("fastapi_access")?.value;
+
+  const response = await api.GET("/api/v1/orders/{order_id}/payment-status", {
+    headers : {
+            Authorization: `Bearer ${accessToken}`,
+    },
+    params: {
+      path: {
+          order_id: Number(order_id)
+      }
+    }
+  })
+
+  return response.data
+}

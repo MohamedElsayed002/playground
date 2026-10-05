@@ -281,7 +281,7 @@ export const checkoutCart = checkoutSessionDef.server(
     if (!accessToken) throw new Error("Please log in before checking out.");
     await requestApiData(
       () =>
-        api.POST("/api/v1/orders/testing-route", {
+        api.POST("/api/v1/orders/checkout", {
           headers: {
             Authorization: `Bearer ${accessToken}`,
           },

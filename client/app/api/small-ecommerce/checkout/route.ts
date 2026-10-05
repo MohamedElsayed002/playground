@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
   try {
     const checkoutDetails = (await request.json()) as CheckoutDetails;
-    const response = await api.POST("/api/v1/orders/testing-route", {
+    const response = await api.POST("/api/v1/orders/checkout", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

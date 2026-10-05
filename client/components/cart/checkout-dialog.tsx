@@ -21,6 +21,8 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/c
 import { useCheckout } from "@/hooks/use-checkout";
 import { sileo } from "sileo";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { FlashSalePaymentDialog } from "@/components/single-product/flash-sale-payment-dialog";
 
 const formSchema = z.object({
   notes: z.string(),
@@ -35,11 +37,13 @@ export const CheckoutDialog = () => {
   const [open, setOpen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
 
-  const { checkoutMutate, isPending, error } = useCheckout();
+  const { checkoutMutate, isPending, error, payment, paymentLoading } = useCheckout();
 
   const router = useRouter();
-
+  const queryClient = useQueryClient();
+  const clientSecret = payment?.stripe_client_secret ?? null;
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -75,16 +79,6 @@ export const CheckoutDialog = () => {
         shipping_postal_code: data.shipping_postal_code,
       },
       {
-        onSuccess: () => {
-          setShowConfetti(true);
-          sileo.success({ title: "Checkout Successfully" });
-          window.setTimeout(() => {
-            setShowConfetti(false);
-            setOpen(false);
-            form.reset();
-            router.push("/small-ecommerce");
-          }, 4000);
-        },
         onError: (error) => {
           const message = error instanceof Error ? error.message : "Failed Checkout";
           sileo.error({ title: message });
@@ -93,96 +87,126 @@ export const CheckoutDialog = () => {
     );
   };
 
+  useEffect(() => {
+    if (clientSecret) {
+      const timer = window.setTimeout(() => {
+        setOpen(false);
+        setIsPaymentDialogOpen(true);
+      }, 0);
+
+      return () => window.clearTimeout(timer);
+    }
+  }, [clientSecret]);
+
+  function handlePaymentSuccess() {
+    setIsPaymentDialogOpen(false);
+    setShowConfetti(true);
+    setOpen(false);
+    form.reset();
+    queryClient.invalidateQueries({ queryKey: ["user-cart"] });
+    window.setTimeout(() => {
+      setShowConfetti(false);
+      router.push("/small-ecommerce");
+    }, 4000);
+  }
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <Button className="bg-yellow-500" type="button" onClick={() => setOpen(true)}>
-        <ShoppingBag className="size-4" />
-        Checkout
-      </Button>
+    <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <Button className="bg-yellow-500" type="button" onClick={() => setOpen(true)}>
+          <ShoppingBag className="size-4" />
+          Checkout
+        </Button>
 
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Reserve your Cart</DialogTitle>
-          <DialogDescription>Cart Description</DialogDescription>
-        </DialogHeader>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Reserve your Cart</DialogTitle>
+            <DialogDescription>Cart Description</DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="shipping_address_line1">Shipping Address Line 1</FieldLabel>
-              <Input
-                id="shipping_address_line1"
-                placeholder="123 Main St"
-                {...form.register("shipping_address_line1")}
-              />
-              <FieldError>{form.formState.errors.shipping_address_line1?.message}</FieldError>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="shipping_address_line2">Shipping Address Line 2</FieldLabel>
-              <FieldDescription>Optional apartment, suite, or unit number.</FieldDescription>
-              <Input
-                id="shipping_address_line2"
-                placeholder="Apt 4B"
-                {...form.register("shipping_address_line2")}
-              />
-              <FieldError>{form.formState.errors.shipping_address_line2?.message}</FieldError>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="shipping_city">City</FieldLabel>
-              <Input id="shipping_city" placeholder="City" {...form.register("shipping_city")} />
-              <FieldError>{form.formState.errors.shipping_city?.message}</FieldError>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="shipping_country">Country</FieldLabel>
-              <Input
-                id="shipping_country"
-                placeholder="Country"
-                {...form.register("shipping_country")}
-              />
-              <FieldError>{form.formState.errors.shipping_country?.message}</FieldError>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="shipping_postal_code">Postal Code</FieldLabel>
-              <Input
-                id="shipping_postal_code"
-                placeholder="Postal Code"
-                {...form.register("shipping_postal_code")}
-              />
-              <FieldError>{form.formState.errors.shipping_postal_code?.message}</FieldError>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="notes">Notes</FieldLabel>
-              <FieldDescription>Optional order notes or special instructions.</FieldDescription>
-              <Input id="notes" placeholder="Add any notes here" {...form.register("notes")} />
-              <FieldError>{form.formState.errors.notes?.message}</FieldError>
-            </Field>
-          </FieldGroup>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="shipping_address_line1">Shipping Address Line 1</FieldLabel>
+                <Input
+                  id="shipping_address_line1"
+                  placeholder="123 Main St"
+                  {...form.register("shipping_address_line1")}
+                />
+                <FieldError>{form.formState.errors.shipping_address_line1?.message}</FieldError>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="shipping_address_line2">Shipping Address Line 2</FieldLabel>
+                <FieldDescription>Optional apartment, suite, or unit number.</FieldDescription>
+                <Input
+                  id="shipping_address_line2"
+                  placeholder="Apt 4B"
+                  {...form.register("shipping_address_line2")}
+                />
+                <FieldError>{form.formState.errors.shipping_address_line2?.message}</FieldError>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="shipping_city">City</FieldLabel>
+                <Input id="shipping_city" placeholder="City" {...form.register("shipping_city")} />
+                <FieldError>{form.formState.errors.shipping_city?.message}</FieldError>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="shipping_country">Country</FieldLabel>
+                <Input
+                  id="shipping_country"
+                  placeholder="Country"
+                  {...form.register("shipping_country")}
+                />
+                <FieldError>{form.formState.errors.shipping_country?.message}</FieldError>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="shipping_postal_code">Postal Code</FieldLabel>
+                <Input
+                  id="shipping_postal_code"
+                  placeholder="Postal Code"
+                  {...form.register("shipping_postal_code")}
+                />
+                <FieldError>{form.formState.errors.shipping_postal_code?.message}</FieldError>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="notes">Notes</FieldLabel>
+                <FieldDescription>Optional order notes or special instructions.</FieldDescription>
+                <Input id="notes" placeholder="Add any notes here" {...form.register("notes")} />
+                <FieldError>{form.formState.errors.notes?.message}</FieldError>
+              </Field>
+            </FieldGroup>
 
-          {error ? (
-            <div className="rounded-md border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-              {error instanceof Error ? error.message : "An error occurred during checkout."}
-            </div>
-          ) : null}
+            {error ? (
+              <div className="rounded-md border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+                {error instanceof Error ? error.message : "An error occurred during checkout."}
+              </div>
+            ) : null}
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setOpen(false)}
-              disabled={isPending}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Submitting..." : "Checkout"}
-            </Button>
-          </DialogFooter>
-        </form>
-
-        {showConfetti && windowSize.width > 0 && (
-          <Confetti width={windowSize.width} height={windowSize.height} />
-        )}
-      </DialogContent>
-    </Dialog>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setOpen(false)}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isPending || paymentLoading}>
+                {(isPending || paymentLoading) ? "Submitting..." : "Checkout"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <FlashSalePaymentDialog
+        clientSecret={clientSecret}
+        isOpen={isPaymentDialogOpen}
+        onOpenChange={setIsPaymentDialogOpen}
+        onSuccess={handlePaymentSuccess}
+      />
+      {showConfetti && windowSize.width > 0 && (
+        <Confetti width={windowSize.width} height={windowSize.height} />
+      )}
+    </>
   );
 };
