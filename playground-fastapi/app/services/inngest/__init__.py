@@ -12,6 +12,8 @@ from app.services.inngest.functions.pdf_upload import process_pdf_upload
 from app.services.inngest.functions.csv_uploaded import process_csv_upload
 from app.services.inngest.functions.flash_sale import flash_sale_payment
 from app.services.inngest.functions.reconcile_orders import reconcile_expired_pending_orders
+from app.services.inngest.functions.refund import process_order_refund
+from app.services.inngest.functions.reconcile_refunds import reconcile_order_refunds
 
 inngest_functions = [
     process_pdf_upload,
@@ -20,6 +22,8 @@ inngest_functions = [
     process_csv_upload,
     flash_sale_payment,
     reconcile_expired_pending_orders,
+    process_order_refund,
+    reconcile_order_refunds,
 ]
 
 __all__ = [
@@ -28,5 +32,7 @@ __all__ = [
     "send_flash_sale_payment_job",
     "send_order_payment_succeeded_job",
     "reconcile_expired_pending_orders",
+    "process_order_refund",
+    "reconcile_order_refunds",
     "inngest_functions",
 ]

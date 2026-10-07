@@ -50,3 +50,13 @@ async def send_order_payment_succeeded_job(
             data={"order_id": order_id, "stripe_event_id": stripe_event_id},
         )
     )
+
+
+async def send_refund_job(outbox_id: str, *, event_id: str | None = None) -> None:
+    await inngest_client.send(
+        inngest.Event(
+            id=event_id or f"refund-outbox-{outbox_id}",
+            name="order/refund.requested",
+            data={"outbox_id": outbox_id},
+        )
+    )

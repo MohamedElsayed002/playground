@@ -18,6 +18,10 @@ from app.models.user import User
 from app.models.order import Order, PaymentStatus
 from app.exceptions.handlers import NotFoundException
 from app.services.checkout.create_checkout import CheckoutService
+
+
+from app.services.refund.refund_service import RefundService
+
 import uuid
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -211,3 +215,25 @@ async def update_order_status(
 ):
     """[Admin] Update an order's status (e.g., mark as shipped, delivered)."""
     return await order_service.update_order_status(db, order_id, data)
+
+
+
+
+@router.post("/{order_id}/refund")
+async def refund(
+    order_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    idempotency_key: str | None = Header(
+        None,
+        description="Unique identifier for request idempotency."
+                    "Same key = cached response, prevents duplicate processing. Optional - if not provided, UUID will be auto-generated"
+    ),
+):
+    key = idempotency_key or str(uuid.uuid4())
+    refund_service = RefundService(db)
+    return await refund_service.refund_logic(
+        key,
+        user_id=current_user.id,
+        order_id=order_id,
+    )
