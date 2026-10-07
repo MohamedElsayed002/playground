@@ -1,6 +1,7 @@
 from .user import User
 from .product import Product
 from .order import Order
+from .refund import Refund, RefundStatus
 from .cart import Cart
 from .cart_item import CartItem
 from .idempotency import IdempotencyKey

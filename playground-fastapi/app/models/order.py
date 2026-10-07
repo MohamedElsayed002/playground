@@ -76,6 +76,9 @@ class Order(Base):
         "OrderItem", back_populates="order",
         lazy="selectin", cascade="all, delete-orphan"
     )
+    refund: Mapped["Refund | None"] = relationship(
+        "Refund", back_populates="order", uselist=False, lazy="selectin"
+    )
 
     def __repr__(self) -> str:
         return f"<Order id={self.id} number={self.order_number} status={self.status}>"
