@@ -1,5 +1,5 @@
 import React from "react";
-import OrderCard from "@/components/snapshot/OrderCard";
+import OrderCard from "@/components/snapshot/order-card";
 import { Order } from "@/app/small-ecommerce/snapshot/page";
 
 export default function OrderList({ orders }: { orders: Order[] }) {

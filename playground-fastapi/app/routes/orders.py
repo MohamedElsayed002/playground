@@ -9,6 +9,8 @@ from app.schemas.order import (
     OrderResponse,
     OrderStatusUpdate,
     OrderPaymentStatusResponse,
+    RefundResponse,
+    RefundStatusResponse,
 )
 from app.schemas.cart import CartActionResponse, CartItemCreate, CartResponse, CartRemoveItem
 from app.schemas.common import PaginatedResponse
@@ -16,6 +18,7 @@ from app.services import order_service
 from app.services.order_service_2 import OrderService
 from app.models.user import User
 from app.models.order import Order, PaymentStatus
+from app.models.refund import Refund
 from app.exceptions.handlers import NotFoundException
 from app.services.checkout.create_checkout import CheckoutService
 
@@ -219,7 +222,12 @@ async def update_order_status(
 
 
 
-@router.post("/{order_id}/refund")
+@router.post(
+    "/{order_id}/refund",
+    response_model=RefundResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+    responses={200: {"model": RefundResponse}},
+)
 async def refund(
     order_id: int,
     current_user: User = Depends(get_current_user),
@@ -236,4 +244,31 @@ async def refund(
         key,
         user_id=current_user.id,
         order_id=order_id,
+    )
+
+
+@router.get("/{order_id}/refund-status", response_model=RefundStatusResponse)
+async def get_refund_status(
+    order_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return the current refund state for an order owned by the current user."""
+    order_result = await db.execute(
+        select(Order.id).where(Order.id == order_id, Order.user_id == current_user.id)
+    )
+    if order_result.scalar_one_or_none() is None:
+        raise NotFoundException("Order", order_id)
+
+    refund_result = await db.execute(
+        select(Refund).where(Refund.order_id == order_id)
+    )
+    refund = refund_result.scalar_one_or_none()
+    if refund is None:
+        raise NotFoundException("Refund", order_id)
+
+    return RefundStatusResponse(
+        order_id=order_id,
+        status=refund.status.value,
+        refund_amount=refund.amount,
     )

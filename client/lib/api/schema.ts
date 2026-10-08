@@ -626,6 +626,43 @@ export interface paths {
         patch: operations["update_order_status_api_v1_orders__order_id__status_patch"];
         trace?: never;
     };
+    "/api/v1/orders/{order_id}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refund */
+        post: operations["refund_api_v1_orders__order_id__refund_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}/refund-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Refund Status
+         * @description Return the current refund state for an order owned by the current user.
+         */
+        get: operations["get_refund_status_api_v1_orders__order_id__refund_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/files/images": {
         parameters: {
             query?: never;
@@ -1470,7 +1507,7 @@ export interface components {
          * @description Order lifecycle states.
          * @enum {string}
          */
-        OrderStatus: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
+        OrderStatus: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded" | "expired";
         /** OrderStatusUpdate */
         OrderStatusUpdate: {
             status: components["schemas"]["OrderStatus"];
@@ -1566,7 +1603,7 @@ export interface components {
          * PaymentStatus
          * @enum {string}
          */
-        PaymentStatus: "pending" | "paid" | "failed" | "refunded";
+        PaymentStatus: "pending" | "paid" | "failed" | "refunded" | "expired";
         /** ProductCreate */
         ProductCreate: {
             /** Name */
@@ -1740,6 +1777,28 @@ export interface components {
             is_active?: boolean | null;
             /** Is Featured */
             is_featured?: boolean | null;
+        };
+        /** RefundResponse */
+        RefundResponse: {
+            /** Success */
+            success: boolean;
+            /** Message */
+            message: string;
+            /** Status */
+            status: string;
+            /** Order Id */
+            order_id: number;
+            /** Idempotency Key */
+            idempotency_key: string;
+        };
+        /** RefundStatusResponse */
+        RefundStatusResponse: {
+            /** Order Id */
+            order_id: number;
+            /** Status */
+            status: string;
+            /** Refund Amount */
+            refund_amount: string;
         };
         /** ReportJobListResponse */
         ReportJobListResponse: {
@@ -3080,6 +3139,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OrderResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refund_api_v1_orders__order_id__refund_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Unique identifier for request idempotency.Same key = cached response, prevents duplicate processing. Optional - if not provided, UUID will be auto-generated */
+                "idempotency-key"?: string | null;
+            };
+            path: {
+                order_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefundResponse"];
+                };
+            };
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefundResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_refund_status_api_v1_orders__order_id__refund_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RefundStatusResponse"];
                 };
             };
             /** @description Validation Error */

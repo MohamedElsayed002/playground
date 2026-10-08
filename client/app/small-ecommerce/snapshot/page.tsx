@@ -1,6 +1,6 @@
 import { api } from "@/lib/api/client";
 import { Metadata } from "next";
-import OrderList from "@/components/snapshot/OrderList";
+import OrderList from "@/components/snapshot/order-list";
 import type { components } from "@/lib/api/schema";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -43,7 +43,11 @@ export default async function Page() {
   } catch {
     loadError = "Unable to load your order history right now. Please try again.";
   }
-  const total = orders.reduce((acc, order) => acc + parseFloat(order.total), 0);
+  console.log(orders)
+  const onlyPaidOrders = orders.filter(
+    (item) => item.status !== "pending" && item.status !== "cancelled" && item.status !== "refunded",
+  );
+  const total = onlyPaidOrders.reduce((acc, order) => acc + parseFloat(order.total), 0);
 
   return (
     <div className="min-h-screen py-8">

@@ -1,6 +1,19 @@
-import { Order } from "@/app/small-ecommerce/snapshot/page";
+import type { Order } from "@/app/small-ecommerce/snapshot/page";
+import RefundConfirmationDialog from "@/components/snapshot/refund-confirmation-dialog";
+
+const paymentStatusStyles: Record<string, string> = {
+  processing: "bg-blue-100 text-blue-800 ring-blue-200",
+  failed: "bg-red-100 text-red-800 ring-red-200",
+  refund: "bg-violet-100 text-violet-800 ring-violet-200",
+  refunded: "bg-violet-100 text-violet-800 ring-violet-200",
+  paid: "bg-emerald-100 text-emerald-800 ring-emerald-200",
+};
 
 export default function OrderCard({ order }: { order: Order }) {
+  const paymentStatus = String(order.payment_status ?? "unknown").toLowerCase();
+  const paymentStatusStyle =
+    paymentStatusStyles[paymentStatus] ?? "bg-gray-100 text-gray-700 ring-gray-200";
+
   return (
     <article className="bg-white shadow rounded-lg p-6 w-full">
       <div className="flex justify-between items-start">
@@ -13,12 +26,17 @@ export default function OrderCard({ order }: { order: Order }) {
         <div className="text-right">
           <div className="text-sm">
             <span
-              className={`px-2 py-1 rounded-full text-white ${order.payment_status === "paid" ? "bg-green-600" : "bg-yellow-500"}`}
+              className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize ring-1 ring-inset ${paymentStatusStyle}`}
             >
               {order.payment_status}
             </span>
           </div>
           <div className="mt-2 text-sm text-gray-600">Status: {order.status}</div>
+          {paymentStatus === "paid" && (
+            <div className="mt-3">
+              <RefundConfirmationDialog orderId={order.id} orderTotal={order.total} />
+            </div>
+          )}
         </div>
       </div>
 

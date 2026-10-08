@@ -1,6 +1,9 @@
 "use client";
 
-import { addCartItemAction, removeItem } from "@/actions/cart.action";
+import {
+  addCartItemAction,
+  removeItem,
+} from "@/actions/cart.action";
 import {
   checkWhetherUserRedeemed,
   getFlashSalePaymentStatus,
@@ -148,3 +151,4 @@ export const useRemoveItemCart = () => {
     isPending,
   };
 };
+

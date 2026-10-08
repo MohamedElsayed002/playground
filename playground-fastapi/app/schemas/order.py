@@ -101,3 +101,20 @@ class OrderResponse(BaseModel):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+class RefundResponse(BaseModel):
+    success: bool
+    message: str
+    status: str
+    order_id: int
+    idempotency_key: str
+
+    model_config = {"from_attributes": True}
+
+
+class RefundStatusResponse(BaseModel):
+    order_id: int
+    status: str
+    refund_amount: Decimal
+
+    model_config = {"from_attributes": True}
