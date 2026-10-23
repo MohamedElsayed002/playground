@@ -138,7 +138,7 @@ async def checkout(
 ):  
     key = idempotency_key or str(uuid.uuid4())
     checkout_service = CheckoutService(db)
-    return await checkout_service.checkout_2(key, current_user.id, data)
+    return await checkout_service.checkout(key, current_user.id, data)
 
 
 @router.get(
@@ -240,7 +240,7 @@ async def refund(
 ):
     key = idempotency_key or str(uuid.uuid4())
     refund_service = RefundService(db)
-    return await refund_service.refund_logic(
+    return await refund_service.request_refund(
         key,
         user_id=current_user.id,
         order_id=order_id,

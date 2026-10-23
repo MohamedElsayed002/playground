@@ -25,6 +25,7 @@ import app.services.flash_sale.flash_sale_service as flash_module
 def result(value=None, *, mapping=None):
     return SimpleNamespace(
         scalar_one_or_none=lambda: value,
+        scalars=lambda: SimpleNamespace(first=lambda: value),
         mappings=lambda: SimpleNamespace(one_or_none=lambda: mapping),
     )
 
@@ -39,9 +40,13 @@ def make_service(monkeypatch, execute_results=()):
         add=Mock(), add_all=Mock(), flush=AsyncMock(), refresh=AsyncMock(),
         commit=AsyncMock(), begin_nested=Mock(side_effect=nested_transaction),
     )
+    service = FlashSaleService(session)
+    service.idempotency_repo.create_lock = AsyncMock(
+        return_value=SimpleNamespace()
+    )
     monkeypatch.setattr(flash_module, "create_audit_log", AsyncMock())
     monkeypatch.setattr(flash_module, "send_flash_sale_payment_job", AsyncMock())
-    return FlashSaleService(session), session
+    return service, session
 
 
 def active_sale(**overrides):
@@ -271,7 +276,11 @@ async def test_two_users_compete_for_last_flash_sale_unit_only_one_redeems(monke
             flush=AsyncMock(), refresh=AsyncMock(), commit=AsyncMock(),
             begin_nested=Mock(side_effect=nested_transaction),
         )
-        return FlashSaleService(session)
+        service = FlashSaleService(session)
+        service.idempotency_repo.create_lock = AsyncMock(
+            return_value=SimpleNamespace()
+        )
+        return service
 
     services = [make_racing_service(), make_racing_service()]
 

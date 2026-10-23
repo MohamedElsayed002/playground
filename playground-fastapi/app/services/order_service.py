@@ -1,7 +1,5 @@
 import math 
-import uuid 
 from decimal import Decimal 
-from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
@@ -14,15 +12,7 @@ from app.models.product import Product
 from app.schemas.order import OrderCheckoutCreate, OrderStatusUpdate
 from app.models.user import User
 from app.exceptions.handlers import NotFoundException, BadRequestException
-
-def __generate_order_number() -> str:
-    """
-    Generate a human readable unique order number like ORD-20240417-A3F2.
-    """
-
-    date_str = datetime.now().strftime("%Y%m%d")
-    unique_part = uuid.uuid4().hex[:6].upper()
-    return f"ORD-{date_str}-{unique_part}"
+from app.services.order_factory import create_pending_order
 
 
 
@@ -208,20 +198,11 @@ async def create_order(db: AsyncSession, user_id: int, data: OrderCheckoutCreate
         })
 
     # Create the order record 
-    order = Order(
-        order_number=__generate_order_number(),
+    order = create_pending_order(
         user_id=user_id,
         subtotal=subtotal,
-        shipping_cost=Decimal("0"),
         tax=subtotal * Decimal("0.14"),
-        total=subtotal + (subtotal * Decimal("0.14")),
-        shipping_address_line1=data.shipping_address_line1,
-        shipping_address_line2=data.shipping_address_line2,
-        shipping_city=data.shipping_city,
-        shipping_country=data.shipping_country,
-        shipping_postal_code=data.shipping_postal_code,
-        notes=data.notes,
-        expires_at=datetime.now(timezone.utc) + timedelta(minutes=30),
+        checkout_details=data,
     )
     db.add(order)
     await db.flush()

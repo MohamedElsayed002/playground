@@ -7,6 +7,7 @@ Create Date: 2026-10-07
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 
 revision = "20261007_03"
@@ -16,25 +17,36 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.create_table(
-        "refunds",
-        sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("order_id", sa.Integer(), nullable=False),
-        sa.Column("amount", sa.Numeric(10, 2), nullable=False),
-        sa.Column(
-            "status",
-            sa.Enum("IDLE", "PROCESSING", "REFUNDED", "FAILED", "EXPIRED", name="refundstatus"),
-            nullable=False,
-        ),
-        sa.Column("stripe_refund_id", sa.String(length=255), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
-        sa.CheckConstraint("amount > 0", name="ck_refunds_amount_positive"),
-        sa.ForeignKeyConstraint(["order_id"], ["orders.id"], ondelete="RESTRICT"),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("order_id", name="uq_refunds_order_id"),
-        sa.UniqueConstraint("stripe_refund_id", name="uq_refunds_stripe_refund_id"),
+    bind = op.get_bind()
+    refund_status = postgresql.ENUM(
+        "IDLE", "PROCESSING", "REFUNDED", "FAILED", "EXPIRED",
+        name="refundstatus",
+        create_type=False,
     )
+    # The enum may already exist in databases created from SQLAlchemy metadata
+    # before this migration was recorded.
+    refund_status.create(bind, checkfirst=True)
+
+    if not sa.inspect(bind).has_table("refunds"):
+        op.create_table(
+            "refunds",
+            sa.Column("id", sa.Integer(), nullable=False),
+            sa.Column("order_id", sa.Integer(), nullable=False),
+            sa.Column("amount", sa.Numeric(10, 2), nullable=False),
+            sa.Column(
+                "status",
+                refund_status,
+                nullable=False,
+            ),
+            sa.Column("stripe_refund_id", sa.String(length=255), nullable=True),
+            sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+            sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+            sa.CheckConstraint("amount > 0", name="ck_refunds_amount_positive"),
+            sa.ForeignKeyConstraint(["order_id"], ["orders.id"], ondelete="RESTRICT"),
+            sa.PrimaryKeyConstraint("id"),
+            sa.UniqueConstraint("order_id", name="uq_refunds_order_id"),
+            sa.UniqueConstraint("stripe_refund_id", name="uq_refunds_stripe_refund_id"),
+        )
 
 
 def downgrade() -> None:

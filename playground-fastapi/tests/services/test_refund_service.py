@@ -37,7 +37,10 @@ from app.services.refund import refund_service as service_module
 
 
 def db_result(value):
-    return SimpleNamespace(scalar_one_or_none=lambda: value)
+    return SimpleNamespace(
+        scalar_one_or_none=lambda: value,
+        scalars=lambda: SimpleNamespace(first=lambda: value),
+    )
 
 
 def make_order(*, created_at=None):
@@ -98,6 +101,9 @@ async def test_ten_requests_with_different_keys_create_one_refund_and_one_outbox
     send_refund = AsyncMock(side_effect=lambda *_args: timeline.append("send"))
     monkeypatch.setattr(service_module, "send_refund_job", send_refund)
     service = service_module.RefundService(session)
+    service.idempotency_repo.create_lock = AsyncMock(
+        return_value=SimpleNamespace()
+    )
 
     responses = [
         await service.refund_logic(f"click-{index}", user_id=7, order_id=41)
@@ -127,8 +133,12 @@ async def test_existing_terminal_failure_is_returned_without_republishing(monkey
     )
     send_refund = AsyncMock()
     monkeypatch.setattr(service_module, "send_refund_job", send_refund)
+    refund_service = service_module.RefundService(session)
+    refund_service.idempotency_repo.create_lock = AsyncMock(
+        return_value=SimpleNamespace()
+    )
 
-    response = await service_module.RefundService(session).refund_logic(
+    response = await refund_service.refund_logic(
         "new-key-after-failure", user_id=7, order_id=41
     )
 
@@ -145,9 +155,13 @@ async def test_expired_refund_request_creates_no_refund_or_outbox(monkeypatch):
         order=make_order(created_at=datetime.now(timezone.utc) - timedelta(days=31))
     )
     monkeypatch.setattr(service_module, "send_refund_job", AsyncMock())
+    refund_service = service_module.RefundService(session)
+    refund_service.idempotency_repo.create_lock = AsyncMock(
+        return_value=SimpleNamespace()
+    )
 
     with pytest.raises(BadRequestException, match="30-day refund period"):
-        await service_module.RefundService(session).refund_logic(
+        await refund_service.refund_logic(
             "expired-key", user_id=7, order_id=41
         )
 
@@ -165,6 +179,9 @@ async def test_inngest_send_failure_keeps_committed_refund_for_retry(monkeypatch
     )
     monkeypatch.setattr(service_module, "send_refund_job", send_refund)
     refund_service = service_module.RefundService(session)
+    refund_service.idempotency_repo.create_lock = AsyncMock(
+        return_value=SimpleNamespace()
+    )
 
     with pytest.raises(RuntimeError, match="Inngest unavailable"):
         await refund_service.refund_logic("stable-key", user_id=7, order_id=41)

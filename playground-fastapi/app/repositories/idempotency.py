@@ -25,7 +25,12 @@ class IdempotencyRepository(BaseRepository[IdempotencyKey]):
 
         await self.session.execute(stmt)
 
-    async def get_by_key(self, key: str, user_id: int | None = None) -> IdempotencyKey | None:
+    async def get_by_key(
+        self,
+        key: str,
+        user_id: int | None = None,
+        request_path: str | None = None,
+    ) -> IdempotencyKey | None:
         now = datetime.now(timezone.utc)
         stmt = select(IdempotencyKey).where(
             IdempotencyKey.key == key,
@@ -34,6 +39,8 @@ class IdempotencyRepository(BaseRepository[IdempotencyKey]):
 
         if user_id is not None:
             stmt = stmt.where(IdempotencyKey.user_id == user_id)
+        if request_path is not None:
+            stmt = stmt.where(IdempotencyKey.request_path == request_path)
 
         result = await self.session.execute(stmt)
         return result.scalars().first()

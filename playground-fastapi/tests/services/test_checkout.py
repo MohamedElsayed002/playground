@@ -11,7 +11,10 @@ from sqlalchemy.exc import IntegrityError
 from app.exceptions.handlers import ConflictException, NotFoundException, OutOfStockError
 from app.models.cart import Cart
 from app.models.order import OrderStatus, PaymentStatus
-from app.services.checkout.create_checkout import checkout_service_2 as checkout_module
+from app.services.checkout.create_checkout import (
+    checkout_service_2 as checkout_module,
+    checkout_transaction as transaction_module,
+)
 from app.services.checkout.create_checkout.checkout_service_2 import CheckoutService
 
 from app.models.product import Product
@@ -496,7 +499,7 @@ async def test_100_concurrent_checkouts_consume_same_cart_once(monkeypatch):
                     await product_lock.acquire()
                     self.holds_product_lock = True
                 return product_result(product)
-            if entity is checkout_module.FlashSale:
+            if entity is transaction_module.FlashSale:
                 return db_result(None)
             if getattr(statement, "table", None) is not None and statement.table.name == "cart_items":
                 self.claimed_items = list(shared_cart.items)
