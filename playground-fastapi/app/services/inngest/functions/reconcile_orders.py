@@ -17,7 +17,7 @@ from app.services.inngest.dispatch import send_order_payment_succeeded_job
 
 @inngest_client.create_function(
     fn_id="reconcile-expired-pending-orders",
-    trigger=inngest.TriggerCron(cron="*/5 * * * *"),
+    trigger=inngest.TriggerCron(cron="0 6 * * *"),
     retries=3,
 )
 async def reconcile_expired_pending_orders(ctx: inngest.Context):

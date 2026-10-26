@@ -17,7 +17,7 @@ from app.services.refund.refund_state import apply_stripe_refund_state
 
 @inngest_client.create_function(
     fn_id="reconcile-order-refunds",
-    trigger=inngest.TriggerCron(cron="*/5 * * * *"),
+    trigger=inngest.TriggerCron(cron="0 6 * * *"),
     retries=3,
 )
 async def reconcile_order_refunds(ctx: inngest.Context):
