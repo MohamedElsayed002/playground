@@ -1,15 +1,3 @@
-"""
-app/core/config.py
-
-Centralized settings loaded from .env file
-
-NestJS equivalent -> ConfigModule / ConfigService 
-FastAPI approach -> pydantic-settings BaseSeetings
-    - Read from .env automatically 
-    - Validates types (DATABASE_URL must be a valid URL, etc.)
-    - Raises clear errors at startup if a required var is missing
-"""
-
 from functools import lru_cache 
 from pydantic import AnyUrl, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -46,8 +34,9 @@ class Settings(BaseSettings):
     CORS_ORIGINS: str = "http://localhost:3000"
     BUCKET_NAME: str
     AWS_REGION: str 
-    AWS_SECRET_ACCESS_KEY: str 
-    AWS_ACCESS_KEY_ID: str
+    # Optional in AWS deployments; boto3 uses the attached instance role.
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
+    AWS_ACCESS_KEY_ID: Optional[str] = None
 
     IDEMPOTENCY_KEY_TTL_HOURS: float = 0.25
 
@@ -70,6 +59,8 @@ class Settings(BaseSettings):
 
     DISCORD_ORDER_WEBHOOK_URL: str 
 
+
+    BEDROCK_MODEL_ID: str 
 
 
     # Pydantic-settings config: reads from .env file

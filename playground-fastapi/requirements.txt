@@ -24,3 +24,5 @@ workos
 pytest
 pytest-asyncio
 aiosqlite
+strands-agents-tools
+strands-agents

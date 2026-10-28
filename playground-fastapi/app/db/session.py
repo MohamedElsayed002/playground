@@ -1,17 +1,3 @@
-"""
-app/db/session.py
-──────────────────
-Creates the async SQLAlchemy engine + session factory.
-
-NestJS/TypeORM equivalent → DataSource configuration in AppModule
-FastAPI approach  → create_async_engine + async_sessionmaker
-
-WHY ASYNC?
-  FastAPI is built on top of Starlette (ASGI) and supports true async I/O.
-  Using async DB calls means your server can handle other requests while
-  waiting for the database — just like await in Node.js/NestJS.
-"""
-
 from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,

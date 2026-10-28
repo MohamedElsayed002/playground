@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 import os
 from urllib.parse import unquote
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -34,6 +34,13 @@ from app.db.session import create_all_tables
 from app.routes import auth, users, products, orders, files, audit_logs, normalized_products, flash_sale
 from app.services.inngest import inngest_client, inngest_functions
 
+
+from app.tools.strands import create_agent
+from app.schemas.assistant import ShopAssistantRequest, ShopAssistantResponse
+from app.core.dependencies import get_current_user, get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.services import chat_service
+from app.models.user import User
 # Lifespan
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -113,6 +120,46 @@ app.include_router(flash_sale.router, prefix=API_PREFIX)
 @app.get("/")
 async def root():
     return {"status": "FastAPI Application Playground ", "service": settings.APP_NAME}
+
+
+
+
+@app.post(
+    f"{API_PREFIX}/shop-assistant-bot",
+    response_model=ShopAssistantResponse,
+    tags=["Shopping Assistant"],
+)
+@limiter.limit("10/minute")
+async def chat_bot(
+    request: Request,
+    data: ShopAssistantRequest,
+    current_user: User=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    conversation = await chat_service.get_or_create_conversation(
+        db, current_user.id, data.conversation_id
+    )
+
+    context = await chat_service.get_context_messages(db, conversation.id)
+
+    user_message = data.message
+
+    await chat_service.save_message(
+        db, conversation.id, "user", user_message
+    )
+
+    agent = create_agent(db=db, user_id=current_user.id, messages=context)
+
+    result = await agent.invoke_async(user_message)
+    reply = "".join(
+        block["text"]
+        for block in result.message.get("content", [])
+        if isinstance(block, dict) and isinstance(block.get("text"), str)
+    )
+
+    reply = (reply or "I couldn't generate a response.")[:4000]
+    await chat_service.save_message(db, conversation.id, "assistant", reply)
+    return ShopAssistantResponse(reply=reply, conversation_id=conversation.id)
 
 
 
