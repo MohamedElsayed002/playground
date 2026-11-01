@@ -1,14 +1,3 @@
-"""
-Reusable FastAPI dependencies - injected via Depends 
-
-NestJS equivalent -> Guards + Interceptors + custom providers
-FastAPI approach -> Functions decorated with Depends()
-
-- get_db -> database session per request (like request-scoped provided)
-- get_current_user -> auth guard (like AuthGuard('jwt'))
-- require_admin -> role guard (like RolesGuard)
-"""
-
 from typing import AsyncGenerator
 from fastapi import Depends, HTTPException, status 
 from fastapi.security import OAuth2PasswordBearer 

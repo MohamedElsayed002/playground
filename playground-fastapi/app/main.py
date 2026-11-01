@@ -148,7 +148,13 @@ async def chat_bot(
         db, conversation.id, "user", user_message
     )
 
-    agent = create_agent(db=db, user_id=current_user.id, messages=context)
+    agent = create_agent(
+        db=db,
+        user_id=current_user.id,
+        first_name=current_user.first_name,
+        last_name=current_user.last_name,
+        messages=context,
+    )
 
     result = await agent.invoke_async(user_message)
     reply = "".join(
